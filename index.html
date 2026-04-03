@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="format-detection" content="telephone=no">
+  <title>Расписание запусков курсов Академии</title>
+
+  <link rel="stylesheet" href="./assets/tt_default_styles.css" type="text/css">
+  <link rel="stylesheet" href="./assets/design-i4tnsvnhw-1756120511_styles.css" type="text/css">
+  <link rel="stylesheet" href="./assets/shared-design-styles.css" type="text/css">
+  <link rel="stylesheet" href="./assets/ms_site_default.css" type="text/css">
+  <link rel="stylesheet" href="./assets/css" media="all">
+  <script src="./assets/webfont.js" type="text/javascript"></script>
+  <script>
+    if (window.WebFont) {
+      WebFont.load({
+        google: {
+          families: ['Wix Madefor Text:400,400italic,500,600,700']
+        }
+      });
+    }
+  </script>
+
+  <style>
+    html, body {
+      background-color: #F5F5FF;
+      font-family: 'Wix Madefor Text', Arial, Helvetica, sans-serif;
+    }
+
+    body, .mosaic-wrap, .root, .text, .link-block, .button {
+      font-family: 'Wix Madefor Text', Arial, Helvetica, sans-serif;
+    }
+
+    .schedule-link:hover .schedule-link-button,
+    .schedule-link:active .schedule-link-button {
+      background-color: #6542CC;
+      border-color: #6542CC;
+    }
+
+    .schedule-link:focus .schedule-link-button,
+    .schedule-link:focus-visible .schedule-link-button,
+    .schedule-link:focus-within .schedule-link-button {
+      background-color: #4C3888;
+      border-color: #4C3888;
+    }
+
+    .schedule-tab-links-wrapper {
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+    }
+
+    .schedule-tab-links-wrapper::-webkit-scrollbar {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+<div class="mosaic-wrap">
+  <div class="root">
+    <div class="div page-wrapper">
+      <div class="div main-wrapper">
+        <section class="section section-timetable">
+          <div class="div padding-global">
+            <div class="container main-container">
+              <div class="div timeline-component">
+                <div class="div schedule-header">
+                  <div class="embed academy-logo-embed">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" viewBox="0 0 77 26" fill="none" preserveAspectRatio="xMidYMid meet">
+                      <path d="M40.1151 26C36.4167 26 33.375 24.7798 30.9898 22.3393C28.5778 19.8713 27.3763 16.759 27.3763 13.0023C27.3763 9.24556 28.5823 6.13324 30.9898 3.66532C33.3794 1.22025 36.4167 0 40.1151 0C43.8134 0 46.9356 1.23396 49.3476 3.69731C49.7674 4.12691 50.2007 4.65706 50.6474 5.27861L47.4537 7.64598C47.0339 7.02443 46.681 6.58112 46.3996 6.31605C44.8095 4.68905 42.737 3.87555 40.1866 3.87555C37.6361 3.87555 35.5904 4.70276 33.9735 6.35261C32.2896 8.07558 31.4454 10.2921 31.4454 12.9977C31.4454 15.7033 32.2896 17.9198 33.9735 19.6428C35.5859 21.2927 37.6585 22.1199 40.1866 22.1199C42.7147 22.1199 45.0641 21.1738 46.9624 19.2818L47.6637 18.4911L50.7546 20.7168C50.357 21.2424 49.9461 21.736 49.5262 22.1884C47.0473 24.7249 43.9117 25.9954 40.1196 25.9954L40.1151 26Z" fill="currentColor"></path>
+                      <path d="M57.5568 0.430432H77V25.5712H73.0336V4.31055H61.5232V25.5712H57.5568V0.430432Z" fill="currentColor"></path>
+                      <path d="M14.579 0.435268H9.49602L0 25.7177H4.14055L6.59272 19.0361H14.2798L12.8594 15.1742H8.01311L8.98683 12.5189L9.00023 12.5235L12.0018 4.37023L17.125 18.1357L19.9836 25.7177H24.0751L14.579 0.435268Z" fill="currentColor"></path>
+                    </svg>
+                  </div>
+                  <div class="text text-paragraph-medium text-align-center text-weight-bold">
+                    <span class="text-block-wrap-div">Расписание обучения<br> и мероприятий в Академии</span>
+                  </div>
+                </div>
+
+                <div id="monthTabs" class="div schedule-tab-links-wrapper"></div>
+                <div id="monthsContainer" class="div schedule-component"></div>
+
+                <div class="div schedule-links-component margin-16">
+                  <div class="text text-paragraph-large text-weight-bold tab-heading">
+                    <span class="text-block-wrap-div">Лист ожидания</span>
+                  </div>
+                  <div id="waitlistContainer" class="div schedule-links-wrapper"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="./frontend-db.js"></script>
+</body>
+</html>

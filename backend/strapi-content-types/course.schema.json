@@ -1,0 +1,82 @@
+{
+  "kind": "collectionType",
+  "collectionName": "courses",
+  "info": {
+    "singularName": "course",
+    "pluralName": "courses",
+    "displayName": "Course"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "attributes": {
+    "title": {
+      "type": "string",
+      "required": true
+    },
+    "subtitle": {
+      "type": "string"
+    },
+    "month": {
+      "type": "enumeration",
+      "enum": [
+        "Январь",
+        "Февраль",
+        "Март",
+        "Апрель",
+        "Май",
+        "Июнь",
+        "Июль",
+        "Август",
+        "Сентябрь",
+        "Октябрь",
+        "Ноябрь",
+        "Декабрь"
+      ]
+    },
+    "date": {
+      "type": "date"
+    },
+    "dateLabel": {
+      "type": "string"
+    },
+    "courseStatus": {
+      "type": "enumeration",
+      "required": true,
+      "default": "Идет набор",
+      "enum": [
+        "Идет набор",
+        "Последний шанс"
+      ]
+    },
+    "weekday": {
+      "type": "string"
+    },
+    "hours": {
+      "type": "string"
+    },
+    "certificate": {
+      "type": "enumeration",
+      "enum": ["Диплом", "Удостоверение", "Сертификат"]
+    },
+    "price": {
+      "type": "string"
+    },
+    "cta": {
+      "type": "string",
+      "default": "Записаться"
+    },
+    "link": {
+      "type": "string",
+      "required": true
+    },
+    "isUndated": {
+      "type": "boolean",
+      "default": false
+    },
+    "order": {
+      "type": "integer",
+      "default": 0
+    }
+  }
+}

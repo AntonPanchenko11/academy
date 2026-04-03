@@ -1,0 +1,3388 @@
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+<link rel="stylesheet" href="/g/s3/mosaic/css/constructor/redesign/tt_default_styles.css" type="text/css">
+<link rel="stylesheet" href="/t/v1161/images/mosaic/designs/design-i4tnsvnhw-1756120511_styles.css" type="text/css">
+<link rel="stylesheet" href="/t/v1161/images/mosaic/designs/3/shared-design-styles.css" type="text/css">
+<!-- This site was created in Taptop. https://taptop.pro/ -->
+<meta content="Taptop" name="generator"> 
+<meta charset="utf-8">
+<meta name="robots" content="all">
+<title>Расписание запусков курсов Академии</title>
+<!-- assets.top -->
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://modernpsy.academy/timetable">
+<meta name="twitter:card" content="summary">
+<!-- /assets.top -->
+
+<meta name="description" content="Расписание запусков курсов Академии">
+<meta name="keywords" content="Расписание запусков курсов Академии">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="format-detection" content="telephone=no">
+
+
+<script>
+ var mapKeys = {
+     google: "",
+     yandex: ""
+ };
+ var mosaicDesignId = 20038513;
+ var mosaicDesignPrefix = 'i4tnsvnhw-1756120511';
+ var mosaicTimeZone = 'Europe/Moscow';
+</script>
+
+
+<link rel="stylesheet" href="/g/s3/mosaic/css/ms_site_default.css">
+<script src="/g/libs/jquery/1.10.2/jquery.min.js"></script>
+
+ 	    <script src="https://ajax.googleapis.com/ajax/libs/webfont/1.6.26/webfont.js" type="text/javascript"></script>
+	<script>
+WebFont.load({
+	google: {
+		families: [
+			"Wix Madefor Text:400,400italic,500,600,700",
+			"&display=swap"
+		]}
+	});
+</script>
+	    <script src="/g/s3/mosaic/js/do/redesign/do.js?rnd=1771143248"></script>
+
+
+            <!-- 46b9544ffa2e5e73c3c971fe2ede35a5 -->
+            <script src='/shared/s3/js/lang/en.js'></script>
+            <script src='/shared/s3/js/common.min.js'></script>
+        
+<!--s3_require-->
+
+<!--/s3_require-->
+
+
+
+	
+<!-- Yandex.Metrika counter -->
+<script type="text/javascript">
+    (function(m,e,t,r,i,k,a){
+        m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
+        m[i].l=1*new Date();
+        k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)
+    })(window, document,'script','//mc.yandex.ru/metrika/tag.js', 'ym');
+
+    ym(99554449, 'init', {accurateTrackBounce:true, trackLinks:true, webvisor:true, clickmap:true, params: {__ym: {isFromApi: 'yesIsFromApi'}}});
+</script>
+<noscript><div><img src="https://mc.yandex.ru/watch/99554449" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
+<!-- /Yandex.Metrika counter -->
+
+
+
+
+
+<!-- mosaic.head.scripts -->
+<style>
+.schedule-link-item:hover .button-primary,
+.schedule-link-item:active .button-primary {
+  background-color: #6542CC;
+  border-color: #6542CC;
+}
+
+.schedule-link-item:focus .button-primary,
+.schedule-link-item:focus-visible .button-primary,
+.schedule-link-item:focus-within .button-primary {
+  background-color: #4C3888;
+  border-color: #4C3888;
+}
+</style>
+<!-- /mosaic.head.scripts --></head>
+<body>
+<div class='mosaic-wrap'>
+<div class='root' id='i4tnsvnhw_0'>
+<div class='embed embed--u-islq96j1w' id='islq96j1w_0'>
+<style>
+html, body {
+  background-color: #F5F5FF;
+}
+</style>
+
+<style>
+.schedule-link:hover .schedule-link-button,
+.schedule-link:active .schedule-link-button {
+  background-color: #6542CC;
+  border-color: #6542CC;
+}
+
+.schedule-link:focus .schedule-link-button,
+.schedule-link:focus-visible .schedule-link-button,
+.schedule-link:focus-within .schedule-link-button {
+  background-color: #4C3888;
+  border-color: #4C3888;
+}
+</style>
+
+<style>
+.schedule-tab-links-wrapper {
+  -webkit-overflow-scrolling: touch; 
+  scrollbar-width: none;            
+}
+
+.schedule-tab-links-wrapper::-webkit-scrollbar {
+  display: none;                    
+}
+</style>
+</div>
+<div class='embed embed--u-idlsww1eg' id='idlsww1eg_0'>
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+
+  const monthsGenitive = [
+    "января", "февраля", "марта", "апреля", "мая", "июня",
+    "июля", "августа", "сентября", "октября", "ноября", "декабря"
+  ];
+
+  const weekdaysShort = ["пн", "вт", "ср", "чт", "пт", "сб", "вс"];
+
+  function formatDay(value) {
+    const num = parseInt(value, 10);
+    if (isNaN(num)) return value;
+    return num < 10 ? `0${num}` : String(num);
+  }
+
+  function parseDate(value) {
+    if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+      return new Date(value);
+    }
+    if (/^\d{2}\.\d{2}\.\d{4}$/.test(value)) {
+      const [d, m, y] = value.split(".");
+      return new Date(`${y}-${m}-${d}`);
+    }
+    return null;
+  }
+
+  // &#x1F525; Теперь month-day → только месяц + день недели (без числа)
+  function formatMonthDay(value) {
+    const date = parseDate(value);
+    if (!date || isNaN(date.getTime())) return value;
+
+    const month = monthsGenitive[date.getMonth()];
+    const weekday = weekdaysShort[date.getDay() === 0 ? 6 : date.getDay() - 1];
+
+    return `${month}, ${weekday}`;
+  }
+
+  function formatPrice(value) {
+    const num = parseInt(value.replace(/\s+/g, ""), 10);
+    if (isNaN(num)) return value;
+
+    if (num >= 1000 && num <= 9999) {
+      return String(num);
+    }
+
+    return num.toLocaleString("ru-RU").replace(/,/g, " ");
+  }
+
+  document.querySelectorAll("[data-format]").forEach(el => {
+    const type = el.getAttribute("data-format");
+    const text = el.textContent.trim();
+
+    if (type === "day") {
+      el.textContent = formatDay(text);
+    }
+
+    if (type === "month-day") {
+      el.textContent = formatMonthDay(text);
+    }
+  });
+
+  document.querySelectorAll("[price-format]").forEach(el => {
+    el.textContent = formatPrice(el.textContent.trim());
+  });
+
+});
+</script>
+</div>
+<div class='div page-wrapper div--u-ichhbhcii' id='ichhbhcii_0'>
+<div class='div main-wrapper div--u-izep4xwa8' id='izep4xwa8_0'>
+<section class='section section-timetable section--u-i1f5xpyt8' id='i1f5xpyt8_0'>
+<div class='div padding-global div--u-iowbrmxpr' id='iowbrmxpr_0'>
+<div class='container main-container' id='ib2enye1h_0'>
+<div class='div timeline-component' id='ipbf6id3z_0'>
+<div class='div schedule-header' id='i9d862t44_0'>
+<div class='embed academy-logo-embed' id='i75cxcnm2_0'>
+<svg xmlns="http://www.w3.org/2000/svg" 
+     width="100%" 
+     height="100%" 
+     viewBox="0 0 77 26"
+     fill="none"
+     preserveAspectRatio="xMidYMid meet">
+  <path d="M40.1151 26C36.4167 26 33.375 24.7798 30.9898 22.3393C28.5778 19.8713 27.3763 16.759 27.3763 13.0023C27.3763 9.24556 28.5823 6.13324 30.9898 3.66532C33.3794 1.22025 36.4167 0 40.1151 0C43.8134 0 46.9356 1.23396 49.3476 3.69731C49.7674 4.12691 50.2007 4.65706 50.6474 5.27861L47.4537 7.64598C47.0339 7.02443 46.681 6.58112 46.3996 6.31605C44.8095 4.68905 42.737 3.87555 40.1866 3.87555C37.6361 3.87555 35.5904 4.70276 33.9735 6.35261C32.2896 8.07558 31.4454 10.2921 31.4454 12.9977C31.4454 15.7033 32.2896 17.9198 33.9735 19.6428C35.5859 21.2927 37.6585 22.1199 40.1866 22.1199C42.7147 22.1199 45.0641 21.1738 46.9624 19.2818L47.6637 18.4911L50.7546 20.7168C50.357 21.2424 49.9461 21.736 49.5262 22.1884C47.0473 24.7249 43.9117 25.9954 40.1196 25.9954L40.1151 26Z" fill="currentColor"/>
+  <path d="M57.5568 0.430432H77V25.5712H73.0336V4.31055H61.5232V25.5712H57.5568V0.430432Z" fill="currentColor"/>
+  <path d="M14.579 0.435268H9.49602L0 25.7177H4.14055L6.59272 19.0361H14.2798L12.8594 15.1742H8.01311L8.98683 12.5189L9.00023 12.5235L12.0018 4.37023L17.125 18.1357L19.9836 25.7177H24.0751L14.579 0.435268Z" fill="currentColor"/>
+</svg>
+</div>
+<div class='text text-paragraph-medium text-align-center text-weight-bold' id='ijsleli3r_0'>
+<span class='text-block-wrap-div'>Расписание обучения<br> и мероприятий в Академии</span>
+</div>
+</div>
+<div class='div schedule-tab-links-wrapper div--u-i1e8m1a92' id='i1e8m1a92_0'>
+<a href='#i004yia39_0' data-action-element='' target='_self' class='link-block schedule-tab-link' id='it439395w_0'>
+<div class='text' id='ijflzg1by_0'>
+<span class='text-block-wrap-div'>Декабрь</span>
+</div>
+</a>
+<a href='#i004yia39_0' data-action-element='' target='_self' class='link-block schedule-tab-link' id='ieil2ch10_0'>
+<div class='text' id='i8vrknipg_0'>
+<span class='text-block-wrap-div'>Январь</span>
+</div>
+</a>
+<a href='#ie00qz2ly_0' data-action-element='' target='_self' class='link-block schedule-tab-link' id='ichpnldj1_0'>
+<div class='text' id='ijbq6lolx_0'>
+<span class='text-block-wrap-div'>Февраль</span>
+</div>
+</a>
+<a href='#ii4up84es_0' data-action-element='' target='_self' class='link-block schedule-tab-link' id='izn5pex5n_0'>
+<div class='text' id='iup7cdlng_0'>
+<span class='text-block-wrap-div'>Март</span>
+</div>
+</a>
+<a href='#imki7wyml_0' data-action-element='' target='_self' class='link-block schedule-tab-link' id='i2apz7wpw_0'>
+<div class='text' id='ifrpv60pq_0'>
+<span class='text-block-wrap-div'>Апрель</span>
+</div>
+</a>
+<a href='#iv3ig8r7f_0' data-action-element='' target='_self' class='link-block schedule-tab-link' id='iw860bbbj_0'>
+<div class='text' id='ij0mnkr7v_0'>
+<span class='text-block-wrap-div'>Май</span>
+</div>
+</a>
+<a href='#iv3ig8r7f_0' data-action-element='' target='_self' class='link-block schedule-tab-link' id='iji2t3l8l_0'>
+<div class='text' id='izdt8rzyr_0'>
+<span class='text-block-wrap-div'>Июнь</span>
+</div>
+</a>
+<a href='#iv3ig8r7f_0' data-action-element='' target='_self' class='link-block schedule-tab-link' id='it1w1y6yw_0'>
+<div class='text' id='i1uk6m8ft_0'>
+<span class='text-block-wrap-div'>Июль</span>
+</div>
+</a>
+<a href='#iv3ig8r7f_0' data-action-element='' target='_self' class='link-block schedule-tab-link' id='i2d6hfarl_0'>
+<div class='text' id='i1sntmr3e_0'>
+<span class='text-block-wrap-div'>Август</span>
+</div>
+</a>
+<a href='#iv3ig8r7f_0' data-action-element='' target='_self' class='link-block schedule-tab-link' id='i4f3zlbru_0'>
+<div class='text' id='imxr8zp1r_0'>
+<span class='text-block-wrap-div'>Сентябрь</span>
+</div>
+</a>
+<a href='#iv3ig8r7f_0' data-action-element='' target='_self' class='link-block schedule-tab-link' id='ia315i28z_0'>
+<div class='text' id='izh1qfp5c_0'>
+<span class='text-block-wrap-div'>Октябрь</span>
+</div>
+</a>
+<a href='#iv3ig8r7f_0' data-action-element='' target='_self' class='link-block schedule-tab-link' id='idlr1azd6_0'>
+<div class='text' id='i1q2w0pdw_0'>
+<span class='text-block-wrap-div'>Ноябрь</span>
+</div>
+</a>
+<a href='#iv3ig8r7f_0' data-action-element='' target='_self' class='link-block schedule-tab-link not-active' id='ikexc9y5r_0'>
+<div class='text' id='iapxgps31_0'>
+<span class='text-block-wrap-div'>Декабрь</span>
+</div>
+</a>
+</div>
+<div class='div schedule-component' id='i004yia39_0'>
+<div class='div schedule-links-component margin-24' id='i4pjyxxa6_0'>
+<div class='text text-paragraph-large text-weight-bold tab-heading' id='i5nqkgsg0_0'>
+<span class='text-block-wrap-div'>Декабрь</span>
+</div>
+<div class='div schedule-links-wrapper' id='ikvn63hmr_0'>
+<a href='https://modern-psy.ru/rodbt_conference?utm_source=web&utm_medium=cpc&utm_campaign=schedule' data-action-element='' target='_blank' class='link-block schedule-link' id='i313chemu_0'>
+<div class='div schedule-item div--u-i45hne1xl' id='i45hne1xl_0'>
+<div class='div schedule-item-date div--u-i9p3uc0aj' id='i9p3uc0aj_0'>
+<div class='div schedule-item-date-tag' id='igvw7c61l_0'>
+<div class='text' id='icwcjnxpw_0'>
+<span class='text-block-wrap-div'>Идет набор</span>
+</div>
+</div>
+<div class='div schedule-item-date-tag-red not-active' id='idnupepe8_0'>
+<div class='text' id='iijyfv0lf_0'>
+<span class='text-block-wrap-div'>SOLD OUT</span>
+</div>
+</div>
+<div class='div schedule-date-wrapper' id='io5w02x54_0'>
+<div class='text heading-style-h4 text-weight-bold' id='i76r7m4lq_0'>
+<span class='text-block-wrap-div'>7-8</span>
+</div>
+<div class='text caption-small text-color-violet' id='iyjamtbiq_0'>
+<span class='text-block-wrap-div'>Декабря</span>
+</div>
+</div>
+</div>
+<div class='div schedule-item-info' id='ixag0qr3f_0'>
+<div class='div schedule-info-text-wrapper' id='itcn24zwr_0'>
+<div class='text text-paragraph-medium text-weight-bold' id='i7km9ingi_0'>
+<span class='text-block-wrap-div'>Radically Open Conference</span>
+</div>
+<div class='text caption-small text-color-violet-copy' id='icw6dm8r2_0'>
+<span class='text-block-wrap-div'>Купить запись</span>
+</div>
+</div>
+<div class='div schedule-info-tag-wrapper' id='izeraivgf_0'>
+<div class='div inner-tag-wrapper' id='i9nb2wikq_0'>
+<div class='div schedule-info-tag not-active' id='iwlpc4uy6_0'>
+<div class='image schedule-tag-icon' id='i4yv0q033_0'>
+<img src='/thumb/2/C-PCUk8sC6qkunoWuyMWhA/640r480/d/calendar-icon.svg' alt='calendar-icon' title='' data-size='0x0' data-origin-src='/thumb/2/C-PCUk8sC6qkunoWuyMWhA/640r480/d/calendar-icon.svg' class='image__img' id='i4itfsrfb_0' >
+</div>
+<div class='text' id='i13t2hk8p_0'>
+<span class='text-block-wrap-div'>Воскресенье и понедельник</span>
+</div>
+</div>
+<div class='div schedule-info-tag not-active' id='in5fa5wfm_0'>
+<div class='image schedule-tag-icon' id='irk8l5t7b_0'>
+<img src='/thumb/2/Z0A_hcrK3Pw2QOeLaBy-lA/640r480/d/time-circle-icon.svg' alt='time-circle-icon' title='' data-size='0x0' data-origin-src='/thumb/2/Z0A_hcrK3Pw2QOeLaBy-lA/640r480/d/time-circle-icon.svg' class='image__img' id='iafw0tcf2_0' >
+</div>
+<div class='div tag-text-wrapper' id='id1a0i8qv_0'>
+<div class='text' id='i5a48c8pv_0'>
+<span class='text-block-wrap-div'>116</span>
+</div>
+<div class='text' id='itpmf8uij_0'>
+<span class='text-block-wrap-div'>ак. ч.</span>
+</div>
+</div>
+</div>
+</div>
+<div class='div schedule-info-tag' id='iv3uv2u8m_0'>
+<div class='image schedule-tag-icon' id='i7hxc2vcq_0'>
+<img src='/thumb/2/nEpYW3XdTHy2maSXhYgxow/640r480/d/document-verified-icon.svg' alt='document-verified-icon' title='' data-size='0x0' data-origin-src='/thumb/2/nEpYW3XdTHy2maSXhYgxow/640r480/d/document-verified-icon.svg' class='image__img' id='i5aqzapey_0' >
+</div>
+<div class='text' id='ib3kkp7rc_0'>
+<span class='text-block-wrap-div'>Сертификат</span>
+</div>
+</div>
+</div>
+</div>
+<div class='div schedule-item-price' id='icri829d0_0'>
+<div class='div flex-wrapper' id='inwesn0im_0'>
+<div class='div schedule-price-tag div--u-idpi0o0fq not-active' id='idpi0o0fq_0'>
+<div class='text' id='iy1uw017v_0'>
+<span class='text-block-wrap-div'>-10%</span>
+</div>
+</div>
+<div class='div schedule-price' id='i7q06sf14_0'>
+<div class='text text-paragraph-medium text-weight-bold' id='ihc1tqq1c_0'>
+<span class='text-block-wrap-div'>3000</span>
+</div>
+<div class='text text-paragraph-medium text-weight-bold' id='ijc35agx3_0'>
+<span class='text-block-wrap-div'>₽</span>
+</div>
+</div>
+</div>
+<div class='div schedule-link-button' id='iasgns00d_0'>
+<div class='text' id='ib3vxh1r3_0'>
+<span class='text-block-wrap-div'>Купить </span>
+</div>
+</div>
+</div>
+</div>
+</a>
+</div>
+</div>
+</div>
+<div class='div schedule-component' id='ie00qz2ly_0'>
+<div class='div schedule-links-component margin-24' id='iyk2rb3pc_0'>
+<div class='text text-paragraph-large text-weight-bold tab-heading' id='ibaln9bwk_0'>
+<span class='text-block-wrap-div'>Февраль</span>
+</div>
+<div class='div schedule-links-wrapper' id='i4uah0l4n_0'>
+<a href='https://modern-psy.ru/act?utm_source=web&utm_medium=cpc&utm_campaign=schedule' data-action-element='' target='_blank' class='link-block schedule-link' id='itnv8cgr0_0'>
+<div class='div schedule-item div--u-ih14ulmwk' id='ih14ulmwk_0'>
+<div class='div schedule-item-date div--u-iq5h978p5' id='iq5h978p5_0'>
+<div class='div schedule-item-date-tag schedule-item-date-tag-warning' id='i7e9e60a5_0'>
+<div class='text' id='i4rhtyw2f_0'>
+<span class='text-block-wrap-div'>Последний шанс</span>
+</div>
+</div>
+<div class='div schedule-item-date-tag-red not-active' id='iecirql98_0'>
+<div class='text' id='i87m3cd4s_0'>
+<span class='text-block-wrap-div'>SOLD OUT</span>
+</div>
+</div>
+<div class='div schedule-date-wrapper' id='i7hlj5ru8_0'>
+<div class='text heading-style-h4 text-weight-bold' id='ifl45oue9_0'>
+<span class='text-block-wrap-div'>02</span>
+</div>
+<div class='text caption-small text-color-violet' id='ine9pk4x8_0'>
+<span class='text-block-wrap-div'>Февраля, пн</span>
+</div>
+</div>
+</div>
+<div class='div schedule-item-info' id='i6ewgxicf_0'>
+<div class='div schedule-info-text-wrapper' id='ii93kyhw2_0'>
+<div class='text text-paragraph-medium text-weight-bold' id='itf3j31kw_0'>
+<span class='text-block-wrap-div'>Терапия принятия и ответственности (ACT)</span>
+</div>
+<div class='text caption-small text-color-violet-copy not-active' id='ihklsbsyg_0'>
+<span class='text-block-wrap-div'>Оксфордская модель</span>
+</div>
+</div>
+<div class='div schedule-info-tag-wrapper' id='ijgcpgm83_0'>
+<div class='div inner-tag-wrapper' id='ii70ivz7d_0'>
+<div class='div schedule-info-tag' id='izeoygx0f_0'>
+<div class='image schedule-tag-icon' id='iffmdq796_0'>
+<img src='/thumb/2/C-PCUk8sC6qkunoWuyMWhA/640r480/d/calendar-icon.svg' alt='calendar-icon' title='' data-size='0x0' data-origin-src='/thumb/2/C-PCUk8sC6qkunoWuyMWhA/640r480/d/calendar-icon.svg' class='image__img' id='ivwmc1w7s_0' >
+</div>
+<div class='text' id='iwis8qc02_0'>
+<span class='text-block-wrap-div'>По понедельникам и четвергам</span>
+</div>
+</div>
+<div class='div schedule-info-tag' id='icq63h5f9_0'>
+<div class='image schedule-tag-icon' id='iddrr37a4_0'>
+<img src='/thumb/2/Z0A_hcrK3Pw2QOeLaBy-lA/640r480/d/time-circle-icon.svg' alt='time-circle-icon' title='' data-size='0x0' data-origin-src='/thumb/2/Z0A_hcrK3Pw2QOeLaBy-lA/640r480/d/time-circle-icon.svg' class='image__img' id='i5yrvzxqt_0' >
+</div>
+<div class='div tag-text-wrapper' id='i75saxb46_0'>
+<div class='text' id='im058lsqt_0'>
+<span class='text-block-wrap-div'>270</span>
+</div>
+<div class='text' id='i7bwhnljy_0'>
+<span class='text-block-wrap-div'>ак. ч.</span>
+</div>
+</div>
+</div>
+</div>
+<div class='div schedule-info-tag' id='iemidqd4v_0'>
+<div class='image schedule-tag-icon' id='ih61gddha_0'>
+<img src='/thumb/2/nEpYW3XdTHy2maSXhYgxow/640r480/d/document-verified-icon.svg' alt='document-verified-icon' title='' data-size='0x0' data-origin-src='/thumb/2/nEpYW3XdTHy2maSXhYgxow/640r480/d/document-verified-icon.svg' class='image__img' id='ijo0awqdw_0' >
+</div>
+<div class='text' id='i0xcl0648_0'>
+<span class='text-block-wrap-div'>Диплом</span>
+</div>
+</div>
+</div>
+</div>
+<div class='div schedule-item-price' id='isucnshe0_0'>
+<div class='div flex-wrapper' id='i8gixh0kc_0'>
+<div class='div schedule-price-tag div--u-ivtm5r17j not-active' id='ivtm5r17j_0'>
+<div class='text' id='ipjawb7jq_0'>
+<span class='text-block-wrap-div'>-10%</span>
+</div>
+</div>
+<div class='div schedule-price' id='iw2cc5060_0'>
+<div class='text text-paragraph-medium text-weight-bold' id='i7mu7mdcs_0'>
+<span class='text-block-wrap-div'>130 000</span>
+</div>
+<div class='text text-paragraph-medium text-weight-bold' id='i5wkf1qoz_0'>
+<span class='text-block-wrap-div'>₽</span>
+</div>
+</div>
+</div>
+<div class='div schedule-link-button' id='i0b2yc9x0_0'>
+<div class='text' id='idv9gon46_0'>
+<span class='text-block-wrap-div'>Записаться</span>
+</div>
+</div>
+</div>
+</div>
+</a>
+<a href='https://modern-psy.ru/autistic-disorders?utm_source=web&utm_medium=cpc&utm_campaign=schedule' data-action-element='' target='_blank' class='link-block schedule-link' id='iwnz6nrdg_0'>
+<div class='div schedule-item div--u-i12fuezi4' id='i12fuezi4_0'>
+<div class='div schedule-item-date div--u-ivr8qv76b' id='ivr8qv76b_0'>
+<div class='div schedule-item-date-tag schedule-item-date-tag-warning' id='izr7p5ig1_0'>
+<div class='text' id='izrurjk2b_0'>
+<span class='text-block-wrap-div'>Последний шанс</span>
+</div>
+</div>
+<div class='div schedule-item-date-tag-red not-active' id='i9dg1w21s_0'>
+<div class='text' id='i8vg2e8hp_0'>
+<span class='text-block-wrap-div'>SOLD OUT</span>
+</div>
+</div>
+<div class='div schedule-date-wrapper' id='iigmzkjr9_0'>
+<div class='text heading-style-h4 text-weight-bold' id='ibvpl42vx_0'>
+<span class='text-block-wrap-div'>04</span>
+</div>
+<div class='text caption-small text-color-violet' id='i1k29toh5_0'>
+<span class='text-block-wrap-div'>Февраля, ср</span>
+</div>
+</div>
+</div>
+<div class='div schedule-item-info' id='il3epxqp6_0'>
+<div class='div schedule-info-text-wrapper' id='infgkwll3_0'>
+<div class='text text-paragraph-medium text-weight-bold' id='il5l076g7_0'>
+<span class='text-block-wrap-div'>Расстройства аутистического спектра (РАС) в практике психолога</span>
+</div>
+<div class='text caption-small text-color-violet-copy not-active' id='i9zv1rr6c_0'>
+<span class='text-block-wrap-div'>Модель Бека</span>
+</div>
+</div>
+<div class='div schedule-info-tag-wrapper' id='i6zyo820g_0'>
+<div class='div inner-tag-wrapper' id='i9z2f6dpu_0'>
+<div class='div schedule-info-tag' id='iuiv0s7j4_0'>
+<div class='image schedule-tag-icon' id='ioycpv3xa_0'>
+<img src='/thumb/2/C-PCUk8sC6qkunoWuyMWhA/640r480/d/calendar-icon.svg' alt='calendar-icon' title='' data-size='0x0' data-origin-src='/thumb/2/C-PCUk8sC6qkunoWuyMWhA/640r480/d/calendar-icon.svg' class='image__img' id='i04gjvf8o_0' >
+</div>
+<div class='text' id='igify5p5u_0'>
+<span class='text-block-wrap-div'>По средам </span>
+</div>
+</div>
+<div class='div schedule-info-tag' id='izi7nefia_0'>
+<div class='image schedule-tag-icon' id='io3pj4nmk_0'>
+<img src='/thumb/2/Z0A_hcrK3Pw2QOeLaBy-lA/640r480/d/time-circle-icon.svg' alt='time-circle-icon' title='' data-size='0x0' data-origin-src='/thumb/2/Z0A_hcrK3Pw2QOeLaBy-lA/640r480/d/time-circle-icon.svg' class='image__img' id='i7ubq261d_0' >
+</div>
+<div class='div tag-text-wrapper' id='ihug9gftm_0'>
+<div class='text' id='i3xle1bvn_0'>
+<span class='text-block-wrap-div'>40</span>
+</div>
+<div class='text' id='iwcj46p3n_0'>
+<span class='text-block-wrap-div'>ак. ч.</span>
+</div>
+</div>
+</div>
+</div>
+<div class='div schedule-info-tag' id='i5693ohfv_0'>
+<div class='image schedule-tag-icon' id='ikkxgbomu_0'>
+<img src='/thumb/2/nEpYW3XdTHy2maSXhYgxow/640r480/d/document-verified-icon.svg' alt='document-verified-icon' title='' data-size='0x0' data-origin-src='/thumb/2/nEpYW3XdTHy2maSXhYgxow/640r480/d/document-verified-icon.svg' class='image__img' id='ifiz1bbf4_0' >
+</div>
+<div class='text' id='ir36veloy_0'>
+<span class='text-block-wrap-div'>Удостоверение</span>
+</div>
+</div>
+</div>
+</div>
+<div class='div schedule-item-price' id='ikmw2hf17_0'>
+<div class='div flex-wrapper' id='ip21ck116_0'>
+<div class='div schedule-price-tag div--u-itda55jl3 not-active' id='itda55jl3_0'>
+<div class='text' id='ib0ayp24z_0'>
+<span class='text-block-wrap-div'>-10%</span>
+</div>
+</div>
+<div class='div schedule-price' id='il7pht1gm_0'>
+<div class='text text-paragraph-medium text-weight-bold' id='imx8ss2k6_0'>
+<span class='text-block-wrap-div'>30 000</span>
+</div>
+<div class='text text-paragraph-medium text-weight-bold' id='i5saq8895_0'>
+<span class='text-block-wrap-div'>₽</span>
+</div>
+</div>
+</div>
+<div class='div schedule-link-button' id='i3taqg54m_0'>
+<div class='text' id='im1z9779b_0'>
+<span class='text-block-wrap-div'>Записаться</span>
+</div>
+</div>
+</div>
+</div>
+</a>
+<a href='https://modern-psy.ru/polymodal-conference?utm_source=web&utm_medium=cpc&utm_campaign=schedule' data-action-element='' target='_blank' class='link-block schedule-link' id='imkqq0d9z_0'>
+<div class='div schedule-item div--u-igcfc2j71' id='igcfc2j71_0'>
+<div class='div schedule-item-date div--u-inuk4txss' id='inuk4txss_0'>
+<div class='div schedule-item-date-tag' id='ikmojosmk_0'>
+<div class='text' id='i25g3x07h_0'>
+<span class='text-block-wrap-div'>Идет набор</span>
+</div>
+</div>
+<div class='div schedule-item-date-tag-red not-active' id='i8cjq9dn1_0'>
+<div class='text' id='i3i8y2tqf_0'>
+<span class='text-block-wrap-div'>SOLD OUT</span>
+</div>
+</div>
+<div class='div schedule-date-wrapper' id='ipx13unat_0'>
+<div class='text heading-style-h4 text-weight-bold' id='istnwcqt7_0'>
+<span class='text-block-wrap-div'>07</span>
+</div>
+<div class='text caption-small text-color-violet' id='i6dyzy9f4_0'>
+<span class='text-block-wrap-div'>Февраля, сб</span>
+</div>
+</div>
+</div>
+<div class='div schedule-item-info' id='izno57b6c_0'>
+<div class='div schedule-info-text-wrapper' id='isz9j7g70_0'>
+<div class='text text-paragraph-medium text-weight-bold' id='ieyujfp0r_0'>
+<span class='text-block-wrap-div'>Полимодальная конференция для психологов</span>
+</div>
+<div class='text caption-small text-color-violet-copy not-active' id='iga2hc7mn_0'>
+<span class='text-block-wrap-div'>Оксфордская модель</span>
+</div>
+</div>
+<div class='div schedule-info-tag-wrapper' id='iag2tnn4k_0'>
+<div class='div inner-tag-wrapper' id='ie3kftopo_0'>
+<div class='div schedule-info-tag' id='it6q5ics9_0'>
+<div class='image schedule-tag-icon' id='iddk245ji_0'>
+<img src='/thumb/2/C-PCUk8sC6qkunoWuyMWhA/640r480/d/calendar-icon.svg' alt='calendar-icon' title='' data-size='0x0' data-origin-src='/thumb/2/C-PCUk8sC6qkunoWuyMWhA/640r480/d/calendar-icon.svg' class='image__img' id='iz7jywflf_0' >
+</div>
+<div class='text' id='irjcxwcc9_0'>
+<span class='text-block-wrap-div'>Суббота</span>
+</div>
+</div>
+<div class='div schedule-info-tag not-active' id='im1x6nv3f_0'>
+<div class='image schedule-tag-icon' id='ib5p4nzku_0'>
+<img src='/thumb/2/Z0A_hcrK3Pw2QOeLaBy-lA/640r480/d/time-circle-icon.svg' alt='time-circle-icon' title='' data-size='0x0' data-origin-src='/thumb/2/Z0A_hcrK3Pw2QOeLaBy-lA/640r480/d/time-circle-icon.svg' class='image__img' id='inokbyd70_0' >
+</div>
+<div class='div tag-text-wrapper' id='iac3k3rxm_0'>
+<div class='text' id='i8lj6tq5n_0'>
+<span class='text-block-wrap-div'>18</span>
+</div>
+<div class='text' id='ii4gwy82l_0'>
+<span class='text-block-wrap-div'>ак. ч.</span>
+</div>
+</div>
+</div>
+</div>
+<div class='div schedule-info-tag' id='ii8aq1obg_0'>
+<div class='image schedule-tag-icon' id='ih17aotqp_0'>
+<img src='/thumb/2/nEpYW3XdTHy2maSXhYgxow/640r480/d/document-verified-icon.svg' alt='document-verified-icon' title='' data-size='0x0' data-origin-src='/thumb/2/nEpYW3XdTHy2maSXhYgxow/640r480/d/document-verified-icon.svg' class='image__img' id='ig65x0nog_0' >
+</div>
+<div class='text' id='iabvs4o4r_0'>
+<span class='text-block-wrap-div'>Сертификат</span>
+</div>
+</div>
+</div>
+</div>
+<div class='div schedule-item-price' id='i45lnqfth_0'>
+<div class='div flex-wrapper' id='ixu6eejan_0'>
+<div class='div schedule-price-tag div--u-i3esosz2u not-active' id='i3esosz2u_0'>
+<div class='text' id='ii5vn52nx_0'>
+<span class='text-block-wrap-div'>-10%</span>
+</div>
+</div>
+<div class='div schedule-price' id='i5aj0rvzf_0'>
+<div class='text text-paragraph-medium text-weight-bold' id='i5xmfdbv6_0'>
+<span class='text-block-wrap-div'>14 000</span>
+</div>
+<div class='text text-paragraph-medium text-weight-bold' id='i3u8yf488_0'>
+<span class='text-block-wrap-div'>₽</span>
+</div>
+</div>
+</div>
+<div class='div schedule-link-button' id='idyku0c7w_0'>
+<div class='text' id='itnifsgr9_0'>
+<span class='text-block-wrap-div'>Записаться</span>
+</div>
+</div>
+</div>
+</div>
+</a>
+<a href='https://modern-psy.ru/s-risk?utm_source=web&utm_medium=cpc&utm_campaign=schedule' data-action-element='' target='_blank' class='link-block schedule-link' id='ib6ifywah_0'>
+<div class='div schedule-item div--u-iwi1tbyms' id='iwi1tbyms_0'>
+<div class='div schedule-item-date div--u-ittebupe1' id='ittebupe1_0'>
+<div class='div schedule-item-date-tag schedule-item-date-tag-warning' id='iqk92qgsy_0'>
+<div class='text' id='iczl0mpak_0'>
+<span class='text-block-wrap-div'>Последний шанс</span>
+</div>
+</div>
+<div class='div schedule-item-date-tag-red not-active' id='io2us1t5t_0'>
+<div class='text' id='ite3cznph_0'>
+<span class='text-block-wrap-div'>SOLD OUT</span>
+</div>
+</div>
+<div class='div schedule-date-wrapper' id='i7swynbm2_0'>
+<div class='text heading-style-h4 text-weight-bold' id='i9rwfqnwj_0'>
+<span class='text-block-wrap-div'>09</span>
+</div>
+<div class='text caption-small text-color-violet' id='ib95xslwt_0'>
+<span class='text-block-wrap-div'>Февраля, пн</span>
+</div>
+</div>
+</div>
+<div class='div schedule-item-info' id='iuk2ncn4d_0'>
+<div class='div schedule-info-text-wrapper' id='ic5yun50t_0'>
+<div class='text text-paragraph-medium text-weight-bold' id='i159d52bv_0'>
+<span class='text-block-wrap-div'>Оценка и управление суицидальным риском</span>
+</div>
+<div class='text caption-small text-color-violet-copy not-active' id='i5rrmdbcb_0'>
+<span class='text-block-wrap-div'>Оксфордская модель</span>
+</div>
+</div>
+<div class='div schedule-info-tag-wrapper' id='ihd5bht1w_0'>
+<div class='div inner-tag-wrapper' id='if6zw0rh2_0'>
+<div class='div schedule-info-tag' id='irwd7pvlh_0'>
+<div class='image schedule-tag-icon' id='i9o25ym4p_0'>
+<img src='/thumb/2/C-PCUk8sC6qkunoWuyMWhA/640r480/d/calendar-icon.svg' alt='calendar-icon' title='' data-size='0x0' data-origin-src='/thumb/2/C-PCUk8sC6qkunoWuyMWhA/640r480/d/calendar-icon.svg' class='image__img' id='ie2f2wopx_0' >
+</div>
+<div class='text' id='iflbo6cqf_0'>
+<span class='text-block-wrap-div'>По понедельникам</span>
+</div>
+</div>
+<div class='div schedule-info-tag' id='igrqxj4ah_0'>
+<div class='image schedule-tag-icon' id='i9h0k4o1q_0'>
+<img src='/thumb/2/Z0A_hcrK3Pw2QOeLaBy-lA/640r480/d/time-circle-icon.svg' alt='time-circle-icon' title='' data-size='0x0' data-origin-src='/thumb/2/Z0A_hcrK3Pw2QOeLaBy-lA/640r480/d/time-circle-icon.svg' class='image__img' id='ihau2ejj1_0' >
+</div>
+<div class='div tag-text-wrapper' id='is91qu3cd_0'>
+<div class='text' id='ipywcrytk_0'>
+<span class='text-block-wrap-div'>20</span>
+</div>
+<div class='text' id='ikq5rqvvz_0'>
+<span class='text-block-wrap-div'>ак. ч.</span>
+</div>
+</div>
+</div>
+</div>
+<div class='div schedule-info-tag' id='imuolbix4_0'>
+<div class='image schedule-tag-icon' id='iyeywm0o6_0'>
+<img src='/thumb/2/nEpYW3XdTHy2maSXhYgxow/640r480/d/document-verified-icon.svg' alt='document-verified-icon' title='' data-size='0x0' data-origin-src='/thumb/2/nEpYW3XdTHy2maSXhYgxow/640r480/d/document-verified-icon.svg' class='image__img' id='i1sq8marx_0' >
+</div>
+<div class='text' id='izgn1mfdq_0'>
+<span class='text-block-wrap-div'>Удостоверение</span>
+</div>
+</div>
+</div>
+</div>
+<div class='div schedule-item-price' id='imirgnf4t_0'>
+<div class='div flex-wrapper' id='ickzsvy56_0'>
+<div class='div schedule-price-tag div--u-imfxlswcb not-active' id='imfxlswcb_0'>
+<div class='text' id='ixdq0hwpm_0'>
+<span class='text-block-wrap-div'>-10%</span>
+</div>
+</div>
+<div class='div schedule-price' id='iybtcd3ov_0'>
+<div class='text text-paragraph-medium text-weight-bold' id='ixatly0hk_0'>
+<span class='text-block-wrap-div'>15 000</span>
+</div>
+<div class='text text-paragraph-medium text-weight-bold' id='islkyq7w4_0'>
+<span class='text-block-wrap-div'>₽</span>
+</div>
+</div>
+</div>
+<div class='div schedule-link-button' id='iut8jpr1b_0'>
+<div class='text' id='i3qhvufp9_0'>
+<span class='text-block-wrap-div'>Записаться</span>
+</div>
+</div>
+</div>
+</div>
+</a>
+<a href='https://modern-psy.ru/cbt-oxford?utm_source=web&utm_medium=cpc&utm_campaign=schedule' data-action-element='' target='_blank' class='link-block schedule-link' id='ie0k5usrk_0'>
+<div class='div schedule-item div--u-in5sz6n06' id='in5sz6n06_0'>
+<div class='div schedule-item-date div--u-iy8uxy35v' id='iy8uxy35v_0'>
+<div class='div schedule-item-date-tag' id='i8s3an4yw_0'>
+<div class='text' id='i11zggnml_0'>
+<span class='text-block-wrap-div'>Идет набор</span>
+</div>
+</div>
+<div class='div schedule-item-date-tag-red not-active' id='i6elootcs_0'>
+<div class='text' id='ilhjw4l5s_0'>
+<span class='text-block-wrap-div'>SOLD OUT</span>
+</div>
+</div>
+<div class='div schedule-date-wrapper' id='ilxnx6ixt_0'>
+<div class='text heading-style-h4 text-weight-bold' id='ir8g581oi_0'>
+<span class='text-block-wrap-div'>20</span>
+</div>
+<div class='text caption-small text-color-violet' id='i5i7j0yed_0'>
+<span class='text-block-wrap-div'>Февраля, пт</span>
+</div>
+</div>
+</div>
+<div class='div schedule-item-info' id='i4k192fhl_0'>
+<div class='div schedule-info-text-wrapper' id='ipcp1ksv8_0'>
+<div class='text text-paragraph-medium text-weight-bold' id='iad3icv0a_0'>
+<span class='text-block-wrap-div'>Когнитивно-поведенческая терапия</span>
+</div>
+<div class='text caption-small text-color-violet-copy' id='i84snvydp_0'>
+<span class='text-block-wrap-div'>Оксфордская модель</span>
+</div>
+</div>
+<div class='div schedule-info-tag-wrapper' id='i22o52kjd_0'>
+<div class='div inner-tag-wrapper' id='i6zemjeom_0'>
+<div class='div schedule-info-tag' id='iqj653h0l_0'>
+<div class='image schedule-tag-icon' id='i2ju135kp_0'>
+<img src='/thumb/2/C-PCUk8sC6qkunoWuyMWhA/640r480/d/calendar-icon.svg' alt='calendar-icon' title='' data-size='0x0' data-origin-src='/thumb/2/C-PCUk8sC6qkunoWuyMWhA/640r480/d/calendar-icon.svg' class='image__img' id='i2rj42da4_0' >
+</div>
+<div class='text' id='iw802mkwy_0'>
+<span class='text-block-wrap-div'>По понедельникам и четвергам</span>
+</div>
+</div>
+<div class='div schedule-info-tag' id='ixps9cpg1_0'>
+<div class='image schedule-tag-icon' id='ifd51nugz_0'>
+<img src='/thumb/2/Z0A_hcrK3Pw2QOeLaBy-lA/640r480/d/time-circle-icon.svg' alt='time-circle-icon' title='' data-size='0x0' data-origin-src='/thumb/2/Z0A_hcrK3Pw2QOeLaBy-lA/640r480/d/time-circle-icon.svg' class='image__img' id='i9ckw0h0t_0' >
+</div>
+<div class='div tag-text-wrapper' id='i6zv2tfk8_0'>
+<div class='text' id='ije54afo3_0'>
+<span class='text-block-wrap-div'>750</span>
+</div>
+<div class='text' id='izfzddssq_0'>
+<span class='text-block-wrap-div'>ак. ч.</span>
+</div>
+</div>
+</div>
+</div>
+<div class='div schedule-info-tag' id='iynrj3apn_0'>
+<div class='image schedule-tag-icon' id='iruuw1oig_0'>
+<img src='/thumb/2/nEpYW3XdTHy2maSXhYgxow/640r480/d/document-verified-icon.svg' alt='document-verified-icon' title='' data-size='0x0' data-origin-src='/thumb/2/nEpYW3XdTHy2maSXhYgxow/640r480/d/document-verified-icon.svg' class='image__img' id='i6nie4zvy_0' >
+</div>
+<div class='text' id='iugkth5p0_0'>
+<span class='text-block-wrap-div'>Диплом</span>
+</div>
+</div>
+</div>
+</div>
+<div class='div schedule-item-price' id='i45sdb6q7_0'>
+<div class='div flex-wrapper' id='i40hil0uo_0'>
+<div class='div schedule-price-tag div--u-i1x8re6eu not-active' id='i1x8re6eu_0'>
+<div class='text' id='iydbx4qou_0'>
+<span class='text-block-wrap-div'>-10%</span>
+</div>
+</div>
+<div class='div schedule-price' id='ijjxc469k_0'>
+<div class='text text-paragraph-medium text-weight-bold' id='i9iv9877k_0'>
+<span class='text-block-wrap-div'>148 000</span>
+</div>
+<div class='text text-paragraph-medium text-weight-bold' id='i15v3xz1h_0'>
+<span class='text-block-wrap-div'>₽</span>
+</div>
+</div>
+</div>
+<div class='div schedule-link-button' id='i1klcd8rh_0'>
+<div class='text' id='ioantp5fz_0'>
+<span class='text-block-wrap-div'>Записаться</span>
+</div>
+</div>
+</div>
+</div>
+</a>
+<a href='https://modern-psy.ru/adult-adhd-therapy?utm_source=web&utm_medium=cpc&utm_campaign=schedule' data-action-element='' target='_blank' class='link-block schedule-link' id='iehg04726_0'>
+<div class='div schedule-item div--u-i4oqh8eks' id='i4oqh8eks_0'>
+<div class='div schedule-item-date div--u-i4siqeby3' id='i4siqeby3_0'>
+<div class='div schedule-item-date-tag' id='iwj9ie1xx_0'>
+<div class='text' id='i03kk77h6_0'>
+<span class='text-block-wrap-div'>Идет набор</span>
+</div>
+</div>
+<div class='div schedule-item-date-tag-red not-active' id='i8neall2x_0'>
+<div class='text' id='iul21nbo8_0'>
+<span class='text-block-wrap-div'>SOLD OUT</span>
+</div>
+</div>
+<div class='div schedule-date-wrapper' id='iuw13hk07_0'>
+<div class='text heading-style-h4 text-weight-bold' id='idvp8rv0l_0'>
+<span class='text-block-wrap-div'>22</span>
+</div>
+<div class='text caption-small text-color-violet' id='iem0ro7dn_0'>
+<span class='text-block-wrap-div'>Февраля, вс</span>
+</div>
+</div>
+</div>
+<div class='div schedule-item-info' id='iqz7fdxrp_0'>
+<div class='div schedule-info-text-wrapper' id='iynhx3ces_0'>
+<div class='text text-paragraph-medium text-weight-bold' id='i3pnkwyno_0'>
+<span class='text-block-wrap-div'>Вебинар ‭«Идентичность и особенности Селф у взрослых с СДВГ» </span>
+</div>
+<div class='text caption-small text-color-violet-copy not-active' id='iizmku4zp_0'>
+<span class='text-block-wrap-div'>Работа</span>
+</div>
+</div>
+<div class='div schedule-info-tag-wrapper' id='ibhvgpz8e_0'>
+<div class='div inner-tag-wrapper' id='ihgfhrqmj_0'>
+<div class='div schedule-info-tag' id='iffvbb06b_0'>
+<div class='image schedule-tag-icon' id='i1e0snukr_0'>
+<img src='/thumb/2/C-PCUk8sC6qkunoWuyMWhA/640r480/d/calendar-icon.svg' alt='calendar-icon' title='' data-size='0x0' data-origin-src='/thumb/2/C-PCUk8sC6qkunoWuyMWhA/640r480/d/calendar-icon.svg' class='image__img' id='iknufbduw_0' >
+</div>
+<div class='text' id='ik0n0n7xx_0'>
+<span class='text-block-wrap-div'>Воскресенье 15:00 - 19:00</span>
+</div>
+</div>
+<div class='div schedule-info-tag' id='itsf4oadj_0'>
+<div class='image schedule-tag-icon' id='iucak70xz_0'>
+<img src='/thumb/2/Z0A_hcrK3Pw2QOeLaBy-lA/640r480/d/time-circle-icon.svg' alt='time-circle-icon' title='' data-size='0x0' data-origin-src='/thumb/2/Z0A_hcrK3Pw2QOeLaBy-lA/640r480/d/time-circle-icon.svg' class='image__img' id='i0fd11epy_0' >
+</div>
+<div class='div tag-text-wrapper' id='i8v7wphfb_0'>
+<div class='text' id='i4zr8zane_0'>
+<span class='text-block-wrap-div'>5</span>
+</div>
+<div class='text' id='ifkusa1ms_0'>
+<span class='text-block-wrap-div'>ак. ч.</span>
+</div>
+</div>
+</div>
+</div>
+<div class='div schedule-info-tag not-active' id='iszdb5xgy_0'>
+<div class='image schedule-tag-icon' id='ilgrtlw6g_0'>
+<img src='/thumb/2/nEpYW3XdTHy2maSXhYgxow/640r480/d/document-verified-icon.svg' alt='document-verified-icon' title='' data-size='0x0' data-origin-src='/thumb/2/nEpYW3XdTHy2maSXhYgxow/640r480/d/document-verified-icon.svg' class='image__img' id='ipnxshpnr_0' >
+</div>
+<div class='text' id='il8prcg1l_0'>
+<span class='text-block-wrap-div'>Удостоверение</span>
+</div>
+</div>
+</div>
+</div>
+<div class='div schedule-item-price' id='ir71hd4l7_0'>
+<div class='div flex-wrapper' id='iktofro96_0'>
+<div class='div schedule-price-tag div--u-i7b99fsvw not-active' id='i7b99fsvw_0'>
+<div class='text' id='izya78kno_0'>
+<span class='text-block-wrap-div'>-10%</span>
+</div>
+</div>
+<div class='div schedule-price' id='igqz2jfz8_0'>
+<div class='text text-paragraph-medium text-weight-bold' id='i6wbdik9l_0'>
+<span class='text-block-wrap-div'>6000</span>
+</div>
+<div class='text text-paragraph-medium text-weight-bold' id='iiv1g11h3_0'>
+<span class='text-block-wrap-div'>₽</span>
+</div>
+</div>
+</div>
+<div class='div schedule-link-button' id='iil2kxj2c_0'>
+<div class='text' id='i1fvtsdgs_0'>
+<span class='text-block-wrap-div'>Записаться</span>
+</div>
+</div>
+</div>
+</div>
+</a>
+<a href='https://modern-psy.ru/mbt-i?utm_source=web&utm_medium=cpc&utm_campaign=schedule' data-action-element='' target='_blank' class='link-block schedule-link' id='i2d7jeaju_0'>
+<div class='div schedule-item div--u-ifcz02k8n' id='ifcz02k8n_0'>
+<div class='div schedule-item-date div--u-i3ls505ry' id='i3ls505ry_0'>
+<div class='div schedule-item-date-tag' id='ir4i7tkeg_0'>
+<div class='text' id='i0eu2lhqy_0'>
+<span class='text-block-wrap-div'>Идет набор</span>
+</div>
+</div>
+<div class='div schedule-item-date-tag-red not-active' id='im05oukdm_0'>
+<div class='text' id='iffvdtyyy_0'>
+<span class='text-block-wrap-div'>SOLD OUT</span>
+</div>
+</div>
+<div class='div schedule-date-wrapper' id='i2gvu6nur_0'>
+<div class='text heading-style-h4 text-weight-bold' id='ide4tdwke_0'>
+<span class='text-block-wrap-div'>26</span>
+</div>
+<div class='text caption-small text-color-violet' id='i1hj2hmyf_0'>
+<span class='text-block-wrap-div'>Февраля, вс</span>
+</div>
+</div>
+</div>
+<div class='div schedule-item-info' id='i3017zqjd_0'>
+<div class='div schedule-info-text-wrapper' id='igi2w7k3u_0'>
+<div class='text text-paragraph-medium text-weight-bold' id='ieh3b5zxb_0'>
+<span class='text-block-wrap-div'>MBT-I для специалистов</span>
+</div>
+<div class='text caption-small text-color-violet-copy' id='i927fifel_0'>
+<span class='text-block-wrap-div'>В формате онлайн-группы</span>
+</div>
+</div>
+<div class='div schedule-info-tag-wrapper' id='ia6zo31e2_0'>
+<div class='div inner-tag-wrapper' id='ifkhsqw40_0'>
+<div class='div schedule-info-tag' id='iu4zx8j66_0'>
+<div class='image schedule-tag-icon' id='iwwbsri4n_0'>
+<img src='/thumb/2/C-PCUk8sC6qkunoWuyMWhA/640r480/d/calendar-icon.svg' alt='calendar-icon' title='' data-size='0x0' data-origin-src='/thumb/2/C-PCUk8sC6qkunoWuyMWhA/640r480/d/calendar-icon.svg' class='image__img' id='iro2r18uy_0' >
+</div>
+<div class='text' id='i3emm34nt_0'>
+<span class='text-block-wrap-div'>Четверг 16:00 - 18:00</span>
+</div>
+</div>
+<div class='div schedule-info-tag' id='ir8ldcyk3_0'>
+<div class='image schedule-tag-icon' id='ic6rro7pe_0'>
+<img src='/thumb/2/Z0A_hcrK3Pw2QOeLaBy-lA/640r480/d/time-circle-icon.svg' alt='time-circle-icon' title='' data-size='0x0' data-origin-src='/thumb/2/Z0A_hcrK3Pw2QOeLaBy-lA/640r480/d/time-circle-icon.svg' class='image__img' id='i7pv94dmg_0' >
+</div>
+<div class='div tag-text-wrapper' id='in5wbkp51_0'>
+<div class='text' id='iu450kjox_0'>
+<span class='text-block-wrap-div'>32</span>
+</div>
+<div class='text' id='i4phhoz0d_0'>
+<span class='text-block-wrap-div'>ак. ч.</span>
+</div>
+</div>
+</div>
+</div>
+<div class='div schedule-info-tag' id='iwx6orudg_0'>
+<div class='image schedule-tag-icon' id='ix3c4ms8y_0'>
+<img src='/thumb/2/nEpYW3XdTHy2maSXhYgxow/640r480/d/document-verified-icon.svg' alt='document-verified-icon' title='' data-size='0x0' data-origin-src='/thumb/2/nEpYW3XdTHy2maSXhYgxow/640r480/d/document-verified-icon.svg' class='image__img' id='i7q9p0lqb_0' >
+</div>
+<div class='text' id='ijwlp4ucf_0'>
+<span class='text-block-wrap-div'>Сертификат</span>
+</div>
+</div>
+</div>
+</div>
+<div class='div schedule-item-price' id='iz4xue1z8_0'>
+<div class='div flex-wrapper' id='isbv8gic3_0'>
+<div class='div schedule-price-tag div--u-iniolcvnl not-active' id='iniolcvnl_0'>
+<div class='text' id='i9rx9cg5p_0'>
+<span class='text-block-wrap-div'>-10%</span>
+</div>
+</div>
+<div class='div schedule-price' id='i9unityg6_0'>
+<div class='text text-paragraph-medium text-weight-bold' id='ibbxscyy2_0'>
+<span class='text-block-wrap-div'>25 000</span>
+</div>
+<div class='text text-paragraph-medium text-weight-bold' id='i2rvj72wa_0'>
+<span class='text-block-wrap-div'>₽</span>
+</div>
+</div>
+</div>
+<div class='div schedule-link-button' id='ir56bm40k_0'>
+<div class='text' id='i1z2ryem2_0'>
+<span class='text-block-wrap-div'>Записаться</span>
+</div>
+</div>
+</div>
+</div>
+</a>
+</div>
+</div>
+</div>
+<div class='div schedule-component' id='ii4up84es_0'>
+<div class='div schedule-links-component margin-24' id='i7b5zkfxh_0'>
+<div class='text text-paragraph-large text-weight-bold tab-heading' id='i1dh4s81x_0'>
+<span class='text-block-wrap-div'>Март</span>
+</div>
+<div class='div schedule-links-wrapper' id='imjxkkryz_0'>
+<a href='https://modern-psy.ru/clinical_psychology?utm_source=web&utm_medium=cpc&utm_campaign=schedule' data-action-element='' target='_blank' class='link-block schedule-link' id='i1or3nu8u_0'>
+<div class='div schedule-item div--u-i2odk9y4y' id='i2odk9y4y_0'>
+<div class='div schedule-item-date div--u-inyjrjy6c' id='inyjrjy6c_0'>
+<div class='div schedule-item-date-tag' id='i5ucg5y11_0'>
+<div class='text' id='i82ohi1ti_0'>
+<span class='text-block-wrap-div'>Идет набор</span>
+</div>
+</div>
+<div class='div schedule-item-date-tag-red not-active' id='i1d4wze6g_0'>
+<div class='text' id='i8hccyv5i_0'>
+<span class='text-block-wrap-div'>SOLD OUT</span>
+</div>
+</div>
+<div class='div schedule-date-wrapper' id='i7rsczpsj_0'>
+<div class='text heading-style-h4 text-weight-bold' id='ip6s07e5d_0'>
+<span class='text-block-wrap-div'>02</span>
+</div>
+<div class='text caption-small text-color-violet' id='i9bw85bgq_0'>
+<span class='text-block-wrap-div'>Марта, пн</span>
+</div>
+</div>
+</div>
+<div class='div schedule-item-info' id='iq1fbntuf_0'>
+<div class='div schedule-info-text-wrapper' id='i6ry1j78i_0'>
+<div class='text text-paragraph-medium text-weight-bold' id='i37ujljje_0'>
+<span class='text-block-wrap-div'>Клиническая психология</span>
+</div>
+<div class='text caption-small text-color-violet-copy not-active' id='io92xkjlq_0'>
+<span class='text-block-wrap-div'>Полимодальный курс</span>
+</div>
+</div>
+<div class='div schedule-info-tag-wrapper' id='if11d2ian_0'>
+<div class='div inner-tag-wrapper' id='ifaamckie_0'>
+<div class='div schedule-info-tag' id='ijqdtjetk_0'>
+<div class='image schedule-tag-icon' id='iui4272xt_0'>
+<img src='/thumb/2/C-PCUk8sC6qkunoWuyMWhA/640r480/d/calendar-icon.svg' alt='calendar-icon' title='' data-size='0x0' data-origin-src='/thumb/2/C-PCUk8sC6qkunoWuyMWhA/640r480/d/calendar-icon.svg' class='image__img' id='i7q0pvxuo_0' >
+</div>
+<div class='text' id='iknfcyjh6_0'>
+<span class='text-block-wrap-div'>По понедельникам и четвергам</span>
+</div>
+</div>
+<div class='div schedule-info-tag' id='i2h1wputt_0'>
+<div class='image schedule-tag-icon' id='iwl0w3gvu_0'>
+<img src='/thumb/2/Z0A_hcrK3Pw2QOeLaBy-lA/640r480/d/time-circle-icon.svg' alt='time-circle-icon' title='' data-size='0x0' data-origin-src='/thumb/2/Z0A_hcrK3Pw2QOeLaBy-lA/640r480/d/time-circle-icon.svg' class='image__img' id='icaukpz73_0' >
+</div>
+<div class='div tag-text-wrapper' id='ianxqxl63_0'>
+<div class='text' id='ixrh6vsba_0'>
+<span class='text-block-wrap-div'>1000</span>
+</div>
+<div class='text' id='irzsplnpa_0'>
+<span class='text-block-wrap-div'>ак. ч.</span>
+</div>
+</div>
+</div>
+</div>
+<div class='div schedule-info-tag' id='i4qwie10u_0'>
+<div class='image schedule-tag-icon' id='ilir4exuc_0'>
+<img src='/thumb/2/nEpYW3XdTHy2maSXhYgxow/640r480/d/document-verified-icon.svg' alt='document-verified-icon' title='' data-size='0x0' data-origin-src='/thumb/2/nEpYW3XdTHy2maSXhYgxow/640r480/d/document-verified-icon.svg' class='image__img' id='i8245k984_0' >
+</div>
+<div class='text' id='iu8fkhzi0_0'>
+<span class='text-block-wrap-div'>Диплом</span>
+</div>
+</div>
+</div>
+</div>
+<div class='div schedule-item-price' id='ix3vedxyp_0'>
+<div class='div flex-wrapper' id='iq3zwacyn_0'>
+<div class='div schedule-price-tag div--u-ij8iqd6qf not-active' id='ij8iqd6qf_0'>
+<div class='text' id='ieqbb5pa1_0'>
+<span class='text-block-wrap-div'>-10%</span>
+</div>
+</div>
+<div class='div schedule-price' id='iwvwdmhxw_0'>
+<div class='text text-paragraph-medium text-weight-bold' id='i1p49nczq_0'>
+<span class='text-block-wrap-div'>150 000</span>
+</div>
+<div class='text text-paragraph-medium text-weight-bold' id='i47g39oo2_0'>
+<span class='text-block-wrap-div'>₽</span>
+</div>
+</div>
+</div>
+<div class='div schedule-link-button' id='i9ig1pqze_0'>
+<div class='text' id='i6x8ur73t_0'>
+<span class='text-block-wrap-div'>Записаться</span>
+</div>
+</div>
+</div>
+</div>
+</a>
+<a href='https://modern-psy.ru/rft?utm_source=web&utm_medium=cpc&utm_campaign=schedule' data-action-element='' target='_blank' class='link-block schedule-link' id='itqxmnfbh_0'>
+<div class='div schedule-item div--u-i01xieqsy' id='i01xieqsy_0'>
+<div class='div schedule-item-date div--u-i3mcghl87' id='i3mcghl87_0'>
+<div class='div schedule-item-date-tag' id='icffnqiul_0'>
+<div class='text' id='iwfpxt3v3_0'>
+<span class='text-block-wrap-div'>Идет набор</span>
+</div>
+</div>
+<div class='div not-active' id='i54o2y4ej_0'>
+<div class='text' id='ic8wdx1g9_0'>
+<span class='text-block-wrap-div'>Последний шанс</span>
+</div>
+</div>
+<div class='div schedule-item-date-tag-red not-active' id='iynig1617_0'>
+<div class='text' id='i370rgkg9_0'>
+<span class='text-block-wrap-div'>SOLD OUT</span>
+</div>
+</div>
+<div class='div schedule-date-wrapper' id='ij2m13uw4_0'>
+<div class='text heading-style-h4 text-weight-bold' id='iede2przk_0'>
+<span class='text-block-wrap-div'>03</span>
+</div>
+<div class='text caption-small text-color-violet' id='ireptg9mf_0'>
+<span class='text-block-wrap-div'>Марта, вт</span>
+</div>
+</div>
+</div>
+<div class='div schedule-item-info' id='impt85v0l_0'>
+<div class='div schedule-info-text-wrapper' id='ig2xy83qu_0'>
+<div class='text text-paragraph-medium text-weight-bold' id='ih1ud90xl_0'>
+<span class='text-block-wrap-div'>RFT: Теория реляционных фреймов</span>
+</div>
+<div class='text caption-small text-color-violet-copy not-active' id='iolbkjkp5_0'>
+<span class='text-block-wrap-div'>Оксфордская модель</span>
+</div>
+</div>
+<div class='div schedule-info-tag-wrapper' id='ixmegr4fu_0'>
+<div class='div inner-tag-wrapper' id='i30m84d86_0'>
+<div class='div schedule-info-tag' id='i9cisfgak_0'>
+<div class='image schedule-tag-icon' id='ibuzx2j2b_0'>
+<img src='/thumb/2/C-PCUk8sC6qkunoWuyMWhA/640r480/d/calendar-icon.svg' alt='calendar-icon' title='' data-size='0x0' data-origin-src='/thumb/2/C-PCUk8sC6qkunoWuyMWhA/640r480/d/calendar-icon.svg' class='image__img' id='ibtemzeb8_0' >
+</div>
+<div class='text' id='irtjyexws_0'>
+<span class='text-block-wrap-div'>По вторникам</span>
+</div>
+</div>
+<div class='div schedule-info-tag' id='iig5q57vo_0'>
+<div class='image schedule-tag-icon' id='i22i8fkx3_0'>
+<img src='/thumb/2/Z0A_hcrK3Pw2QOeLaBy-lA/640r480/d/time-circle-icon.svg' alt='time-circle-icon' title='' data-size='0x0' data-origin-src='/thumb/2/Z0A_hcrK3Pw2QOeLaBy-lA/640r480/d/time-circle-icon.svg' class='image__img' id='inlk3tdtc_0' >
+</div>
+<div class='div tag-text-wrapper' id='ide1devfe_0'>
+<div class='text' id='id33tk49c_0'>
+<span class='text-block-wrap-div'>18</span>
+</div>
+<div class='text' id='i3dfch6vc_0'>
+<span class='text-block-wrap-div'>ак. ч.</span>
+</div>
+</div>
+</div>
+</div>
+<div class='div schedule-info-tag' id='iyu27k1do_0'>
+<div class='image schedule-tag-icon' id='i8uhu8t57_0'>
+<img src='/thumb/2/nEpYW3XdTHy2maSXhYgxow/640r480/d/document-verified-icon.svg' alt='document-verified-icon' title='' data-size='0x0' data-origin-src='/thumb/2/nEpYW3XdTHy2maSXhYgxow/640r480/d/document-verified-icon.svg' class='image__img' id='i8ieigzuj_0' >
+</div>
+<div class='text' id='iz7amemgx_0'>
+<span class='text-block-wrap-div'>Удостоверение</span>
+</div>
+</div>
+</div>
+</div>
+<div class='div schedule-item-price' id='ig7jy5mxn_0'>
+<div class='div flex-wrapper' id='iqv62162s_0'>
+<div class='div schedule-price-tag div--u-il983h8so not-active' id='il983h8so_0'>
+<div class='text' id='igxbbhhp9_0'>
+<span class='text-block-wrap-div'>-10%</span>
+</div>
+</div>
+<div class='div schedule-price' id='irm31un6w_0'>
+<div class='text text-paragraph-medium text-weight-bold' id='iuw05j1t0_0'>
+<span class='text-block-wrap-div'>15 000</span>
+</div>
+<div class='text text-paragraph-medium text-weight-bold' id='ipdu5005y_0'>
+<span class='text-block-wrap-div'>₽</span>
+</div>
+</div>
+</div>
+<div class='div schedule-link-button' id='ijnrxs6jo_0'>
+<div class='text' id='idq7alnkh_0'>
+<span class='text-block-wrap-div'>Записаться</span>
+</div>
+</div>
+</div>
+</div>
+</a>
+<a href='https://modern-psy.ru/psyeducation?utm_source=web&utm_medium=cpc&utm_campaign=schedule' data-action-element='' target='_blank' class='link-block schedule-link' id='iwz9kufim_0'>
+<div class='div schedule-item div--u-iuq09zoe3' id='iuq09zoe3_0'>
+<div class='div schedule-item-date div--u-ixthzejnd' id='ixthzejnd_0'>
+<div class='div schedule-item-date-tag not-active' id='ileh7a7gp_0'>
+<div class='text' id='ile8j09ws_0'>
+<span class='text-block-wrap-div'>Идет набор</span>
+</div>
+</div>
+<div class='div schedule-item-date-tag' id='i7f85wk2c_0'>
+<div class='text' id='izfri2bgp_0'>
+<span class='text-block-wrap-div'>Последний шанс</span>
+</div>
+<div class='div schedule-item-date-tag' id='ixvfedzlr_0'>
+<div class='text' id='i6apmte74_0'>
+<span class='text-block-wrap-div'>Идет набор</span>
+</div>
+</div>
+</div>
+<div class='div schedule-item-date-tag-red not-active' id='idyvs1g5e_0'>
+<div class='text' id='ibw1v7a54_0'>
+<span class='text-block-wrap-div'>SOLD OUT</span>
+</div>
+</div>
+<div class='div schedule-date-wrapper' id='id09lvz8e_0'>
+<div class='text heading-style-h4 text-weight-bold' id='ih0hgoqwl_0'>
+<span class='text-block-wrap-div'>04</span>
+</div>
+<div class='text caption-small text-color-violet' id='ijtyljk4j_0'>
+<span class='text-block-wrap-div'>Марта, ср</span>
+</div>
+</div>
+</div>
+<div class='div schedule-item-info' id='i0rdsgox4_0'>
+<div class='div schedule-info-text-wrapper' id='i5001vphm_0'>
+<div class='text text-paragraph-medium text-weight-bold' id='ia35kdzsv_0'>
+<span class='text-block-wrap-div'>Профессия: Психолог-консультант</span>
+</div>
+<div class='text caption-small text-color-violet-copy not-active' id='i607n7f8m_0'>
+<span class='text-block-wrap-div'>Протокол EMD</span>
+</div>
+</div>
+<div class='div schedule-info-tag-wrapper' id='imx1dsi6k_0'>
+<div class='div inner-tag-wrapper' id='imujbhjh0_0'>
+<div class='div schedule-info-tag' id='iy47lhnaf_0'>
+<div class='image schedule-tag-icon' id='ieewe805s_0'>
+<img src='/thumb/2/C-PCUk8sC6qkunoWuyMWhA/640r480/d/calendar-icon.svg' alt='calendar-icon' title='' data-size='0x0' data-origin-src='/thumb/2/C-PCUk8sC6qkunoWuyMWhA/640r480/d/calendar-icon.svg' class='image__img' id='i0c3hec40_0' >
+</div>
+<div class='text' id='ixtw3k5re_0'>
+<span class='text-block-wrap-div'>По средам </span>
+</div>
+</div>
+<div class='div schedule-info-tag' id='i8hxmw0it_0'>
+<div class='image schedule-tag-icon' id='ifn8u8guh_0'>
+<img src='/thumb/2/Z0A_hcrK3Pw2QOeLaBy-lA/640r480/d/time-circle-icon.svg' alt='time-circle-icon' title='' data-size='0x0' data-origin-src='/thumb/2/Z0A_hcrK3Pw2QOeLaBy-lA/640r480/d/time-circle-icon.svg' class='image__img' id='i37q9rsyi_0' >
+</div>
+<div class='div tag-text-wrapper' id='ifxsjcnbt_0'>
+<div class='text' id='ijzigbbmx_0'>
+<span class='text-block-wrap-div'>1000</span>
+</div>
+<div class='text' id='iaek6qrn9_0'>
+<span class='text-block-wrap-div'>ак. ч.</span>
+</div>
+</div>
+</div>
+</div>
+<div class='div schedule-info-tag' id='ipj76guc9_0'>
+<div class='image schedule-tag-icon' id='iry9jqhfq_0'>
+<img src='/thumb/2/nEpYW3XdTHy2maSXhYgxow/640r480/d/document-verified-icon.svg' alt='document-verified-icon' title='' data-size='0x0' data-origin-src='/thumb/2/nEpYW3XdTHy2maSXhYgxow/640r480/d/document-verified-icon.svg' class='image__img' id='ibfbgwjor_0' >
+</div>
+<div class='text' id='ir4rjmlgz_0'>
+<span class='text-block-wrap-div'>Диплом</span>
+</div>
+</div>
+</div>
+</div>
+<div class='div schedule-item-price' id='iudmvu08y_0'>
+<div class='div flex-wrapper' id='isnbq6sq7_0'>
+<div class='div schedule-price-tag div--u-i74kxqs8g not-active' id='i74kxqs8g_0'>
+<div class='text' id='ii62eofha_0'>
+<span class='text-block-wrap-div'>-10%</span>
+</div>
+</div>
+<div class='div schedule-price' id='iquqii8aj_0'>
+<div class='text text-paragraph-medium text-weight-bold' id='ixun9hph6_0'>
+<span class='text-block-wrap-div'>195 000</span>
+</div>
+<div class='text text-paragraph-medium text-weight-bold' id='i57t6slly_0'>
+<span class='text-block-wrap-div'>₽</span>
+</div>
+</div>
+</div>
+<div class='div schedule-link-button' id='ijp9eyr4l_0'>
+<div class='text' id='i0975etrc_0'>
+<span class='text-block-wrap-div'>Записаться</span>
+</div>
+</div>
+</div>
+</div>
+</a>
+<a href='https://modern-psy.ru/mindfulness?utm_source=web&utm_medium=cpc&utm_campaign=schedule' data-action-element='' target='_blank' class='link-block schedule-link' id='ia5juigt6_0'>
+<div class='div schedule-item div--u-iq2gtlvgu' id='iq2gtlvgu_0'>
+<div class='div schedule-item-date div--u-i960bzip8' id='i960bzip8_0'>
+<div class='div schedule-item-date-tag' id='idslu5zur_0'>
+<div class='text' id='ihewxlvh0_0'>
+<span class='text-block-wrap-div'>Идет набор</span>
+</div>
+</div>
+<div class='div schedule-item-date-tag-red not-active' id='iaxhjh20c_0'>
+<div class='text' id='i4gz5lgpp_0'>
+<span class='text-block-wrap-div'>SOLD OUT</span>
+</div>
+</div>
+<div class='div schedule-date-wrapper' id='i2je78pqo_0'>
+<div class='text heading-style-h4 text-weight-bold' id='i9297ixh6_0'>
+<span class='text-block-wrap-div'>04</span>
+</div>
+<div class='text caption-small text-color-violet' id='iubtz2hhp_0'>
+<span class='text-block-wrap-div'>Марта, ср</span>
+</div>
+</div>
+</div>
+<div class='div schedule-item-info' id='ime9kzjdu_0'>
+<div class='div schedule-info-text-wrapper' id='ic350lv06_0'>
+<div class='text text-paragraph-medium text-weight-bold' id='ihfxdpopj_0'>
+<span class='text-block-wrap-div'>Mindfulness для психологов</span>
+</div>
+<div class='text caption-small text-color-violet-copy not-active' id='i7wh5giou_0'>
+<span class='text-block-wrap-div'>Полимодальный курс</span>
+</div>
+</div>
+<div class='div schedule-info-tag-wrapper' id='if8evtffw_0'>
+<div class='div inner-tag-wrapper' id='ilkuib9ho_0'>
+<div class='div schedule-info-tag' id='i9tko0xnm_0'>
+<div class='image schedule-tag-icon' id='itaratp2i_0'>
+<img src='/thumb/2/C-PCUk8sC6qkunoWuyMWhA/640r480/d/calendar-icon.svg' alt='calendar-icon' title='' data-size='0x0' data-origin-src='/thumb/2/C-PCUk8sC6qkunoWuyMWhA/640r480/d/calendar-icon.svg' class='image__img' id='icicjd505_0' >
+</div>
+<div class='text' id='ix3ecoo2j_0'>
+<span class='text-block-wrap-div'>По средам</span>
+</div>
+</div>
+<div class='div schedule-info-tag' id='itbcw6pvj_0'>
+<div class='image schedule-tag-icon' id='ip413g4gv_0'>
+<img src='/thumb/2/Z0A_hcrK3Pw2QOeLaBy-lA/640r480/d/time-circle-icon.svg' alt='time-circle-icon' title='' data-size='0x0' data-origin-src='/thumb/2/Z0A_hcrK3Pw2QOeLaBy-lA/640r480/d/time-circle-icon.svg' class='image__img' id='i2bd2i6ks_0' >
+</div>
+<div class='div tag-text-wrapper' id='iw1de4gyj_0'>
+<div class='text' id='ip98i3u3c_0'>
+<span class='text-block-wrap-div'>16</span>
+</div>
+<div class='text' id='i267cujin_0'>
+<span class='text-block-wrap-div'>ак. ч.</span>
+</div>
+</div>
+</div>
+</div>
+<div class='div schedule-info-tag' id='i5hyk9oeq_0'>
+<div class='image schedule-tag-icon' id='i0ivbqdcq_0'>
+<img src='/thumb/2/nEpYW3XdTHy2maSXhYgxow/640r480/d/document-verified-icon.svg' alt='document-verified-icon' title='' data-size='0x0' data-origin-src='/thumb/2/nEpYW3XdTHy2maSXhYgxow/640r480/d/document-verified-icon.svg' class='image__img' id='ibof89uzu_0' >
+</div>
+<div class='text' id='iyhzy253m_0'>
+<span class='text-block-wrap-div'>Удостоверение</span>
+</div>
+</div>
+</div>
+</div>
+<div class='div schedule-item-price' id='iodbew0di_0'>
+<div class='div flex-wrapper' id='i0npmzkjf_0'>
+<div class='div schedule-price-tag div--u-i7bcds24b not-active' id='i7bcds24b_0'>
+<div class='text' id='ihbzln1zt_0'>
+<span class='text-block-wrap-div'>-10%</span>
+</div>
+</div>
+<div class='div schedule-price' id='izxj35ge7_0'>
+<div class='text text-paragraph-medium text-weight-bold' id='i1molags5_0'>
+<span class='text-block-wrap-div'>13 000</span>
+</div>
+<div class='text text-paragraph-medium text-weight-bold' id='idqlnzjc7_0'>
+<span class='text-block-wrap-div'>₽</span>
+</div>
+</div>
+</div>
+<div class='div schedule-link-button' id='i0rsfop1b_0'>
+<div class='text' id='iv4gickxm_0'>
+<span class='text-block-wrap-div'>Записаться</span>
+</div>
+</div>
+</div>
+</div>
+</a>
+<a href='https://modern-psy.ru/sft?utm_source=web&utm_medium=cpc&utm_campaign=schedule' data-action-element='' target='_blank' class='link-block schedule-link' id='i2h59aw1g_0'>
+<div class='div schedule-item div--u-i6ipw7kt6' id='i6ipw7kt6_0'>
+<div class='div schedule-item-date div--u-ih3txhilf' id='ih3txhilf_0'>
+<div class='div schedule-item-date-tag' id='isa6byjto_0'>
+<div class='text' id='ibdbl19wx_0'>
+<span class='text-block-wrap-div'>Идет набор</span>
+</div>
+</div>
+<div class='div schedule-item-date-tag-red not-active' id='igi5czeh4_0'>
+<div class='text' id='ivvusnj0m_0'>
+<span class='text-block-wrap-div'>SOLD OUT</span>
+</div>
+</div>
+<div class='div schedule-date-wrapper' id='ip4vdvzkn_0'>
+<div class='text heading-style-h4 text-weight-bold' id='ierkystgk_0'>
+<span class='text-block-wrap-div'>10</span>
+</div>
+<div class='text caption-small text-color-violet' id='i2qud01en_0'>
+<span class='text-block-wrap-div'>Марта, вт</span>
+</div>
+</div>
+</div>
+<div class='div schedule-item-info' id='icuj2i3he_0'>
+<div class='div schedule-info-text-wrapper' id='i47rgilq4_0'>
+<div class='text text-paragraph-medium text-weight-bold' id='in782hwep_0'>
+<span class='text-block-wrap-div'>Основы семейной системной терапии</span>
+</div>
+<div class='text caption-small text-color-violet-copy not-active' id='i37j9bbae_0'>
+<span class='text-block-wrap-div'>Модель Бека</span>
+</div>
+</div>
+<div class='div schedule-info-tag-wrapper' id='ilhdaz2d2_0'>
+<div class='div inner-tag-wrapper' id='i3rgujs1k_0'>
+<div class='div schedule-info-tag' id='i9gnouk7d_0'>
+<div class='image schedule-tag-icon' id='ig6lsvf3b_0'>
+<img src='/thumb/2/C-PCUk8sC6qkunoWuyMWhA/640r480/d/calendar-icon.svg' alt='calendar-icon' title='' data-size='0x0' data-origin-src='/thumb/2/C-PCUk8sC6qkunoWuyMWhA/640r480/d/calendar-icon.svg' class='image__img' id='i3677tpyd_0' >
+</div>
+<div class='text' id='i4g4094jb_0'>
+<span class='text-block-wrap-div'>По вторникам </span>
+</div>
+</div>
+<div class='div schedule-info-tag' id='ihsm5tscl_0'>
+<div class='image schedule-tag-icon' id='id63anq8x_0'>
+<img src='/thumb/2/Z0A_hcrK3Pw2QOeLaBy-lA/640r480/d/time-circle-icon.svg' alt='time-circle-icon' title='' data-size='0x0' data-origin-src='/thumb/2/Z0A_hcrK3Pw2QOeLaBy-lA/640r480/d/time-circle-icon.svg' class='image__img' id='ifie5fjlc_0' >
+</div>
+<div class='div tag-text-wrapper' id='i50yzm33k_0'>
+<div class='text' id='ic86efw6o_0'>
+<span class='text-block-wrap-div'>80</span>
+</div>
+<div class='text' id='ismobyht9_0'>
+<span class='text-block-wrap-div'>ак. ч.</span>
+</div>
+</div>
+</div>
+</div>
+<div class='div schedule-info-tag' id='i5fo0g18b_0'>
+<div class='image schedule-tag-icon' id='i68sw8b10_0'>
+<img src='/thumb/2/nEpYW3XdTHy2maSXhYgxow/640r480/d/document-verified-icon.svg' alt='document-verified-icon' title='' data-size='0x0' data-origin-src='/thumb/2/nEpYW3XdTHy2maSXhYgxow/640r480/d/document-verified-icon.svg' class='image__img' id='i9pk6dzlp_0' >
+</div>
+<div class='text' id='ia4rmwwxz_0'>
+<span class='text-block-wrap-div'>Удостоверение</span>
+</div>
+</div>
+</div>
+</div>
+<div class='div schedule-item-price' id='ircy63q5a_0'>
+<div class='div flex-wrapper' id='izt6o11jw_0'>
+<div class='div schedule-price-tag div--u-i38yilwxv not-active' id='i38yilwxv_0'>
+<div class='text' id='ik2vtrbc5_0'>
+<span class='text-block-wrap-div'>-10%</span>
+</div>
+</div>
+<div class='div schedule-price' id='iwmfoj6kt_0'>
+<div class='text text-paragraph-medium text-weight-bold' id='il959muge_0'>
+<span class='text-block-wrap-div'>45 000</span>
+</div>
+<div class='text text-paragraph-medium text-weight-bold' id='i2okx6mgs_0'>
+<span class='text-block-wrap-div'>₽</span>
+</div>
+</div>
+</div>
+<div class='div schedule-link-button' id='itl8pz6to_0'>
+<div class='text' id='ia4cpqkx6_0'>
+<span class='text-block-wrap-div'>Записаться</span>
+</div>
+</div>
+</div>
+</div>
+</a>
+<a href='https://modern-psy.ru/kpt?utm_source=web&utm_medium=cpc&utm_campaign=schedule' data-action-element='' target='_blank' class='link-block schedule-link' id='inwtf8jus_0'>
+<div class='div schedule-item div--u-ih8judf1z' id='ih8judf1z_0'>
+<div class='div schedule-item-date div--u-imx5m8rg2' id='imx5m8rg2_0'>
+<div class='div schedule-item-date-tag' id='ie9fe7ifq_0'>
+<div class='text' id='i8vq5ag6d_0'>
+<span class='text-block-wrap-div'>Идет набор</span>
+</div>
+</div>
+<div class='div schedule-item-date-tag-red not-active' id='itvlm13wc_0'>
+<div class='text' id='ibolok0l5_0'>
+<span class='text-block-wrap-div'>SOLD OUT</span>
+</div>
+</div>
+<div class='div schedule-date-wrapper' id='i9p7kf3rz_0'>
+<div class='text heading-style-h4 text-weight-bold' id='ik7dp1ln7_0'>
+<span class='text-block-wrap-div'>19</span>
+</div>
+<div class='text caption-small text-color-violet' id='iq0rdyw6h_0'>
+<span class='text-block-wrap-div'>Марта, чт</span>
+</div>
+</div>
+</div>
+<div class='div schedule-item-info' id='in4zppem8_0'>
+<div class='div schedule-info-text-wrapper' id='ih5ay6y38_0'>
+<div class='text text-paragraph-medium text-weight-bold' id='i3clbdlx3_0'>
+<span class='text-block-wrap-div'>КПТ: Когнитивно-поведенческая терапия</span>
+</div>
+<div class='text caption-small text-color-violet-copy' id='iz3eio0ew_0'>
+<span class='text-block-wrap-div'>Модель Бека</span>
+</div>
+</div>
+<div class='div schedule-info-tag-wrapper' id='ihjpiw5x1_0'>
+<div class='div inner-tag-wrapper' id='ihuowjxt2_0'>
+<div class='div schedule-info-tag' id='ib287ndlz_0'>
+<div class='image schedule-tag-icon' id='ixf7v5yeg_0'>
+<img src='/thumb/2/C-PCUk8sC6qkunoWuyMWhA/640r480/d/calendar-icon.svg' alt='calendar-icon' title='' data-size='0x0' data-origin-src='/thumb/2/C-PCUk8sC6qkunoWuyMWhA/640r480/d/calendar-icon.svg' class='image__img' id='i4u2jgq97_0' >
+</div>
+<div class='text' id='iu0hn2o8e_0'>
+<span class='text-block-wrap-div'>По средам и пятницам</span>
+</div>
+</div>
+<div class='div schedule-info-tag' id='iapdjtsuw_0'>
+<div class='image schedule-tag-icon' id='izvjjovz9_0'>
+<img src='/thumb/2/Z0A_hcrK3Pw2QOeLaBy-lA/640r480/d/time-circle-icon.svg' alt='time-circle-icon' title='' data-size='0x0' data-origin-src='/thumb/2/Z0A_hcrK3Pw2QOeLaBy-lA/640r480/d/time-circle-icon.svg' class='image__img' id='irt0iribm_0' >
+</div>
+<div class='div tag-text-wrapper' id='iz0n1catr_0'>
+<div class='text' id='iij297pdy_0'>
+<span class='text-block-wrap-div'>750</span>
+</div>
+<div class='text' id='id5fzo2m2_0'>
+<span class='text-block-wrap-div'>ак. ч.</span>
+</div>
+</div>
+</div>
+</div>
+<div class='div schedule-info-tag' id='ijuhbdvbd_0'>
+<div class='image schedule-tag-icon' id='ii81cmg36_0'>
+<img src='/thumb/2/nEpYW3XdTHy2maSXhYgxow/640r480/d/document-verified-icon.svg' alt='document-verified-icon' title='' data-size='0x0' data-origin-src='/thumb/2/nEpYW3XdTHy2maSXhYgxow/640r480/d/document-verified-icon.svg' class='image__img' id='iga83gjfb_0' >
+</div>
+<div class='text' id='i7wz4xozw_0'>
+<span class='text-block-wrap-div'>Диплом</span>
+</div>
+</div>
+</div>
+</div>
+<div class='div schedule-item-price' id='ibupi727w_0'>
+<div class='div flex-wrapper' id='ir3j9ocie_0'>
+<div class='div schedule-price-tag div--u-ijtos66pk not-active' id='ijtos66pk_0'>
+<div class='text' id='i2x7bklym_0'>
+<span class='text-block-wrap-div'>-10%</span>
+</div>
+</div>
+<div class='div schedule-price' id='ifpt1c7vg_0'>
+<div class='text text-paragraph-medium text-weight-bold' id='iagfco6n9_0'>
+<span class='text-block-wrap-div'>136 000</span>
+</div>
+<div class='text text-paragraph-medium text-weight-bold' id='ig3jmrtrt_0'>
+<span class='text-block-wrap-div'>₽</span>
+</div>
+</div>
+</div>
+<div class='div schedule-link-button' id='ij6ol1bvy_0'>
+<div class='text' id='inmg01kof_0'>
+<span class='text-block-wrap-div'>Записаться</span>
+</div>
+</div>
+</div>
+</div>
+</a>
+<a href='https://modern-psy.ru/schema-therapy?utm_source=web&utm_medium=cpc&utm_campaign=schedule' data-action-element='' target='_blank' class='link-block schedule-link' id='iak2grrxn_0'>
+<div class='div schedule-item div--u-ijjaxt993' id='ijjaxt993_0'>
+<div class='div schedule-item-date div--u-idpjer6ct' id='idpjer6ct_0'>
+<div class='div schedule-item-date-tag' id='iuk3utto4_0'>
+<div class='text' id='i3nfbsefs_0'>
+<span class='text-block-wrap-div'>Идет набор</span>
+</div>
+</div>
+<div class='div schedule-item-date-tag-red not-active' id='ip4jdw290_0'>
+<div class='text' id='i4a509mpw_0'>
+<span class='text-block-wrap-div'>SOLD OUT</span>
+</div>
+</div>
+<div class='div schedule-date-wrapper' id='isxvzhk7p_0'>
+<div class='text heading-style-h4 text-weight-bold' id='io15e5dqz_0'>
+<span class='text-block-wrap-div'>19</span>
+</div>
+<div class='text caption-small text-color-violet' id='i06io2jbv_0'>
+<span class='text-block-wrap-div'>Марта, чт</span>
+</div>
+</div>
+</div>
+<div class='div schedule-item-info' id='iwubh8aym_0'>
+<div class='div schedule-info-text-wrapper' id='iq4cbjemo_0'>
+<div class='text text-paragraph-medium text-weight-bold' id='ioxvlprmt_0'>
+<span class='text-block-wrap-div'>Схема-терапия</span>
+</div>
+<div class='text caption-small text-color-violet-copy not-active' id='ip6ngqdmu_0'>
+<span class='text-block-wrap-div'>Оксфордская модель</span>
+</div>
+</div>
+<div class='div schedule-info-tag-wrapper' id='ia1ytp43f_0'>
+<div class='div inner-tag-wrapper' id='io721l1ln_0'>
+<div class='div schedule-info-tag' id='isq7xyhxg_0'>
+<div class='image schedule-tag-icon' id='igkrsnk66_0'>
+<img src='/thumb/2/C-PCUk8sC6qkunoWuyMWhA/640r480/d/calendar-icon.svg' alt='calendar-icon' title='' data-size='0x0' data-origin-src='/thumb/2/C-PCUk8sC6qkunoWuyMWhA/640r480/d/calendar-icon.svg' class='image__img' id='iquuoik0e_0' >
+</div>
+<div class='text' id='iyxde98hk_0'>
+<span class='text-block-wrap-div'>По четвергам</span>
+</div>
+</div>
+<div class='div schedule-info-tag' id='i2tteyvhh_0'>
+<div class='image schedule-tag-icon' id='isdbgsvhn_0'>
+<img src='/thumb/2/Z0A_hcrK3Pw2QOeLaBy-lA/640r480/d/time-circle-icon.svg' alt='time-circle-icon' title='' data-size='0x0' data-origin-src='/thumb/2/Z0A_hcrK3Pw2QOeLaBy-lA/640r480/d/time-circle-icon.svg' class='image__img' id='i8u1gutdz_0' >
+</div>
+<div class='div tag-text-wrapper' id='i4snhfr12_0'>
+<div class='text' id='if8ysj06m_0'>
+<span class='text-block-wrap-div'>36</span>
+</div>
+<div class='text' id='i0enlhglk_0'>
+<span class='text-block-wrap-div'>ак. ч.</span>
+</div>
+</div>
+</div>
+</div>
+<div class='div schedule-info-tag' id='if0aygxbc_0'>
+<div class='image schedule-tag-icon' id='ik8gadize_0'>
+<img src='/thumb/2/nEpYW3XdTHy2maSXhYgxow/640r480/d/document-verified-icon.svg' alt='document-verified-icon' title='' data-size='0x0' data-origin-src='/thumb/2/nEpYW3XdTHy2maSXhYgxow/640r480/d/document-verified-icon.svg' class='image__img' id='ir7q5nffp_0' >
+</div>
+<div class='text' id='iiuy1ucpd_0'>
+<span class='text-block-wrap-div'>Удостоверение</span>
+</div>
+</div>
+</div>
+</div>
+<div class='div schedule-item-price' id='ix016ghn6_0'>
+<div class='div flex-wrapper' id='itv1qjl0s_0'>
+<div class='div schedule-price-tag div--u-imsizcjo4 not-active' id='imsizcjo4_0'>
+<div class='text' id='iisrw58if_0'>
+<span class='text-block-wrap-div'>-10%</span>
+</div>
+</div>
+<div class='div schedule-price' id='iamjt1rk5_0'>
+<div class='text text-paragraph-medium text-weight-bold' id='in2lzerj5_0'>
+<span class='text-block-wrap-div'>40 000</span>
+</div>
+<div class='text text-paragraph-medium text-weight-bold' id='ipansuqad_0'>
+<span class='text-block-wrap-div'>₽</span>
+</div>
+</div>
+</div>
+<div class='div schedule-link-button' id='iqbbl2at1_0'>
+<div class='text' id='i6tp1658a_0'>
+<span class='text-block-wrap-div'>Записаться</span>
+</div>
+</div>
+</div>
+</div>
+</a>
+<a href='https://modern-psy.ru/orkt?utm_source=web&utm_medium=cpc&utm_campaign=schedule' data-action-element='' target='_blank' class='link-block schedule-link' id='iocn86z6y_0'>
+<div class='div schedule-item div--u-iblag3o2a' id='iblag3o2a_0'>
+<div class='div schedule-item-date div--u-irsao7h5v' id='irsao7h5v_0'>
+<div class='div schedule-item-date-tag' id='i2iacm2mx_0'>
+<div class='text' id='if3z94lwu_0'>
+<span class='text-block-wrap-div'>Идет набор</span>
+</div>
+</div>
+<div class='div schedule-item-date-tag-red not-active' id='i34w7fnpa_0'>
+<div class='text' id='i52g00974_0'>
+<span class='text-block-wrap-div'>SOLD OUT</span>
+</div>
+</div>
+<div class='div schedule-date-wrapper' id='imby8vriy_0'>
+<div class='text heading-style-h4 text-weight-bold' id='ibcnk9sl1_0'>
+<span class='text-block-wrap-div'>23</span>
+</div>
+<div class='text caption-small text-color-violet' id='id7jkcine_0'>
+<span class='text-block-wrap-div'>Марта, пн</span>
+</div>
+</div>
+</div>
+<div class='div schedule-item-info' id='i4lw2mpak_0'>
+<div class='div schedule-info-text-wrapper' id='iuzilqunn_0'>
+<div class='text text-paragraph-medium text-weight-bold' id='ip46cemf7_0'>
+<span class='text-block-wrap-div'>ОРКТ: ориентированная на решение краткосрочная терапия</span>
+</div>
+<div class='text caption-small text-color-violet-copy not-active' id='izt7xt6ge_0'>
+<span class='text-block-wrap-div'>Оксфордская модель</span>
+</div>
+</div>
+<div class='div schedule-info-tag-wrapper' id='iu2998clc_0'>
+<div class='div inner-tag-wrapper' id='i5jyh61ae_0'>
+<div class='div schedule-info-tag' id='i75o7iluy_0'>
+<div class='image schedule-tag-icon' id='izzih3j6f_0'>
+<img src='/thumb/2/C-PCUk8sC6qkunoWuyMWhA/640r480/d/calendar-icon.svg' alt='calendar-icon' title='' data-size='0x0' data-origin-src='/thumb/2/C-PCUk8sC6qkunoWuyMWhA/640r480/d/calendar-icon.svg' class='image__img' id='i4g3lc40s_0' >
+</div>
+<div class='text' id='ifys98oix_0'>
+<span class='text-block-wrap-div'>По понедельникам и четвергам</span>
+</div>
+</div>
+<div class='div schedule-info-tag' id='ir77qw985_0'>
+<div class='image schedule-tag-icon' id='iirzkw8fl_0'>
+<img src='/thumb/2/Z0A_hcrK3Pw2QOeLaBy-lA/640r480/d/time-circle-icon.svg' alt='time-circle-icon' title='' data-size='0x0' data-origin-src='/thumb/2/Z0A_hcrK3Pw2QOeLaBy-lA/640r480/d/time-circle-icon.svg' class='image__img' id='ijta9osze_0' >
+</div>
+<div class='div tag-text-wrapper' id='i9pow4m4o_0'>
+<div class='text' id='ivplzk17k_0'>
+<span class='text-block-wrap-div'>116</span>
+</div>
+<div class='text' id='id4adlevp_0'>
+<span class='text-block-wrap-div'>ак. ч.</span>
+</div>
+</div>
+</div>
+</div>
+<div class='div schedule-info-tag' id='iarzen5pk_0'>
+<div class='image schedule-tag-icon' id='i0jc2eu37_0'>
+<img src='/thumb/2/nEpYW3XdTHy2maSXhYgxow/640r480/d/document-verified-icon.svg' alt='document-verified-icon' title='' data-size='0x0' data-origin-src='/thumb/2/nEpYW3XdTHy2maSXhYgxow/640r480/d/document-verified-icon.svg' class='image__img' id='izhzfeja5_0' >
+</div>
+<div class='text' id='ib5ylddt5_0'>
+<span class='text-block-wrap-div'>Удостоверение</span>
+</div>
+</div>
+</div>
+</div>
+<div class='div schedule-item-price' id='i4c4fem2i_0'>
+<div class='div flex-wrapper' id='imaaj63fn_0'>
+<div class='div schedule-price-tag div--u-id3sgtl8r not-active' id='id3sgtl8r_0'>
+<div class='text' id='i94z9lean_0'>
+<span class='text-block-wrap-div'>-10%</span>
+</div>
+</div>
+<div class='div schedule-price' id='ijz8rinc4_0'>
+<div class='text text-paragraph-medium text-weight-bold' id='i17ndyiuw_0'>
+<span class='text-block-wrap-div'>40 000</span>
+</div>
+<div class='text text-paragraph-medium text-weight-bold' id='idjzsy2zp_0'>
+<span class='text-block-wrap-div'>₽</span>
+</div>
+</div>
+</div>
+<div class='div schedule-link-button' id='i7o3kujid_0'>
+<div class='text' id='i75e0wjqc_0'>
+<span class='text-block-wrap-div'>Записаться</span>
+</div>
+</div>
+</div>
+</div>
+</a>
+<a href='https://modern-psy.ru/rpp?utm_source=web&utm_medium=cpc&utm_campaign=schedule' data-action-element='' target='_blank' class='link-block schedule-link' id='ixybp8p2j_0'>
+<div class='div schedule-item div--u-ilnnrvdla' id='ilnnrvdla_0'>
+<div class='div schedule-item-date div--u-i1ji7nrar' id='i1ji7nrar_0'>
+<div class='div schedule-item-date-tag' id='ie3lsg3uu_0'>
+<div class='text' id='ij99oy2q1_0'>
+<span class='text-block-wrap-div'>Идет набор</span>
+</div>
+</div>
+<div class='div schedule-item-date-tag-red not-active' id='i26tzwqs3_0'>
+<div class='text' id='idn2bbb6x_0'>
+<span class='text-block-wrap-div'>SOLD OUT</span>
+</div>
+</div>
+<div class='div schedule-date-wrapper' id='iei45lmzr_0'>
+<div class='text heading-style-h4 text-weight-bold' id='i38y9cmio_0'>
+<span class='text-block-wrap-div'>26</span>
+</div>
+<div class='text caption-small text-color-violet' id='i6zwa26k5_0'>
+<span class='text-block-wrap-div'>Марта, чт</span>
+</div>
+</div>
+</div>
+<div class='div schedule-item-info' id='i82ap2g7p_0'>
+<div class='div schedule-info-text-wrapper' id='i36g5qb76_0'>
+<div class='text text-paragraph-medium text-weight-bold' id='in94t42fd_0'>
+<span class='text-block-wrap-div'>РПП: Консультирование расстройств пищевого поведения</span>
+</div>
+<div class='text caption-small text-color-violet-copy not-active' id='iwmeczmxr_0'>
+<span class='text-block-wrap-div'>Оксфордская модель</span>
+</div>
+</div>
+<div class='div schedule-info-tag-wrapper' id='iy46mmznb_0'>
+<div class='div inner-tag-wrapper' id='i93lkmzy5_0'>
+<div class='div schedule-info-tag' id='ivzfruouz_0'>
+<div class='image schedule-tag-icon' id='i1ovg2urt_0'>
+<img src='/thumb/2/C-PCUk8sC6qkunoWuyMWhA/640r480/d/calendar-icon.svg' alt='calendar-icon' title='' data-size='0x0' data-origin-src='/thumb/2/C-PCUk8sC6qkunoWuyMWhA/640r480/d/calendar-icon.svg' class='image__img' id='i8vza46d1_0' >
+</div>
+<div class='text' id='iryrxwkw6_0'>
+<span class='text-block-wrap-div'>По четвергам</span>
+</div>
+</div>
+<div class='div schedule-info-tag' id='ikeetwu0t_0'>
+<div class='image schedule-tag-icon' id='im9i325hk_0'>
+<img src='/thumb/2/Z0A_hcrK3Pw2QOeLaBy-lA/640r480/d/time-circle-icon.svg' alt='time-circle-icon' title='' data-size='0x0' data-origin-src='/thumb/2/Z0A_hcrK3Pw2QOeLaBy-lA/640r480/d/time-circle-icon.svg' class='image__img' id='icvkm6om1_0' >
+</div>
+<div class='div tag-text-wrapper' id='i2mn5a6is_0'>
+<div class='text' id='ikidb9k8t_0'>
+<span class='text-block-wrap-div'>255</span>
+</div>
+<div class='text' id='ikc9688d6_0'>
+<span class='text-block-wrap-div'>ак. ч.</span>
+</div>
+</div>
+</div>
+</div>
+<div class='div schedule-info-tag' id='igayp423o_0'>
+<div class='image schedule-tag-icon' id='icscdkhmf_0'>
+<img src='/thumb/2/nEpYW3XdTHy2maSXhYgxow/640r480/d/document-verified-icon.svg' alt='document-verified-icon' title='' data-size='0x0' data-origin-src='/thumb/2/nEpYW3XdTHy2maSXhYgxow/640r480/d/document-verified-icon.svg' class='image__img' id='i7anb9okl_0' >
+</div>
+<div class='text' id='iu5h339z1_0'>
+<span class='text-block-wrap-div'>Диплом</span>
+</div>
+</div>
+</div>
+</div>
+<div class='div schedule-item-price' id='i1e0icp08_0'>
+<div class='div flex-wrapper' id='i0601r19d_0'>
+<div class='div schedule-price-tag div--u-iq90o62m9 not-active' id='iq90o62m9_0'>
+<div class='text' id='ix8rkzzfy_0'>
+<span class='text-block-wrap-div'>-10%</span>
+</div>
+</div>
+<div class='div schedule-price' id='i32jleqy8_0'>
+<div class='text text-paragraph-medium text-weight-bold' id='i91p485yd_0'>
+<span class='text-block-wrap-div'>75 000</span>
+</div>
+<div class='text text-paragraph-medium text-weight-bold' id='idka3hqxz_0'>
+<span class='text-block-wrap-div'>₽</span>
+</div>
+</div>
+</div>
+<div class='div schedule-link-button' id='ip0cnddjy_0'>
+<div class='text' id='ixe4l56w0_0'>
+<span class='text-block-wrap-div'>Записаться</span>
+</div>
+</div>
+</div>
+</div>
+</a>
+<a href='https://modern-psy.ru/child-psy?utm_source=web&utm_medium=cpc&utm_campaign=schedule' data-action-element='' target='_blank' class='link-block schedule-link' id='ic2e0597e_0'>
+<div class='div schedule-item div--u-iwond0qfe' id='iwond0qfe_0'>
+<div class='div schedule-item-date div--u-i1829thg2' id='i1829thg2_0'>
+<div class='div schedule-item-date-tag' id='iosuwqp3s_0'>
+<div class='text' id='io1dziswr_0'>
+<span class='text-block-wrap-div'>Идет набор</span>
+</div>
+</div>
+<div class='div schedule-item-date-tag-red not-active' id='ifigrc7z3_0'>
+<div class='text' id='i36qk9722_0'>
+<span class='text-block-wrap-div'>SOLD OUT</span>
+</div>
+</div>
+<div class='div schedule-date-wrapper' id='i25k6jasg_0'>
+<div class='text heading-style-h4 text-weight-bold' id='iqcjbpigb_0'>
+<span class='text-block-wrap-div'>26</span>
+</div>
+<div class='text caption-small text-color-violet' id='i5ppxt7z7_0'>
+<span class='text-block-wrap-div'>Марта, чт</span>
+</div>
+</div>
+</div>
+<div class='div schedule-item-info' id='idxcdbx9t_0'>
+<div class='div schedule-info-text-wrapper' id='ialltdg4l_0'>
+<div class='text text-paragraph-medium text-weight-bold' id='idbtv6nr8_0'>
+<span class='text-block-wrap-div'>Детская психология</span>
+</div>
+<div class='text caption-small text-color-violet-copy not-active' id='ihbas4x2d_0'>
+<span class='text-block-wrap-div'>Работа</span>
+</div>
+</div>
+<div class='div schedule-info-tag-wrapper' id='i29acpl92_0'>
+<div class='div inner-tag-wrapper' id='ikhnczed8_0'>
+<div class='div schedule-info-tag' id='iblxxx2w6_0'>
+<div class='image schedule-tag-icon' id='ipj6ojv85_0'>
+<img src='/thumb/2/C-PCUk8sC6qkunoWuyMWhA/640r480/d/calendar-icon.svg' alt='calendar-icon' title='' data-size='0x0' data-origin-src='/thumb/2/C-PCUk8sC6qkunoWuyMWhA/640r480/d/calendar-icon.svg' class='image__img' id='ix9vhbqze_0' >
+</div>
+<div class='text' id='ikni300ls_0'>
+<span class='text-block-wrap-div'>По четвергам</span>
+</div>
+</div>
+<div class='div schedule-info-tag' id='i5bmmd8ij_0'>
+<div class='image schedule-tag-icon' id='iq5urot35_0'>
+<img src='/thumb/2/Z0A_hcrK3Pw2QOeLaBy-lA/640r480/d/time-circle-icon.svg' alt='time-circle-icon' title='' data-size='0x0' data-origin-src='/thumb/2/Z0A_hcrK3Pw2QOeLaBy-lA/640r480/d/time-circle-icon.svg' class='image__img' id='i9542mx8i_0' >
+</div>
+<div class='div tag-text-wrapper' id='i630j1dmv_0'>
+<div class='text' id='i6i1bjuue_0'>
+<span class='text-block-wrap-div'>500</span>
+</div>
+<div class='text' id='iezd6t7tb_0'>
+<span class='text-block-wrap-div'>ак. ч.</span>
+</div>
+</div>
+</div>
+</div>
+<div class='div schedule-info-tag' id='i8jksrgds_0'>
+<div class='image schedule-tag-icon' id='i5zgy1nck_0'>
+<img src='/thumb/2/nEpYW3XdTHy2maSXhYgxow/640r480/d/document-verified-icon.svg' alt='document-verified-icon' title='' data-size='0x0' data-origin-src='/thumb/2/nEpYW3XdTHy2maSXhYgxow/640r480/d/document-verified-icon.svg' class='image__img' id='irsg4swne_0' >
+</div>
+<div class='text' id='iyv0ffhjb_0'>
+<span class='text-block-wrap-div'>Диплом</span>
+</div>
+</div>
+</div>
+</div>
+<div class='div schedule-item-price' id='isrn8rh52_0'>
+<div class='div flex-wrapper' id='i6xxm4yhi_0'>
+<div class='div schedule-price-tag div--u-izxv287io not-active' id='izxv287io_0'>
+<div class='text' id='is6di7q3d_0'>
+<span class='text-block-wrap-div'>-10%</span>
+</div>
+</div>
+<div class='div schedule-price' id='iewlivpk5_0'>
+<div class='text text-paragraph-medium text-weight-bold' id='in1hkos4g_0'>
+<span class='text-block-wrap-div'>85 000</span>
+</div>
+<div class='text text-paragraph-medium text-weight-bold' id='i6rwbzfuc_0'>
+<span class='text-block-wrap-div'>₽</span>
+</div>
+</div>
+</div>
+<div class='div schedule-link-button' id='i1q68oag7_0'>
+<div class='text' id='ifnetjvta_0'>
+<span class='text-block-wrap-div'>Записаться</span>
+</div>
+</div>
+</div>
+</div>
+</a>
+</div>
+</div>
+</div>
+<div class='div schedule-component' id='imki7wyml_0'>
+<div class='div schedule-links-component margin-24' id='i5jjueaap_0'>
+<div class='text text-paragraph-large text-weight-bold tab-heading' id='iopi9e2vl_0'>
+<span class='text-block-wrap-div'>Апрель</span>
+</div>
+<div class='div schedule-links-wrapper' id='iwkrh5cbj_0'>
+<a href='https://modern-psy.ru/art-terapiya?utm_source=web&utm_medium=cpc&utm_campaign=schedule' data-action-element='' target='_blank' class='link-block schedule-link' id='ii0owf31u_0'>
+<div class='div schedule-item div--u-ijwjnu1zr' id='ijwjnu1zr_0'>
+<div class='div schedule-item-date div--u-i31f5c5a3' id='i31f5c5a3_0'>
+<div class='div schedule-item-date-tag' id='ibg3yg1fu_0'>
+<div class='text' id='i945q5dqy_0'>
+<span class='text-block-wrap-div'>Идет набор</span>
+</div>
+</div>
+<div class='div schedule-item-date-tag-red not-active' id='ixtln0tck_0'>
+<div class='text' id='im92030pl_0'>
+<span class='text-block-wrap-div'>SOLD OUT</span>
+</div>
+</div>
+<div class='div schedule-date-wrapper' id='ic95poodr_0'>
+<div class='text heading-style-h4 text-weight-bold' id='i54g729zh_0'>
+<span class='text-block-wrap-div'>07</span>
+</div>
+<div class='text caption-small text-color-violet' id='ic97c5teo_0'>
+<span class='text-block-wrap-div'>Апреля, вт</span>
+</div>
+</div>
+</div>
+<div class='div schedule-item-info' id='iyugsfd6u_0'>
+<div class='div schedule-info-text-wrapper' id='iqfdj5psf_0'>
+<div class='text text-paragraph-medium text-weight-bold' id='ijbxvakqf_0'>
+<span class='text-block-wrap-div'>Арт-терапия</span>
+</div>
+<div class='text caption-small text-color-violet-copy not-active' id='id0dvmjhl_0'>
+<span class='text-block-wrap-div'>Полимодальный курс</span>
+</div>
+</div>
+<div class='div schedule-info-tag-wrapper' id='ib6rqbior_0'>
+<div class='div inner-tag-wrapper' id='i3f9oxsli_0'>
+<div class='div schedule-info-tag' id='i99juru8p_0'>
+<div class='image schedule-tag-icon' id='i5ittyn61_0'>
+<img src='/thumb/2/C-PCUk8sC6qkunoWuyMWhA/640r480/d/calendar-icon.svg' alt='calendar-icon' title='' data-size='0x0' data-origin-src='/thumb/2/C-PCUk8sC6qkunoWuyMWhA/640r480/d/calendar-icon.svg' class='image__img' id='igqi88t20_0' >
+</div>
+<div class='text' id='ie9ku64d1_0'>
+<span class='text-block-wrap-div'>По вторникам</span>
+</div>
+</div>
+<div class='div schedule-info-tag' id='itj6t6bc1_0'>
+<div class='image schedule-tag-icon' id='ijl4s7u3e_0'>
+<img src='/thumb/2/Z0A_hcrK3Pw2QOeLaBy-lA/640r480/d/time-circle-icon.svg' alt='time-circle-icon' title='' data-size='0x0' data-origin-src='/thumb/2/Z0A_hcrK3Pw2QOeLaBy-lA/640r480/d/time-circle-icon.svg' class='image__img' id='iiwpgdss0_0' >
+</div>
+<div class='div tag-text-wrapper' id='i6vvnb2l1_0'>
+<div class='text' id='ixhq8xb8u_0'>
+<span class='text-block-wrap-div'>40</span>
+</div>
+<div class='text' id='i16m45tv3_0'>
+<span class='text-block-wrap-div'>ак. ч.</span>
+</div>
+</div>
+</div>
+</div>
+<div class='div schedule-info-tag' id='ijly8g39j_0'>
+<div class='image schedule-tag-icon' id='iolo74mfr_0'>
+<img src='/thumb/2/nEpYW3XdTHy2maSXhYgxow/640r480/d/document-verified-icon.svg' alt='document-verified-icon' title='' data-size='0x0' data-origin-src='/thumb/2/nEpYW3XdTHy2maSXhYgxow/640r480/d/document-verified-icon.svg' class='image__img' id='itxchodun_0' >
+</div>
+<div class='text' id='iyrln8inf_0'>
+<span class='text-block-wrap-div'>Удостоверение</span>
+</div>
+</div>
+</div>
+</div>
+<div class='div schedule-item-price' id='ijhxjkbjj_0'>
+<div class='div flex-wrapper' id='ionr0qm76_0'>
+<div class='div schedule-price-tag div--u-imtglk36g not-active' id='imtglk36g_0'>
+<div class='text' id='impw4kj4m_0'>
+<span class='text-block-wrap-div'>-10%</span>
+</div>
+</div>
+<div class='div schedule-price' id='ih1a2zmen_0'>
+<div class='text text-paragraph-medium text-weight-bold' id='ineeopk37_0'>
+<span class='text-block-wrap-div'>23 000</span>
+</div>
+<div class='text text-paragraph-medium text-weight-bold' id='ije32rsmq_0'>
+<span class='text-block-wrap-div'>₽</span>
+</div>
+</div>
+</div>
+<div class='div schedule-link-button' id='id3611hag_0'>
+<div class='text' id='ivnn7932d_0'>
+<span class='text-block-wrap-div'>Записаться</span>
+</div>
+</div>
+</div>
+</div>
+</a>
+<a href='https://modern-psy.ru/abuse-therapy?utm_source=web&utm_medium=cpc&utm_campaign=schedule' data-action-element='' target='_blank' class='link-block schedule-link' id='i3xt2lx2h_0'>
+<div class='div schedule-item div--u-ijwo51yn8' id='ijwo51yn8_0'>
+<div class='div schedule-item-date div--u-ip0ph0jpd' id='ip0ph0jpd_0'>
+<div class='div schedule-item-date-tag' id='i9uyb11p0_0'>
+<div class='text' id='iwp0ycohs_0'>
+<span class='text-block-wrap-div'>Идет набор</span>
+</div>
+</div>
+<div class='div schedule-item-date-tag-red not-active' id='ie82k0duo_0'>
+<div class='text' id='im0crqvkh_0'>
+<span class='text-block-wrap-div'>SOLD OUT</span>
+</div>
+</div>
+<div class='div schedule-date-wrapper' id='iryuiimgf_0'>
+<div class='text heading-style-h4 text-weight-bold' id='izlm8onjd_0'>
+<span class='text-block-wrap-div'>17</span>
+</div>
+<div class='text caption-small text-color-violet' id='ixasd7nwm_0'>
+<span class='text-block-wrap-div'>Апреля, пт</span>
+</div>
+</div>
+</div>
+<div class='div schedule-item-info' id='i1r97p7vh_0'>
+<div class='div schedule-info-text-wrapper' id='izpblz5x5_0'>
+<div class='text text-paragraph-medium text-weight-bold' id='iy2tita5m_0'>
+<span class='text-block-wrap-div'>Терапия взрослых, переживших сексуализированное насилие в детстве</span>
+</div>
+<div class='text caption-small text-color-violet-copy not-active' id='img32kahf_0'>
+<span class='text-block-wrap-div'>Полимодальный курс</span>
+</div>
+</div>
+<div class='div schedule-info-tag-wrapper' id='imsjxked9_0'>
+<div class='div inner-tag-wrapper' id='iq7f1zmhy_0'>
+<div class='div schedule-info-tag' id='i3lhe09j3_0'>
+<div class='image schedule-tag-icon' id='iksrllxuf_0'>
+<img src='/thumb/2/C-PCUk8sC6qkunoWuyMWhA/640r480/d/calendar-icon.svg' alt='calendar-icon' title='' data-size='0x0' data-origin-src='/thumb/2/C-PCUk8sC6qkunoWuyMWhA/640r480/d/calendar-icon.svg' class='image__img' id='iubwjf9q8_0' >
+</div>
+<div class='text' id='ijtxozusr_0'>
+<span class='text-block-wrap-div'>По пятницам</span>
+</div>
+</div>
+<div class='div schedule-info-tag' id='iguv3rmxq_0'>
+<div class='image schedule-tag-icon' id='iu959cgvs_0'>
+<img src='/thumb/2/Z0A_hcrK3Pw2QOeLaBy-lA/640r480/d/time-circle-icon.svg' alt='time-circle-icon' title='' data-size='0x0' data-origin-src='/thumb/2/Z0A_hcrK3Pw2QOeLaBy-lA/640r480/d/time-circle-icon.svg' class='image__img' id='i7gf32fqd_0' >
+</div>
+<div class='div tag-text-wrapper' id='ife3x8qlr_0'>
+<div class='text' id='idsllxuog_0'>
+<span class='text-block-wrap-div'>52</span>
+</div>
+<div class='text' id='i2e2h9i9p_0'>
+<span class='text-block-wrap-div'>ак. ч.</span>
+</div>
+</div>
+</div>
+</div>
+<div class='div schedule-info-tag' id='i2nf3bisc_0'>
+<div class='image schedule-tag-icon' id='i1i5eg47q_0'>
+<img src='/thumb/2/nEpYW3XdTHy2maSXhYgxow/640r480/d/document-verified-icon.svg' alt='document-verified-icon' title='' data-size='0x0' data-origin-src='/thumb/2/nEpYW3XdTHy2maSXhYgxow/640r480/d/document-verified-icon.svg' class='image__img' id='igpsitt2a_0' >
+</div>
+<div class='text' id='infcv3uuf_0'>
+<span class='text-block-wrap-div'>Удостоверение</span>
+</div>
+</div>
+</div>
+</div>
+<div class='div schedule-item-price' id='imqt9pcqs_0'>
+<div class='div flex-wrapper' id='ivsr2yfac_0'>
+<div class='div schedule-price-tag div--u-iuxcn4s9a not-active' id='iuxcn4s9a_0'>
+<div class='text' id='ieh26buae_0'>
+<span class='text-block-wrap-div'>-10%</span>
+</div>
+</div>
+<div class='div schedule-price' id='iuvat5kso_0'>
+<div class='text text-paragraph-medium text-weight-bold' id='igcltxu49_0'>
+<span class='text-block-wrap-div'>35 000</span>
+</div>
+<div class='text text-paragraph-medium text-weight-bold' id='in96ih3ed_0'>
+<span class='text-block-wrap-div'>₽</span>
+</div>
+</div>
+</div>
+<div class='div schedule-link-button' id='iof44ve4l_0'>
+<div class='text' id='ila3i2x27_0'>
+<span class='text-block-wrap-div'>Записаться</span>
+</div>
+</div>
+</div>
+</div>
+</a>
+<a href='https://modern-psy.ru/sexology?utm_source=web&utm_medium=cpc&utm_campaign=schedule' data-action-element='' target='_blank' class='link-block schedule-link' id='i9xu15oi9_0'>
+<div class='div schedule-item div--u-i9wjjdi3f' id='i9wjjdi3f_0'>
+<div class='div schedule-item-date div--u-i3rb22dg3' id='i3rb22dg3_0'>
+<div class='div schedule-item-date-tag' id='i76eqhwfv_0'>
+<div class='text' id='ilgq7srw9_0'>
+<span class='text-block-wrap-div'>Идет набор</span>
+</div>
+</div>
+<div class='div schedule-item-date-tag-red not-active' id='istsi2c11_0'>
+<div class='text' id='in6zkjsb0_0'>
+<span class='text-block-wrap-div'>SOLD OUT</span>
+</div>
+</div>
+<div class='div schedule-date-wrapper' id='i34ilcamf_0'>
+<div class='text heading-style-h4 text-weight-bold' id='ihbgl70v9_0'>
+<span class='text-block-wrap-div'>21</span>
+</div>
+<div class='text caption-small text-color-violet' id='iqinpfinf_0'>
+<span class='text-block-wrap-div'>Апреля, вт</span>
+</div>
+</div>
+</div>
+<div class='div schedule-item-info' id='inowt24v6_0'>
+<div class='div schedule-info-text-wrapper' id='iss5ralia_0'>
+<div class='text text-paragraph-medium text-weight-bold' id='iprsuqvwt_0'>
+<span class='text-block-wrap-div'>Сексология</span>
+</div>
+<div class='text caption-small text-color-violet-copy not-active' id='ip9sb6zng_0'>
+<span class='text-block-wrap-div'>Работа</span>
+</div>
+</div>
+<div class='div schedule-info-tag-wrapper' id='ipr0emcfo_0'>
+<div class='div inner-tag-wrapper' id='i4nki09j4_0'>
+<div class='div schedule-info-tag' id='iisyo68vx_0'>
+<div class='image schedule-tag-icon' id='iyq2fnuku_0'>
+<img src='/thumb/2/C-PCUk8sC6qkunoWuyMWhA/640r480/d/calendar-icon.svg' alt='calendar-icon' title='' data-size='0x0' data-origin-src='/thumb/2/C-PCUk8sC6qkunoWuyMWhA/640r480/d/calendar-icon.svg' class='image__img' id='inybzu0fe_0' >
+</div>
+<div class='text' id='itkkfu4u1_0'>
+<span class='text-block-wrap-div'>По вторникам</span>
+</div>
+</div>
+<div class='div schedule-info-tag' id='ii387xkml_0'>
+<div class='image schedule-tag-icon' id='ibrdlk5b1_0'>
+<img src='/thumb/2/Z0A_hcrK3Pw2QOeLaBy-lA/640r480/d/time-circle-icon.svg' alt='time-circle-icon' title='' data-size='0x0' data-origin-src='/thumb/2/Z0A_hcrK3Pw2QOeLaBy-lA/640r480/d/time-circle-icon.svg' class='image__img' id='i9fckr17k_0' >
+</div>
+<div class='div tag-text-wrapper' id='iw7t4deyw_0'>
+<div class='text' id='ix75bnwwy_0'>
+<span class='text-block-wrap-div'>350</span>
+</div>
+<div class='text' id='izlkys0tc_0'>
+<span class='text-block-wrap-div'>ак. ч.</span>
+</div>
+</div>
+</div>
+</div>
+<div class='div schedule-info-tag' id='iym4469tv_0'>
+<div class='image schedule-tag-icon' id='iqd8sso4d_0'>
+<img src='/thumb/2/nEpYW3XdTHy2maSXhYgxow/640r480/d/document-verified-icon.svg' alt='document-verified-icon' title='' data-size='0x0' data-origin-src='/thumb/2/nEpYW3XdTHy2maSXhYgxow/640r480/d/document-verified-icon.svg' class='image__img' id='idcht85ry_0' >
+</div>
+<div class='text' id='ihkgf83d4_0'>
+<span class='text-block-wrap-div'>Диплом</span>
+</div>
+</div>
+</div>
+</div>
+<div class='div schedule-item-price' id='i9z7n7qxj_0'>
+<div class='div flex-wrapper' id='iffm01k8l_0'>
+<div class='div schedule-price-tag div--u-ihgre9rcq not-active' id='ihgre9rcq_0'>
+<div class='text' id='iwhbvwpet_0'>
+<span class='text-block-wrap-div'>-10%</span>
+</div>
+</div>
+<div class='div schedule-price' id='i83su72lr_0'>
+<div class='text text-paragraph-medium text-weight-bold' id='ib1i4rndw_0'>
+<span class='text-block-wrap-div'>80 000</span>
+</div>
+<div class='text text-paragraph-medium text-weight-bold' id='i1mqs1f6f_0'>
+<span class='text-block-wrap-div'>₽</span>
+</div>
+</div>
+</div>
+<div class='div schedule-link-button' id='iy43pq4kw_0'>
+<div class='text' id='ijaykvmn6_0'>
+<span class='text-block-wrap-div'>Записаться</span>
+</div>
+</div>
+</div>
+</div>
+</a>
+<a href='https://modern-psy.ru/mother?utm_source=web&utm_medium=cpc&utm_campaign=schedule' data-action-element='' target='_blank' class='link-block schedule-link' id='izl2xplhh_0'>
+<div class='div schedule-item div--u-isttofihf' id='isttofihf_0'>
+<div class='div schedule-item-date div--u-i07g7bqx3' id='i07g7bqx3_0'>
+<div class='div schedule-item-date-tag' id='ia1nm2cve_0'>
+<div class='text' id='ikbwk20c4_0'>
+<span class='text-block-wrap-div'>Идет набор</span>
+</div>
+</div>
+<div class='div schedule-item-date-tag-red not-active' id='iv8twnj0z_0'>
+<div class='text' id='iyduyzfu9_0'>
+<span class='text-block-wrap-div'>SOLD OUT</span>
+</div>
+</div>
+<div class='div schedule-date-wrapper' id='iiju5m4ov_0'>
+<div class='text heading-style-h4 text-weight-bold' id='i8kc8ij72_0'>
+<span class='text-block-wrap-div'>21</span>
+</div>
+<div class='text caption-small text-color-violet' id='i9wzv12u3_0'>
+<span class='text-block-wrap-div'>Апреля, вт</span>
+</div>
+</div>
+</div>
+<div class='div schedule-item-info' id='iswaewfjg_0'>
+<div class='div schedule-info-text-wrapper' id='isktytlpe_0'>
+<div class='text text-paragraph-medium text-weight-bold' id='isyjlb12s_0'>
+<span class='text-block-wrap-div'>Психотерапия для матерей с применением АСТ и CFT</span>
+</div>
+<div class='text caption-small text-color-violet-copy' id='ifqdfr3db_0'>
+<span class='text-block-wrap-div'>C применением АСТ и CFT</span>
+</div>
+</div>
+<div class='div schedule-info-tag-wrapper' id='incwi57nm_0'>
+<div class='div inner-tag-wrapper' id='imrq9tlr6_0'>
+<div class='div schedule-info-tag' id='i0p674j95_0'>
+<div class='image schedule-tag-icon' id='i72u2ocrt_0'>
+<img src='/thumb/2/C-PCUk8sC6qkunoWuyMWhA/640r480/d/calendar-icon.svg' alt='calendar-icon' title='' data-size='0x0' data-origin-src='/thumb/2/C-PCUk8sC6qkunoWuyMWhA/640r480/d/calendar-icon.svg' class='image__img' id='id2nsdw2j_0' >
+</div>
+<div class='text' id='iv37wt6qz_0'>
+<span class='text-block-wrap-div'>По вторникам</span>
+</div>
+</div>
+<div class='div schedule-info-tag' id='icirzskln_0'>
+<div class='image schedule-tag-icon' id='iznlwzi26_0'>
+<img src='/thumb/2/Z0A_hcrK3Pw2QOeLaBy-lA/640r480/d/time-circle-icon.svg' alt='time-circle-icon' title='' data-size='0x0' data-origin-src='/thumb/2/Z0A_hcrK3Pw2QOeLaBy-lA/640r480/d/time-circle-icon.svg' class='image__img' id='i82ugnhnx_0' >
+</div>
+<div class='div tag-text-wrapper' id='iam4rwyzf_0'>
+<div class='text' id='itvzppm51_0'>
+<span class='text-block-wrap-div'>72</span>
+</div>
+<div class='text' id='ireow2wxi_0'>
+<span class='text-block-wrap-div'>ак. ч.</span>
+</div>
+</div>
+</div>
+</div>
+<div class='div schedule-info-tag' id='i21spn74c_0'>
+<div class='image schedule-tag-icon' id='iedkemw9j_0'>
+<img src='/thumb/2/nEpYW3XdTHy2maSXhYgxow/640r480/d/document-verified-icon.svg' alt='document-verified-icon' title='' data-size='0x0' data-origin-src='/thumb/2/nEpYW3XdTHy2maSXhYgxow/640r480/d/document-verified-icon.svg' class='image__img' id='i69v44ji6_0' >
+</div>
+<div class='text' id='itbljfru7_0'>
+<span class='text-block-wrap-div'>Удостоверение</span>
+</div>
+</div>
+</div>
+</div>
+<div class='div schedule-item-price' id='i70mjdilq_0'>
+<div class='div flex-wrapper' id='i797eslm9_0'>
+<div class='div schedule-price-tag div--u-ifxcyzbt4 not-active' id='ifxcyzbt4_0'>
+<div class='text' id='ih2at4e5a_0'>
+<span class='text-block-wrap-div'>-10%</span>
+</div>
+</div>
+<div class='div schedule-price' id='i0ip0mgfs_0'>
+<div class='text text-paragraph-medium text-weight-bold' id='i1llkh1z2_0'>
+<span class='text-block-wrap-div'>30 000</span>
+</div>
+<div class='text text-paragraph-medium text-weight-bold' id='ihol4wgap_0'>
+<span class='text-block-wrap-div'>₽</span>
+</div>
+</div>
+</div>
+<div class='div schedule-link-button' id='itgvtogou_0'>
+<div class='text' id='ixm6rv66a_0'>
+<span class='text-block-wrap-div'>Записаться</span>
+</div>
+</div>
+</div>
+</div>
+</a>
+<a href='https://modern-psy.ru/psychotherapy-mastery?utm_source=web&utm_medium=cpc&utm_campaign=schedule' data-action-element='' target='_blank' class='link-block schedule-link' id='ik02swww4_0'>
+<div class='div schedule-item div--u-irt8dacic' id='irt8dacic_0'>
+<div class='div schedule-item-date div--u-i24k12nob' id='i24k12nob_0'>
+<div class='div schedule-item-date-tag' id='iqiim34v0_0'>
+<div class='text' id='ib8twfji5_0'>
+<span class='text-block-wrap-div'>Идет набор</span>
+</div>
+</div>
+<div class='div schedule-item-date-tag-red not-active' id='i5kknz641_0'>
+<div class='text' id='ipnlsey8r_0'>
+<span class='text-block-wrap-div'>SOLD OUT</span>
+</div>
+</div>
+<div class='div schedule-date-wrapper' id='ibn0cuyke_0'>
+<div class='text heading-style-h4 text-weight-bold' id='iqhg0ixm5_0'>
+<span class='text-block-wrap-div'>23</span>
+</div>
+<div class='text caption-small text-color-violet' id='i7jkrmt2t_0'>
+<span class='text-block-wrap-div'>Апреля, чт</span>
+</div>
+</div>
+</div>
+<div class='div schedule-item-info' id='ieno9qroi_0'>
+<div class='div schedule-info-text-wrapper' id='ihfq7d9d6_0'>
+<div class='text text-paragraph-medium text-weight-bold' id='i1mjst13b_0'>
+<span class='text-block-wrap-div'>Мастерская психотерапии</span>
+</div>
+<div class='text caption-small text-color-violet-copy' id='i55wpwvhq_0'>
+<span class='text-block-wrap-div'>В формате мини-группы</span>
+</div>
+</div>
+<div class='div schedule-info-tag-wrapper' id='io68yky6c_0'>
+<div class='div inner-tag-wrapper' id='ivko0nkee_0'>
+<div class='div schedule-info-tag' id='iosxzweyz_0'>
+<div class='image schedule-tag-icon' id='imixfvr4m_0'>
+<img src='/thumb/2/C-PCUk8sC6qkunoWuyMWhA/640r480/d/calendar-icon.svg' alt='calendar-icon' title='' data-size='0x0' data-origin-src='/thumb/2/C-PCUk8sC6qkunoWuyMWhA/640r480/d/calendar-icon.svg' class='image__img' id='imq19wx3b_0' >
+</div>
+<div class='text' id='i3lwqt4g4_0'>
+<span class='text-block-wrap-div'>По четвергам</span>
+</div>
+</div>
+<div class='div schedule-info-tag' id='ixywd0lt3_0'>
+<div class='image schedule-tag-icon' id='ibfoaikk0_0'>
+<img src='/thumb/2/Z0A_hcrK3Pw2QOeLaBy-lA/640r480/d/time-circle-icon.svg' alt='time-circle-icon' title='' data-size='0x0' data-origin-src='/thumb/2/Z0A_hcrK3Pw2QOeLaBy-lA/640r480/d/time-circle-icon.svg' class='image__img' id='i0q2n55uz_0' >
+</div>
+<div class='div tag-text-wrapper' id='ihsthzo3i_0'>
+<div class='text' id='ijt53exje_0'>
+<span class='text-block-wrap-div'>90</span>
+</div>
+<div class='text' id='ihscuf98g_0'>
+<span class='text-block-wrap-div'>ак. ч.</span>
+</div>
+</div>
+</div>
+</div>
+<div class='div schedule-info-tag' id='idzxbdbyx_0'>
+<div class='image schedule-tag-icon' id='izemz64gs_0'>
+<img src='/thumb/2/nEpYW3XdTHy2maSXhYgxow/640r480/d/document-verified-icon.svg' alt='document-verified-icon' title='' data-size='0x0' data-origin-src='/thumb/2/nEpYW3XdTHy2maSXhYgxow/640r480/d/document-verified-icon.svg' class='image__img' id='iv6ymaa1d_0' >
+</div>
+<div class='text' id='i0k453ir4_0'>
+<span class='text-block-wrap-div'>Удостоверение</span>
+</div>
+</div>
+</div>
+</div>
+<div class='div schedule-item-price' id='i9zcb2o5b_0'>
+<div class='div flex-wrapper' id='ioxdce6e1_0'>
+<div class='div schedule-price-tag div--u-ij5yrw1z4 not-active' id='ij5yrw1z4_0'>
+<div class='text' id='il4bc7j1o_0'>
+<span class='text-block-wrap-div'>-10%</span>
+</div>
+</div>
+<div class='div schedule-price' id='iy8joz01h_0'>
+<div class='text text-paragraph-medium text-weight-bold' id='i4qwbpedc_0'>
+<span class='text-block-wrap-div'>45 000</span>
+</div>
+<div class='text text-paragraph-medium text-weight-bold' id='iw36l08eb_0'>
+<span class='text-block-wrap-div'>₽</span>
+</div>
+</div>
+</div>
+<div class='div schedule-link-button' id='iyo8anw2p_0'>
+<div class='text' id='iafpraszv_0'>
+<span class='text-block-wrap-div'>Записаться</span>
+</div>
+</div>
+</div>
+</div>
+</a>
+<a href='https://modern-psy.ru//womens-care?utm_source=web&utm_medium=cpc&utm_campaign=schedule' data-action-element='' target='_blank' class='link-block schedule-link' id='ipdgtg9f8_0'>
+<div class='div schedule-item div--u-ii3ulq3ut' id='ii3ulq3ut_0'>
+<div class='div schedule-item-date div--u-iukf644s9' id='iukf644s9_0'>
+<div class='div schedule-item-date-tag' id='ieyjuqnpf_0'>
+<div class='text' id='i46u2zozb_0'>
+<span class='text-block-wrap-div'>Идет набор</span>
+</div>
+</div>
+<div class='div schedule-item-date-tag-red not-active' id='it7r0onyc_0'>
+<div class='text' id='iw69j3dxj_0'>
+<span class='text-block-wrap-div'>SOLD OUT</span>
+</div>
+</div>
+<div class='div schedule-date-wrapper' id='icwaw9lgw_0'>
+<div class='text heading-style-h4 text-weight-bold' id='i1purnzvp_0'>
+<span class='text-block-wrap-div'>29</span>
+</div>
+<div class='text caption-small text-color-violet' id='ias4e3w19_0'>
+<span class='text-block-wrap-div'>Апреля, ср</span>
+</div>
+</div>
+</div>
+<div class='div schedule-item-info' id='iwycp6ti9_0'>
+<div class='div schedule-info-text-wrapper' id='ijx18z2jp_0'>
+<div class='text text-paragraph-medium text-weight-bold' id='igvikjoxd_0'>
+<span class='text-block-wrap-div'>Комплексный подход в работе с женщинами</span>
+</div>
+<div class='text caption-small text-color-violet-copy' id='idajpo1gl_0'>
+<span class='text-block-wrap-div'>гинекология, психология, психиатрия</span>
+</div>
+</div>
+<div class='div schedule-info-tag-wrapper' id='ictewfzf5_0'>
+<div class='div inner-tag-wrapper' id='i2hfckyyz_0'>
+<div class='div schedule-info-tag' id='iee792gxe_0'>
+<div class='image schedule-tag-icon' id='i13lgmm57_0'>
+<img src='/thumb/2/C-PCUk8sC6qkunoWuyMWhA/640r480/d/calendar-icon.svg' alt='calendar-icon' title='' data-size='0x0' data-origin-src='/thumb/2/C-PCUk8sC6qkunoWuyMWhA/640r480/d/calendar-icon.svg' class='image__img' id='i3fav3vr4_0' >
+</div>
+<div class='text' id='ii51l55g1_0'>
+<span class='text-block-wrap-div'>По средам</span>
+</div>
+</div>
+<div class='div schedule-info-tag' id='ioe9pfuoc_0'>
+<div class='image schedule-tag-icon' id='ikocruibs_0'>
+<img src='/thumb/2/Z0A_hcrK3Pw2QOeLaBy-lA/640r480/d/time-circle-icon.svg' alt='time-circle-icon' title='' data-size='0x0' data-origin-src='/thumb/2/Z0A_hcrK3Pw2QOeLaBy-lA/640r480/d/time-circle-icon.svg' class='image__img' id='ijj9665ey_0' >
+</div>
+<div class='div tag-text-wrapper' id='i4ps73rdx_0'>
+<div class='text' id='i2z6ap8v1_0'>
+<span class='text-block-wrap-div'>82</span>
+</div>
+<div class='text' id='iv2n5hloy_0'>
+<span class='text-block-wrap-div'>ак. ч.</span>
+</div>
+</div>
+</div>
+</div>
+<div class='div schedule-info-tag' id='igrdm87t8_0'>
+<div class='image schedule-tag-icon' id='ixgrfncwi_0'>
+<img src='/thumb/2/nEpYW3XdTHy2maSXhYgxow/640r480/d/document-verified-icon.svg' alt='document-verified-icon' title='' data-size='0x0' data-origin-src='/thumb/2/nEpYW3XdTHy2maSXhYgxow/640r480/d/document-verified-icon.svg' class='image__img' id='i52nnt2yn_0' >
+</div>
+<div class='text' id='ivsik4rqx_0'>
+<span class='text-block-wrap-div'>Удостоверение</span>
+</div>
+</div>
+</div>
+</div>
+<div class='div schedule-item-price' id='iyi4zg3xf_0'>
+<div class='div flex-wrapper' id='inedc2yos_0'>
+<div class='div schedule-price-tag div--u-iyirvbo4t not-active' id='iyirvbo4t_0'>
+<div class='text' id='i6c80ylep_0'>
+<span class='text-block-wrap-div'>-10%</span>
+</div>
+</div>
+<div class='div schedule-price' id='ibb9d2khl_0'>
+<div class='text text-paragraph-medium text-weight-bold' id='ihlx7hu70_0'>
+<span class='text-block-wrap-div'>40 000</span>
+</div>
+<div class='text text-paragraph-medium text-weight-bold' id='ipw3wsngj_0'>
+<span class='text-block-wrap-div'>₽</span>
+</div>
+</div>
+</div>
+<div class='div schedule-link-button' id='iqjiz9lu2_0'>
+<div class='text' id='ihqd960hc_0'>
+<span class='text-block-wrap-div'>Записаться</span>
+</div>
+</div>
+</div>
+</div>
+</a>
+</div>
+</div>
+</div>
+<div class='div schedule-component' id='iv3ig8r7f_0'>
+<div class='div schedule-links-component margin-24' id='i356nseso_0'>
+<div class='text text-paragraph-large text-weight-bold tab-heading' id='iddzmymhl_0'>
+<span class='text-block-wrap-div'>Май</span>
+</div>
+<div class='div schedule-links-wrapper' id='i27giqphr_0'>
+<a href='https://modern-psy.ru/couples-therapy?utm_source=web&utm_medium=cpc&utm_campaign=schedule' data-action-element='' target='_blank' class='link-block schedule-link' id='ijc40hba0_0'>
+<div class='div schedule-item div--u-iv95ka11q' id='iv95ka11q_0'>
+<div class='div schedule-item-date div--u-ii57r8l8a' id='ii57r8l8a_0'>
+<div class='div schedule-item-date-tag' id='ibc0c6ob7_0'>
+<div class='text' id='iljxucba5_0'>
+<span class='text-block-wrap-div'>Идёт набор</span>
+</div>
+</div>
+<div class='div schedule-item-date-tag-red not-active' id='i9ili4s6q_0'>
+<div class='text' id='idjv2getn_0'>
+<span class='text-block-wrap-div'>SOLD OUT</span>
+</div>
+</div>
+<div class='div schedule-date-wrapper' id='iid58vmev_0'>
+<div class='text heading-style-h4 text-weight-bold' id='idnbfth4u_0'>
+<span class='text-block-wrap-div'>18</span>
+</div>
+<div class='text caption-small text-color-violet' id='idd3fi5kr_0'>
+<span class='text-block-wrap-div'>Мая, пн</span>
+</div>
+</div>
+</div>
+<div class='div schedule-item-info' id='ie3gkf3hf_0'>
+<div class='div schedule-info-text-wrapper' id='iiajux6tt_0'>
+<div class='text text-paragraph-medium text-weight-bold' id='i0ajeytz7_0'>
+<span class='text-block-wrap-div'>Терапия пар</span>
+</div>
+<div class='text caption-small text-color-violet-copy' id='i6hfcfhdq_0'>
+<span class='text-block-wrap-div'>Интегративный подход на основе Схема-терапии, ACT и EFT</span>
+</div>
+</div>
+<div class='div schedule-info-tag-wrapper' id='ipfewrxus_0'>
+<div class='div inner-tag-wrapper' id='ie35itbdv_0'>
+<div class='div schedule-info-tag' id='iwaf3aedt_0'>
+<div class='image schedule-tag-icon' id='ixemyy6bn_0'>
+<img src='/thumb/2/C-PCUk8sC6qkunoWuyMWhA/640r480/d/calendar-icon.svg' alt='calendar-icon' title='' data-size='0x0' data-origin-src='/thumb/2/C-PCUk8sC6qkunoWuyMWhA/640r480/d/calendar-icon.svg' class='image__img' id='iv86lw9vz_0' >
+</div>
+<div class='text' id='i099towxj_0'>
+<span class='text-block-wrap-div'>По понедельникам</span>
+</div>
+</div>
+<div class='div schedule-info-tag' id='iqf0lo407_0'>
+<div class='image schedule-tag-icon' id='i1ssuhf81_0'>
+<img src='/thumb/2/Z0A_hcrK3Pw2QOeLaBy-lA/640r480/d/time-circle-icon.svg' alt='time-circle-icon' title='' data-size='0x0' data-origin-src='/thumb/2/Z0A_hcrK3Pw2QOeLaBy-lA/640r480/d/time-circle-icon.svg' class='image__img' id='ihrlna8w9_0' >
+</div>
+<div class='div tag-text-wrapper' id='icfwtd7ro_0'>
+<div class='text' id='ilato00wf_0'>
+<span class='text-block-wrap-div'>130</span>
+</div>
+<div class='text' id='i5m9qh54q_0'>
+<span class='text-block-wrap-div'>ак. ч.</span>
+</div>
+</div>
+</div>
+</div>
+<div class='div schedule-info-tag' id='i0p4p0srb_0'>
+<div class='image schedule-tag-icon' id='iaftkzp9a_0'>
+<img src='/thumb/2/nEpYW3XdTHy2maSXhYgxow/640r480/d/document-verified-icon.svg' alt='document-verified-icon' title='' data-size='0x0' data-origin-src='/thumb/2/nEpYW3XdTHy2maSXhYgxow/640r480/d/document-verified-icon.svg' class='image__img' id='ia628cckl_0' >
+</div>
+<div class='text' id='iaf9m3v8k_0'>
+<span class='text-block-wrap-div'>Удостоверение</span>
+</div>
+</div>
+</div>
+</div>
+<div class='div schedule-item-price' id='ispo8reyh_0'>
+<div class='div flex-wrapper' id='iy791rbq4_0'>
+<div class='div schedule-price-tag div--u-i63mp53b6 not-active' id='i63mp53b6_0'>
+<div class='text' id='ioo6t3r7z_0'>
+<span class='text-block-wrap-div'>-10%</span>
+</div>
+</div>
+<div class='div schedule-price' id='io775a4gk_0'>
+<div class='text text-paragraph-medium text-weight-bold' id='i6isgez26_0'>
+<span class='text-block-wrap-div'>50 000</span>
+</div>
+<div class='text text-paragraph-medium text-weight-bold' id='i37wfisbm_0'>
+<span class='text-block-wrap-div'>₽</span>
+</div>
+</div>
+</div>
+<div class='div schedule-link-button' id='imkvo89ni_0'>
+<div class='text' id='igglkc2ys_0'>
+<span class='text-block-wrap-div'>Записаться</span>
+</div>
+</div>
+</div>
+</div>
+</a>
+<a href='https://modern-psy.ru/autistic-disorders?utm_source=web&utm_medium=cpc&utm_campaign=schedule' data-action-element='' target='_blank' class='link-block schedule-link' id='itbfuh8yd_0'>
+<div class='div schedule-item div--u-idxxrnsea' id='idxxrnsea_0'>
+<div class='div schedule-item-date div--u-i0ncolc0d' id='i0ncolc0d_0'>
+<div class='div schedule-item-date-tag' id='i1n49j8ff_0'>
+<div class='text' id='ii3bwucqr_0'>
+<span class='text-block-wrap-div'>Идёт набор</span>
+</div>
+</div>
+<div class='div schedule-item-date-tag-red not-active' id='izz42i00j_0'>
+<div class='text' id='ijliuy5oa_0'>
+<span class='text-block-wrap-div'>SOLD OUT</span>
+</div>
+</div>
+<div class='div schedule-date-wrapper' id='img555g6q_0'>
+<div class='text heading-style-h4 text-weight-bold' id='iafc2sdi1_0'>
+<span class='text-block-wrap-div'>13</span>
+</div>
+<div class='text caption-small text-color-violet' id='iij65krc4_0'>
+<span class='text-block-wrap-div'>Мая, ср</span>
+</div>
+</div>
+</div>
+<div class='div schedule-item-info' id='im3h4kdo2_0'>
+<div class='div schedule-info-text-wrapper' id='ii0l67d4h_0'>
+<div class='text text-paragraph-medium text-weight-bold' id='inbdsg3lp_0'>
+<span class='text-block-wrap-div'>Расстройства аутистического спектра (РАС) в практике психолога</span>
+</div>
+<div class='text caption-small text-color-violet-copy not-active' id='irbxozpuk_0'>
+<span class='text-block-wrap-div'>Модель Бека</span>
+</div>
+</div>
+<div class='div schedule-info-tag-wrapper' id='icnuzvdta_0'>
+<div class='div inner-tag-wrapper' id='i8vmsvux3_0'>
+<div class='div schedule-info-tag' id='ifhxm4dv2_0'>
+<div class='image schedule-tag-icon' id='ij4zuyo6i_0'>
+<img src='/thumb/2/C-PCUk8sC6qkunoWuyMWhA/640r480/d/calendar-icon.svg' alt='calendar-icon' title='' data-size='0x0' data-origin-src='/thumb/2/C-PCUk8sC6qkunoWuyMWhA/640r480/d/calendar-icon.svg' class='image__img' id='i8yeyv1cj_0' >
+</div>
+<div class='text' id='i67g6ltf5_0'>
+<span class='text-block-wrap-div'>По средам </span>
+</div>
+</div>
+<div class='div schedule-info-tag' id='i9ylaltt4_0'>
+<div class='image schedule-tag-icon' id='iyp24luxb_0'>
+<img src='/thumb/2/Z0A_hcrK3Pw2QOeLaBy-lA/640r480/d/time-circle-icon.svg' alt='time-circle-icon' title='' data-size='0x0' data-origin-src='/thumb/2/Z0A_hcrK3Pw2QOeLaBy-lA/640r480/d/time-circle-icon.svg' class='image__img' id='iuvaobvqs_0' >
+</div>
+<div class='div tag-text-wrapper' id='i8l7ggvz1_0'>
+<div class='text' id='iqk83yrb4_0'>
+<span class='text-block-wrap-div'>40</span>
+</div>
+<div class='text' id='iu5hsaebm_0'>
+<span class='text-block-wrap-div'>ак. ч.</span>
+</div>
+</div>
+</div>
+</div>
+<div class='div schedule-info-tag' id='isqed8y7v_0'>
+<div class='image schedule-tag-icon' id='ith2gviym_0'>
+<img src='/thumb/2/nEpYW3XdTHy2maSXhYgxow/640r480/d/document-verified-icon.svg' alt='document-verified-icon' title='' data-size='0x0' data-origin-src='/thumb/2/nEpYW3XdTHy2maSXhYgxow/640r480/d/document-verified-icon.svg' class='image__img' id='ix5ggue3a_0' >
+</div>
+<div class='text' id='iwo5d4ifn_0'>
+<span class='text-block-wrap-div'>Удостоверение</span>
+</div>
+</div>
+</div>
+</div>
+<div class='div schedule-item-price' id='i2aki00oh_0'>
+<div class='div flex-wrapper' id='izoac1sa5_0'>
+<div class='div schedule-price-tag div--u-itdufna54 not-active' id='itdufna54_0'>
+<div class='text' id='iithpnb28_0'>
+<span class='text-block-wrap-div'>-10%</span>
+</div>
+</div>
+<div class='div schedule-price' id='i5joo3ptz_0'>
+<div class='text text-paragraph-medium text-weight-bold' id='ixa5r2l4e_0'>
+<span class='text-block-wrap-div'>20 000</span>
+</div>
+<div class='text text-paragraph-medium text-weight-bold' id='i4wbzebbh_0'>
+<span class='text-block-wrap-div'>₽</span>
+</div>
+</div>
+</div>
+<div class='div schedule-link-button' id='ivl1c0590_0'>
+<div class='text' id='ido2a30we_0'>
+<span class='text-block-wrap-div'>Записаться</span>
+</div>
+</div>
+</div>
+</div>
+</a>
+</div>
+</div>
+</div>
+<div class='div schedule-component' id='icx8sdqi2_0'>
+<div class='div schedule-links-component margin-24' id='irhj3ifif_0'>
+<div class='text text-paragraph-large text-weight-bold tab-heading' id='ig4ymld30_0'>
+<span class='text-block-wrap-div'>Июнь</span>
+</div>
+<div class='div schedule-links-wrapper' id='i851r9p46_0'>
+<a href='https://modern-psy.ru/fap?utm_source=web&utm_medium=cpc&utm_campaign=schedule' data-action-element='' target='_blank' class='link-block schedule-link' id='i2p4hzwpx_0'>
+<div class='div schedule-item div--u-ibj7qblsw' id='ibj7qblsw_0'>
+<div class='div schedule-item-date div--u-io37irijr' id='io37irijr_0'>
+<div class='div schedule-item-date-tag' id='i14pppnis_0'>
+<div class='text' id='isdhdiifg_0'>
+<span class='text-block-wrap-div'>Идет набор</span>
+</div>
+</div>
+<div class='div schedule-item-date-tag-red not-active' id='il3ybq3fi_0'>
+<div class='text' id='iz6lnilyz_0'>
+<span class='text-block-wrap-div'>SOLD OUT</span>
+</div>
+</div>
+<div class='div schedule-date-wrapper' id='i9lt8jdn5_0'>
+<div class='text heading-style-h4 text-weight-bold' id='i6jbf61qo_0'>
+<span class='text-block-wrap-div'>09</span>
+</div>
+<div class='text caption-small text-color-violet' id='i5qtfpsbt_0'>
+<span class='text-block-wrap-div'>Июня, вт</span>
+</div>
+</div>
+</div>
+<div class='div schedule-item-info' id='ibw20a3fx_0'>
+<div class='div schedule-info-text-wrapper' id='iluay508e_0'>
+<div class='text text-paragraph-medium text-weight-bold' id='ids2l4ko0_0'>
+<span class='text-block-wrap-div'>FAP: Функциональная аналитическая психотерапия</span>
+</div>
+<div class='text caption-small text-color-violet-copy not-active' id='iy989rn6c_0'>
+<span class='text-block-wrap-div'>Полимодальный курс</span>
+</div>
+</div>
+<div class='div schedule-info-tag-wrapper' id='i1muzrgy5_0'>
+<div class='div inner-tag-wrapper' id='iibidt9qw_0'>
+<div class='div schedule-info-tag' id='iiexp0q60_0'>
+<div class='image schedule-tag-icon' id='iz190zh50_0'>
+<img src='/thumb/2/C-PCUk8sC6qkunoWuyMWhA/640r480/d/calendar-icon.svg' alt='calendar-icon' title='' data-size='0x0' data-origin-src='/thumb/2/C-PCUk8sC6qkunoWuyMWhA/640r480/d/calendar-icon.svg' class='image__img' id='ivhi4r0wv_0' >
+</div>
+<div class='text' id='ipylinlt7_0'>
+<span class='text-block-wrap-div'>По вторникам</span>
+</div>
+</div>
+<div class='div schedule-info-tag' id='imqn5eucg_0'>
+<div class='image schedule-tag-icon' id='iqp73ca2a_0'>
+<img src='/thumb/2/Z0A_hcrK3Pw2QOeLaBy-lA/640r480/d/time-circle-icon.svg' alt='time-circle-icon' title='' data-size='0x0' data-origin-src='/thumb/2/Z0A_hcrK3Pw2QOeLaBy-lA/640r480/d/time-circle-icon.svg' class='image__img' id='i1u00kan9_0' >
+</div>
+<div class='div tag-text-wrapper' id='iq02t4cam_0'>
+<div class='text' id='icug06p7r_0'>
+<span class='text-block-wrap-div'>36</span>
+</div>
+<div class='text' id='i1w17huoj_0'>
+<span class='text-block-wrap-div'>ак. ч.</span>
+</div>
+</div>
+</div>
+</div>
+<div class='div schedule-info-tag' id='iyejnp46c_0'>
+<div class='image schedule-tag-icon' id='i42m06tmy_0'>
+<img src='/thumb/2/nEpYW3XdTHy2maSXhYgxow/640r480/d/document-verified-icon.svg' alt='document-verified-icon' title='' data-size='0x0' data-origin-src='/thumb/2/nEpYW3XdTHy2maSXhYgxow/640r480/d/document-verified-icon.svg' class='image__img' id='ioocwk3nj_0' >
+</div>
+<div class='text' id='in91506ok_0'>
+<span class='text-block-wrap-div'>Удостоверение</span>
+</div>
+</div>
+</div>
+</div>
+<div class='div schedule-item-price' id='iczrcvlm0_0'>
+<div class='div flex-wrapper' id='i2onmwj11_0'>
+<div class='div schedule-price-tag div--u-i5qnbftjv not-active' id='i5qnbftjv_0'>
+<div class='text' id='ia0k2iqd9_0'>
+<span class='text-block-wrap-div'>-10%</span>
+</div>
+</div>
+<div class='div schedule-price' id='irqjkef3p_0'>
+<div class='text text-paragraph-medium text-weight-bold' id='izvt291em_0'>
+<span class='text-block-wrap-div'>25 000</span>
+</div>
+<div class='text text-paragraph-medium text-weight-bold' id='iyup9s7cc_0'>
+<span class='text-block-wrap-div'>₽</span>
+</div>
+</div>
+</div>
+<div class='div schedule-link-button' id='ids5ewpei_0'>
+<div class='text' id='ivvy1m88d_0'>
+<span class='text-block-wrap-div'>Записаться</span>
+</div>
+</div>
+</div>
+</div>
+</a>
+</div>
+</div>
+</div>
+<div class='div schedule-component' id='ipx6eg50p_0'>
+<div class='div schedule-links-component margin-24' id='ifporqcbl_0'>
+<div class='text text-paragraph-large text-weight-bold tab-heading' id='imwy47r6l_0'>
+<span class='text-block-wrap-div'>Август</span>
+</div>
+<div class='div schedule-links-wrapper' id='iic9zdty2_0'>
+<a href='https://modern-psy.ru/s-risk?utm_source=web&utm_medium=cpc&utm_campaign=schedule' data-action-element='' target='_blank' class='link-block schedule-link' id='i9sksiysa_0'>
+<div class='div schedule-item div--u-il4t9biai' id='il4t9biai_0'>
+<div class='div schedule-item-date div--u-iy4y6vfqe' id='iy4y6vfqe_0'>
+<div class='div schedule-item-date-tag' id='ihvwor2qr_0'>
+<div class='text' id='iaq93dte3_0'>
+<span class='text-block-wrap-div'>Идёт набор</span>
+</div>
+</div>
+<div class='div schedule-item-date-tag-red not-active' id='imgfpo2nz_0'>
+<div class='text' id='ipj1blgsd_0'>
+<span class='text-block-wrap-div'>SOLD OUT</span>
+</div>
+</div>
+<div class='div schedule-date-wrapper' id='iuy9cec1s_0'>
+<div class='text heading-style-h4 text-weight-bold' id='ilqgewftl_0'>
+<span class='text-block-wrap-div'>10</span>
+</div>
+<div class='text caption-small text-color-violet' id='iiqc4bl21_0'>
+<span class='text-block-wrap-div'>Августа, пн</span>
+</div>
+</div>
+</div>
+<div class='div schedule-item-info' id='ig4wbj57p_0'>
+<div class='div schedule-info-text-wrapper' id='ixn8ti1p1_0'>
+<div class='text text-paragraph-medium text-weight-bold' id='iob7hzeng_0'>
+<span class='text-block-wrap-div'>Оценка и управление суицидальным риском</span>
+</div>
+<div class='text caption-small text-color-violet-copy not-active' id='i99bg5azs_0'>
+<span class='text-block-wrap-div'>Оксфордская модель</span>
+</div>
+</div>
+<div class='div schedule-info-tag-wrapper' id='i9wvao967_0'>
+<div class='div inner-tag-wrapper' id='izqyvpgs3_0'>
+<div class='div schedule-info-tag' id='i3q8u5iwz_0'>
+<div class='image schedule-tag-icon' id='iuzydtp6e_0'>
+<img src='/thumb/2/C-PCUk8sC6qkunoWuyMWhA/640r480/d/calendar-icon.svg' alt='calendar-icon' title='' data-size='0x0' data-origin-src='/thumb/2/C-PCUk8sC6qkunoWuyMWhA/640r480/d/calendar-icon.svg' class='image__img' id='ikges45jc_0' >
+</div>
+<div class='text' id='i3mry3zuo_0'>
+<span class='text-block-wrap-div'>По понедельникам</span>
+</div>
+</div>
+<div class='div schedule-info-tag' id='iwrmz1cf3_0'>
+<div class='image schedule-tag-icon' id='ijws7cqec_0'>
+<img src='/thumb/2/Z0A_hcrK3Pw2QOeLaBy-lA/640r480/d/time-circle-icon.svg' alt='time-circle-icon' title='' data-size='0x0' data-origin-src='/thumb/2/Z0A_hcrK3Pw2QOeLaBy-lA/640r480/d/time-circle-icon.svg' class='image__img' id='ilcoz454o_0' >
+</div>
+<div class='div tag-text-wrapper' id='ijx7z9tc6_0'>
+<div class='text' id='idcz8bgww_0'>
+<span class='text-block-wrap-div'>20</span>
+</div>
+<div class='text' id='iq90lkfdu_0'>
+<span class='text-block-wrap-div'>ак. ч.</span>
+</div>
+</div>
+</div>
+</div>
+<div class='div schedule-info-tag' id='i8c2gbhcv_0'>
+<div class='image schedule-tag-icon' id='ibbymjrdj_0'>
+<img src='/thumb/2/nEpYW3XdTHy2maSXhYgxow/640r480/d/document-verified-icon.svg' alt='document-verified-icon' title='' data-size='0x0' data-origin-src='/thumb/2/nEpYW3XdTHy2maSXhYgxow/640r480/d/document-verified-icon.svg' class='image__img' id='ici1oasx8_0' >
+</div>
+<div class='text' id='i0pa18j81_0'>
+<span class='text-block-wrap-div'>Удостоверение</span>
+</div>
+</div>
+</div>
+</div>
+<div class='div schedule-item-price' id='i3tieming_0'>
+<div class='div flex-wrapper' id='ibcflezhp_0'>
+<div class='div schedule-price-tag div--u-iruff1erj not-active' id='iruff1erj_0'>
+<div class='text' id='ib43bto6f_0'>
+<span class='text-block-wrap-div'>-10%</span>
+</div>
+</div>
+<div class='div schedule-price' id='i8454lvfa_0'>
+<div class='text text-paragraph-medium text-weight-bold' id='il8tz2mp4_0'>
+<span class='text-block-wrap-div'>12 000</span>
+</div>
+<div class='text text-paragraph-medium text-weight-bold' id='ih5ldb86g_0'>
+<span class='text-block-wrap-div'>₽</span>
+</div>
+</div>
+</div>
+<div class='div schedule-link-button' id='i1fp9rgou_0'>
+<div class='text' id='itw1antlt_0'>
+<span class='text-block-wrap-div'>Записаться</span>
+</div>
+</div>
+</div>
+</div>
+</a>
+<a href='https://modern-psy.ru/addiction-therapy?utm_source=web&utm_medium=cpc&utm_campaign=schedule' data-action-element='' target='_blank' class='link-block schedule-link' id='ioyvwf5yo_0'>
+<div class='div schedule-item div--u-iu5veobfl' id='iu5veobfl_0'>
+<div class='div schedule-item-date div--u-ij66exsjk' id='ij66exsjk_0'>
+<div class='div schedule-item-date-tag schedule-item-date-tag-warning' id='iwwjwn9kc_0'>
+<div class='text' id='i9w2myx27_0'>
+<span class='text-block-wrap-div'>Последний шанс</span>
+</div>
+</div>
+<div class='div schedule-item-date-tag-red' id='id6x1lirz_0'>
+<div class='text' id='ihkewu0s1_0'>
+<span class='text-block-wrap-div'>SOLD OUT</span>
+</div>
+</div>
+<div class='div schedule-date-wrapper' id='i7bkclzy6_0'>
+<div class='text heading-style-h4 text-weight-bold' id='i52igeefb_0'>
+<span class='text-block-wrap-div'>19</span>
+</div>
+<div class='text caption-small text-color-violet' id='i48zvxmxz_0'>
+<span class='text-block-wrap-div'>Августа, ср</span>
+</div>
+</div>
+<div class='div schedule-item-date-tag' id='i09wpmewq_0'>
+<div class='text' id='ixjoo2tu8_0'>
+<span class='text-block-wrap-div'>Идёт набор</span>
+</div>
+</div>
+</div>
+<div class='div schedule-item-info' id='ikufc5lbv_0'>
+<div class='div schedule-info-text-wrapper' id='ikh9c05fe_0'>
+<div class='text text-paragraph-medium text-weight-bold' id='iau4yb40l_0'>
+<span class='text-block-wrap-div'>Техники терапии зависимостей</span>
+</div>
+<div class='text caption-small text-color-violet-copy not-active' id='id7sqhbdr_0'>
+<span class='text-block-wrap-div'>Оксфордская модель</span>
+</div>
+</div>
+<div class='div schedule-info-tag-wrapper' id='i0rp77bzr_0'>
+<div class='div inner-tag-wrapper' id='i7ul23ecq_0'>
+<div class='div schedule-info-tag' id='ifqi310wk_0'>
+<div class='image schedule-tag-icon' id='iszlhpyqc_0'>
+<img src='/thumb/2/C-PCUk8sC6qkunoWuyMWhA/640r480/d/calendar-icon.svg' alt='calendar-icon' title='' data-size='0x0' data-origin-src='/thumb/2/C-PCUk8sC6qkunoWuyMWhA/640r480/d/calendar-icon.svg' class='image__img' id='imeoadym5_0' >
+</div>
+<div class='text' id='ionp2u1id_0'>
+<span class='text-block-wrap-div'>По средам</span>
+</div>
+</div>
+<div class='div schedule-info-tag' id='ig28pwm67_0'>
+<div class='image schedule-tag-icon' id='i6277wpk5_0'>
+<img src='/thumb/2/Z0A_hcrK3Pw2QOeLaBy-lA/640r480/d/time-circle-icon.svg' alt='time-circle-icon' title='' data-size='0x0' data-origin-src='/thumb/2/Z0A_hcrK3Pw2QOeLaBy-lA/640r480/d/time-circle-icon.svg' class='image__img' id='ib6hwnpbt_0' >
+</div>
+<div class='div tag-text-wrapper' id='iphlinrrd_0'>
+<div class='text' id='ipwdzq8gu_0'>
+<span class='text-block-wrap-div'>130</span>
+</div>
+<div class='text' id='iszpwnlbg_0'>
+<span class='text-block-wrap-div'>ак. ч.</span>
+</div>
+</div>
+</div>
+</div>
+<div class='div schedule-info-tag' id='idnf3ffmt_0'>
+<div class='image schedule-tag-icon' id='iw2asdt37_0'>
+<img src='/thumb/2/nEpYW3XdTHy2maSXhYgxow/640r480/d/document-verified-icon.svg' alt='document-verified-icon' title='' data-size='0x0' data-origin-src='/thumb/2/nEpYW3XdTHy2maSXhYgxow/640r480/d/document-verified-icon.svg' class='image__img' id='i7is5tcwv_0' >
+</div>
+<div class='text' id='i4fxt6hb9_0'>
+<span class='text-block-wrap-div'>Удостоверение</span>
+</div>
+</div>
+</div>
+</div>
+<div class='div schedule-item-price' id='ir134mnvf_0'>
+<div class='div flex-wrapper' id='ig90xdirp_0'>
+<div class='div schedule-price-tag div--u-i43cq3vrs not-active' id='i43cq3vrs_0'>
+<div class='text' id='ig2m31daz_0'>
+<span class='text-block-wrap-div'>-10%</span>
+</div>
+</div>
+<div class='div schedule-price' id='i4d8qvx7r_0'>
+<div class='text text-paragraph-medium text-weight-bold' id='ii0rgngqv_0'>
+<span class='text-block-wrap-div'>35 000</span>
+</div>
+<div class='text text-paragraph-medium text-weight-bold' id='imf3q93ip_0'>
+<span class='text-block-wrap-div'>₽</span>
+</div>
+</div>
+</div>
+<div class='div schedule-link-button' id='iahk22jpv_0'>
+<div class='text' id='irm5p7n0i_0'>
+<span class='text-block-wrap-div'>Записаться</span>
+</div>
+</div>
+</div>
+</div>
+</a>
+<a href='https://modern-psy.ru/neurodivergence?utm_source=web&utm_medium=cpc&utm_campaign=schedule' data-action-element='' target='_blank' class='link-block schedule-link' id='iv32gs54t_0'>
+<div class='div schedule-item div--u-i8rapuw57' id='i8rapuw57_0'>
+<div class='div schedule-item-date div--u-in442krh0' id='in442krh0_0'>
+<div class='div schedule-item-date-tag' id='i5g0ujkok_0'>
+<div class='text' id='i8suk2l8n_0'>
+<span class='text-block-wrap-div'>Идёт набор</span>
+</div>
+</div>
+<div class='div schedule-item-date-tag-red not-active' id='icu5kqddq_0'>
+<div class='text' id='ixzu3gu8f_0'>
+<span class='text-block-wrap-div'>SOLD OUT</span>
+</div>
+</div>
+<div class='div schedule-date-wrapper' id='ioyibvcn2_0'>
+<div class='text heading-style-h4 text-weight-bold' id='isuh3c6m8_0'>
+<span class='text-block-wrap-div'>29</span>
+</div>
+<div class='text caption-small text-color-violet' id='idunje0cv_0'>
+<span class='text-block-wrap-div'>Августа, сб</span>
+</div>
+</div>
+</div>
+<div class='div schedule-item-info' id='ixjhpkh97_0'>
+<div class='div schedule-info-text-wrapper' id='ijxhbyvt2_0'>
+<div class='text text-paragraph-medium text-weight-bold' id='ie3w7qciq_0'>
+<span class='text-block-wrap-div'>Психотерапия нейроотличных клиентов: РАС и СДВГ</span>
+</div>
+<div class='text caption-small text-color-violet-copy not-active' id='ifs39q52y_0'>
+<span class='text-block-wrap-div'>Оксфордская модель</span>
+</div>
+</div>
+<div class='div schedule-info-tag-wrapper' id='ijru61jhn_0'>
+<div class='div inner-tag-wrapper' id='i4ovj9cnh_0'>
+<div class='div schedule-info-tag' id='im514g9wv_0'>
+<div class='image schedule-tag-icon' id='in5uou4r2_0'>
+<img src='/thumb/2/C-PCUk8sC6qkunoWuyMWhA/640r480/d/calendar-icon.svg' alt='calendar-icon' title='' data-size='0x0' data-origin-src='/thumb/2/C-PCUk8sC6qkunoWuyMWhA/640r480/d/calendar-icon.svg' class='image__img' id='i2vm9kz8a_0' >
+</div>
+<div class='text' id='i6jjbko5h_0'>
+<span class='text-block-wrap-div'>По субботам</span>
+</div>
+</div>
+<div class='div schedule-info-tag' id='icswoae5d_0'>
+<div class='image schedule-tag-icon' id='ig418k8uy_0'>
+<img src='/thumb/2/Z0A_hcrK3Pw2QOeLaBy-lA/640r480/d/time-circle-icon.svg' alt='time-circle-icon' title='' data-size='0x0' data-origin-src='/thumb/2/Z0A_hcrK3Pw2QOeLaBy-lA/640r480/d/time-circle-icon.svg' class='image__img' id='iv2akrgvp_0' >
+</div>
+<div class='div tag-text-wrapper' id='ip7l4ef24_0'>
+<div class='text' id='iomjte5n5_0'>
+<span class='text-block-wrap-div'>80</span>
+</div>
+<div class='text' id='ip2z9c3dx_0'>
+<span class='text-block-wrap-div'>ак. ч.</span>
+</div>
+</div>
+</div>
+</div>
+<div class='div schedule-info-tag' id='ioheq6fd5_0'>
+<div class='image schedule-tag-icon' id='ive9b5qdl_0'>
+<img src='/thumb/2/nEpYW3XdTHy2maSXhYgxow/640r480/d/document-verified-icon.svg' alt='document-verified-icon' title='' data-size='0x0' data-origin-src='/thumb/2/nEpYW3XdTHy2maSXhYgxow/640r480/d/document-verified-icon.svg' class='image__img' id='iwqya22vy_0' >
+</div>
+<div class='text' id='ij4zla94e_0'>
+<span class='text-block-wrap-div'>Удостоверение</span>
+</div>
+</div>
+</div>
+</div>
+<div class='div schedule-item-price' id='i3wvosip4_0'>
+<div class='div flex-wrapper' id='i9c39g7dw_0'>
+<div class='div schedule-price-tag div--u-ijm4fzdc8 not-active' id='ijm4fzdc8_0'>
+<div class='text' id='im2oqhqv5_0'>
+<span class='text-block-wrap-div'>-10%</span>
+</div>
+</div>
+<div class='div schedule-price' id='iityn2hhs_0'>
+<div class='text text-paragraph-medium text-weight-bold' id='i6e6hfuh0_0'>
+<span class='text-block-wrap-div'>35 000</span>
+</div>
+<div class='text text-paragraph-medium text-weight-bold' id='igt5dfjl8_0'>
+<span class='text-block-wrap-div'>₽</span>
+</div>
+</div>
+</div>
+<div class='div schedule-link-button' id='iq4xy884g_0'>
+<div class='text' id='iuor9rmzr_0'>
+<span class='text-block-wrap-div'>Записаться</span>
+</div>
+</div>
+</div>
+</div>
+</a>
+</div>
+</div>
+</div>
+<div class='div schedule-component' id='icgpd2yyb_0'>
+<div class='div schedule-links-component margin-24' id='i1hv89bnd_0'>
+<div class='text text-paragraph-large text-weight-bold tab-heading' id='iu3xzbah6_0'>
+<span class='text-block-wrap-div'>Ноябрь</span>
+</div>
+<div class='div schedule-links-wrapper' id='i888bzkhh_0'>
+<a href='https://modern-psy.ru/client-centered-therapy?utm_source=web&utm_medium=cpc&utm_campaign=schedule' data-action-element='' target='_blank' class='link-block schedule-link' id='iszbmobfl_0'>
+<div class='div schedule-item div--u-iu674cfz0' id='iu674cfz0_0'>
+<div class='div schedule-item-date div--u-iq5as1a15' id='iq5as1a15_0'>
+<div class='div schedule-item-date-tag' id='iad2pmujq_0'>
+<div class='text' id='iox61zxzy_0'>
+<span class='text-block-wrap-div'>Идёт набор</span>
+</div>
+</div>
+<div class='div schedule-item-date-tag-red not-active' id='iqy7ht1d4_0'>
+<div class='text' id='ip4v91bca_0'>
+<span class='text-block-wrap-div'>SOLD OUT</span>
+</div>
+</div>
+<div class='div schedule-date-wrapper' id='iafab3n1s_0'>
+<div class='text heading-style-h4 text-weight-bold' id='icuxh99fs_0'>
+<span class='text-block-wrap-div'>15</span>
+</div>
+<div class='text caption-small text-color-violet' id='iyjxtyl6h_0'>
+<span class='text-block-wrap-div'>Ноября, вс</span>
+</div>
+</div>
+</div>
+<div class='div schedule-item-info' id='ivztc8o1p_0'>
+<div class='div schedule-info-text-wrapper' id='i5tvvb3o9_0'>
+<div class='text text-paragraph-medium text-weight-bold' id='izc9eluw0_0'>
+<span class='text-block-wrap-div'>КЦТ: Основы клиент-центрированной психотерапии</span>
+</div>
+<div class='text caption-small text-color-violet-copy not-active' id='irxzacn2l_0'>
+<span class='text-block-wrap-div'>Оксфордская модель</span>
+</div>
+</div>
+<div class='div schedule-info-tag-wrapper' id='iss26yj5y_0'>
+<div class='div inner-tag-wrapper' id='ix57lbouc_0'>
+<div class='div schedule-info-tag' id='ifgnv0n8z_0'>
+<div class='image schedule-tag-icon' id='i4ltcjxpt_0'>
+<img src='/thumb/2/C-PCUk8sC6qkunoWuyMWhA/640r480/d/calendar-icon.svg' alt='calendar-icon' title='' data-size='0x0' data-origin-src='/thumb/2/C-PCUk8sC6qkunoWuyMWhA/640r480/d/calendar-icon.svg' class='image__img' id='i6xkkdurt_0' >
+</div>
+<div class='text' id='ifa1bd0cu_0'>
+<span class='text-block-wrap-div'>По воскресеньям</span>
+</div>
+</div>
+<div class='div schedule-info-tag' id='ifcu93fjw_0'>
+<div class='image schedule-tag-icon' id='i1i31wlx2_0'>
+<img src='/thumb/2/Z0A_hcrK3Pw2QOeLaBy-lA/640r480/d/time-circle-icon.svg' alt='time-circle-icon' title='' data-size='0x0' data-origin-src='/thumb/2/Z0A_hcrK3Pw2QOeLaBy-lA/640r480/d/time-circle-icon.svg' class='image__img' id='irvas0rw1_0' >
+</div>
+<div class='div tag-text-wrapper' id='iypze46jo_0'>
+<div class='text' id='iu9x96fo7_0'>
+<span class='text-block-wrap-div'>52</span>
+</div>
+<div class='text' id='i72g5t7da_0'>
+<span class='text-block-wrap-div'>ак. ч.</span>
+</div>
+</div>
+</div>
+</div>
+<div class='div schedule-info-tag' id='iyjypxadd_0'>
+<div class='image schedule-tag-icon' id='ixhdg8dk2_0'>
+<img src='/thumb/2/nEpYW3XdTHy2maSXhYgxow/640r480/d/document-verified-icon.svg' alt='document-verified-icon' title='' data-size='0x0' data-origin-src='/thumb/2/nEpYW3XdTHy2maSXhYgxow/640r480/d/document-verified-icon.svg' class='image__img' id='ixzxyytmm_0' >
+</div>
+<div class='text' id='iejos3tj0_0'>
+<span class='text-block-wrap-div'>Удостоверение</span>
+</div>
+</div>
+</div>
+</div>
+<div class='div schedule-item-price' id='iobw022ht_0'>
+<div class='div flex-wrapper' id='i3amtisr0_0'>
+<div class='div schedule-price-tag div--u-i6226xem5 not-active' id='i6226xem5_0'>
+<div class='text' id='ipjb0oazc_0'>
+<span class='text-block-wrap-div'>-10%</span>
+</div>
+</div>
+<div class='div schedule-price' id='id51qqwms_0'>
+<div class='text text-paragraph-medium text-weight-bold' id='i6571d4w0_0'>
+<span class='text-block-wrap-div'>25 000</span>
+</div>
+<div class='text text-paragraph-medium text-weight-bold' id='iex6begca_0'>
+<span class='text-block-wrap-div'>₽</span>
+</div>
+</div>
+</div>
+<div class='div schedule-link-button' id='ibv5rx3m6_0'>
+<div class='text' id='i4pnytwxr_0'>
+<span class='text-block-wrap-div'>Записаться</span>
+</div>
+</div>
+</div>
+</div>
+</a>
+</div>
+</div>
+</div>
+<div class='div schedule-links-component margin-16' id='id4in6vqm_0'>
+<div class='text text-paragraph-large text-weight-bold tab-heading' id='iug2baoba_0'>
+<span class='text-block-wrap-div'>Лист ожидания</span>
+</div>
+<div class='div schedule-links-wrapper div--u-iecrcm26h' id='iecrcm26h_0'>
+<a href='https://modern-psy.ru/cbt-workshops?utm_source=web&utm_medium=cpc&utm_campaign=schedule' data-action-element='' target='_blank' class='link-block schedule-link' id='ibp8yj3wu_0'>
+<div class='div div--u-ivghbpvcb schedule-item-wait' id='ivghbpvcb_0'>
+<div class='div schedule-item-info' id='iq12aovm2_0'>
+<div class='div schedule-info-text-wrapper' id='io4hli1am_0'>
+<div class='text text-paragraph-medium text-weight-bold' id='iwd9dkaip_0'>
+<span class='text-block-wrap-div'>Мастерская навыков КПТ с Сергеем Падве</span>
+</div>
+<div class='text caption-small text-color-violet-copy' id='irq7im7f7_0'>
+<span class='text-block-wrap-div'>5000&nbsp; ₽</span>
+</div>
+</div>
+</div>
+<div class='div schedule-item-price' id='i30ef54uv_0'>
+<div class='div schedule-link-button' id='i3janimo1_0'>
+<div class='text' id='ih0hnf8ms_0'>
+<span class='text-block-wrap-div'>Записаться</span>
+</div>
+</div>
+</div>
+</div>
+</a>
+<a href='https://t.me/modernpsyru' data-action-element='' target='_blank' class='link-block schedule-link' id='irvtc9387_0'>
+<div class='div div--u-itoysvmzy schedule-item-wait' id='itoysvmzy_0'>
+<div class='div schedule-item-info div--u-is5hn4ica' id='is5hn4ica_0'>
+<div class='div schedule-info-text-wrapper' id='imfjr6ivl_0'>
+<div class='text text-paragraph-medium text-weight-bold' id='iyb0t1sjb_0'>
+<span class='text-block-wrap-div'>РО ДТБ: Радикально открытая ДТБ</span>
+</div>
+<div class='text caption-small text-color-violet-copy not-active' id='iiwtnrg5d_0'>
+<span class='text-block-wrap-div'>5000&nbsp; ₽</span>
+</div>
+</div>
+</div>
+<div class='div schedule-item-price' id='iiubsusbh_0'>
+<div class='div schedule-link-button' id='ij4wozt80_0'>
+<div class='text' id='imq2i4sbd_0'>
+<span class='text-block-wrap-div'>Записаться</span>
+</div>
+</div>
+</div>
+</div>
+</a>
+<a href='https://t.me/modernpsyru' data-action-element='' target='_blank' class='link-block schedule-link' id='iori1yn4l_0'>
+<div class='div div--u-i3ryv6t4l schedule-item-wait' id='i3ryv6t4l_0'>
+<div class='div schedule-item-info div--u-ic9027jcu' id='ic9027jcu_0'>
+<div class='div schedule-info-text-wrapper' id='i653t2bnb_0'>
+<div class='text text-paragraph-medium text-weight-bold' id='ia19hbooa_0'>
+<span class='text-block-wrap-div'>ОСТ: Односессионная терапия</span>
+</div>
+<div class='text caption-small text-color-violet-copy not-active' id='ingahvsax_0'>
+<span class='text-block-wrap-div'>5000&nbsp; ₽</span>
+</div>
+</div>
+</div>
+<div class='div schedule-item-price' id='i657l8abr_0'>
+<div class='div schedule-link-button' id='iktudk5h0_0'>
+<div class='text' id='ixi0mn4qn_0'>
+<span class='text-block-wrap-div'>Записаться</span>
+</div>
+</div>
+</div>
+</div>
+</a>
+<a href='https://t.me/modernpsyru' data-action-element='' target='_blank' class='link-block schedule-link' id='i98j6bdqz_0'>
+<div class='div div--u-i7l3jrb4k schedule-item-wait' id='i7l3jrb4k_0'>
+<div class='div schedule-item-info div--u-id3vbw3ii' id='id3vbw3ii_0'>
+<div class='div schedule-info-text-wrapper' id='ijza993kw_0'>
+<div class='text text-paragraph-medium text-weight-bold' id='ik05b6fng_0'>
+<span class='text-block-wrap-div'>CFT: Терапия, сфокусированная на сострадании</span>
+</div>
+<div class='text caption-small text-color-violet-copy not-active' id='i9elsefq7_0'>
+<span class='text-block-wrap-div'>5000&nbsp; ₽</span>
+</div>
+</div>
+</div>
+<div class='div schedule-item-price' id='ilbymjudd_0'>
+<div class='div schedule-link-button' id='igw6ijb6r_0'>
+<div class='text' id='i2k8h1ze3_0'>
+<span class='text-block-wrap-div'>Записаться</span>
+</div>
+</div>
+</div>
+</div>
+</a>
+<a href='https://modern-psy.ru/trauma-therapy?utm_source=web&utm_medium=cpc&utm_campaign=schedule' data-action-element='' target='_blank' class='link-block schedule-link' id='i4jzzkmk4_0'>
+<div class='div div--u-i7e27eycg schedule-item-wait' id='i7e27eycg_0'>
+<div class='div schedule-item-info' id='irkbldcuu_0'>
+<div class='div schedule-info-text-wrapper' id='iwrnh0qq3_0'>
+<div class='text text-paragraph-medium text-weight-bold' id='irdhizg98_0'>
+<span class='text-block-wrap-div'>Психотерапия травмы</span>
+</div>
+<div class='text caption-small text-color-violet-copy' id='ibakzow8y_0'>
+<span class='text-block-wrap-div'>Полимодальный курс</span>
+</div>
+</div>
+</div>
+<div class='div schedule-item-price' id='imawrfnmd_0'>
+<div class='div schedule-link-button' id='ig4oo3npl_0'>
+<div class='text' id='ijwvld0ea_0'>
+<span class='text-block-wrap-div'>Записаться</span>
+</div>
+</div>
+</div>
+</div>
+</a>
+<a href='https://modern-psy.ru/emd?utm_source=web&utm_medium=cpc&utm_campaign=schedule' data-action-element='' target='_blank' class='link-block schedule-link' id='iflqwjfkd_0'>
+<div class='div div--u-i5u4t8awq schedule-item-wait' id='i5u4t8awq_0'>
+<div class='div schedule-item-info div--u-imr98idy6' id='imr98idy6_0'>
+<div class='div schedule-info-text-wrapper' id='i2m6iby8s_0'>
+<div class='text text-paragraph-medium text-weight-bold' id='izkrpqyj8_0'>
+<span class='text-block-wrap-div'>Терапия ПТСР</span>
+</div>
+<div class='text caption-small text-color-violet-copy' id='ib351cy73_0'>
+<span class='text-block-wrap-div'>Протокол EMD</span>
+</div>
+</div>
+</div>
+<div class='div schedule-item-price' id='ivj2ig135_0'>
+<div class='div schedule-link-button' id='i0xjui06f_0'>
+<div class='text' id='i0hc802h1_0'>
+<span class='text-block-wrap-div'>Записаться</span>
+</div>
+</div>
+</div>
+</div>
+</a>
+<a href='https://modern-psy.ru/bar?utm_source=web&utm_medium=cpc&utm_campaign=schedule' data-action-element='' target='_blank' class='link-block schedule-link' id='irqnp3avq_0'>
+<div class='div div--u-it0aoz7ai schedule-item-wait' id='it0aoz7ai_0'>
+<div class='div schedule-item-info div--u-i3ipathm4' id='i3ipathm4_0'>
+<div class='div schedule-info-text-wrapper' id='iunmrm4wc_0'>
+<div class='text text-paragraph-medium text-weight-bold' id='i1kstn847_0'>
+<span class='text-block-wrap-div'>Биполярное расстройство (БАР) в практике психолога</span>
+</div>
+<div class='text caption-small text-color-violet-copy not-active' id='iqf628edz_0'>
+<span class='text-block-wrap-div'>5000&nbsp; ₽</span>
+</div>
+</div>
+</div>
+<div class='div schedule-item-price' id='irv81gbxp_0'>
+<div class='div schedule-link-button' id='imrpoetg4_0'>
+<div class='text' id='i09zl0ssn_0'>
+<span class='text-block-wrap-div'>Записаться</span>
+</div>
+</div>
+</div>
+</div>
+</a>
+<a href='https://modern-psy.ru/course-rl?utm_source=web&utm_medium=cpc&utm_campaign=schedule' data-action-element='' target='_blank' class='link-block schedule-link' id='itd4lmryu_0'>
+<div class='div div--u-ios11f1nr schedule-item-wait' id='ios11f1nr_0'>
+<div class='div schedule-item-info div--u-i44x9igwb' id='i44x9igwb_0'>
+<div class='div schedule-info-text-wrapper' id='i943gtuhy_0'>
+<div class='text text-paragraph-medium text-weight-bold' id='ia97skor0_0'>
+<span class='text-block-wrap-div'>Современная интегративная психотерапия расстройств личности</span>
+</div>
+<div class='text caption-small text-color-violet-copy not-active' id='i8u7uslmo_0'>
+<span class='text-block-wrap-div'>5000&nbsp; ₽</span>
+</div>
+</div>
+</div>
+<div class='div schedule-item-price' id='ikeevhnw7_0'>
+<div class='div schedule-link-button' id='ixr00t417_0'>
+<div class='text' id='i23dewfqy_0'>
+<span class='text-block-wrap-div'>Записаться</span>
+</div>
+</div>
+</div>
+</div>
+</a>
+<a href='https://modern-psy.ru/ifs?utm_source=web&utm_medium=cpc&utm_campaign=schedule' data-action-element='' target='_blank' class='link-block schedule-link' id='io0lt54cf_0'>
+<div class='div div--u-ilbelzeeq schedule-item-wait' id='ilbelzeeq_0'>
+<div class='div schedule-item-info div--u-i254oh859' id='i254oh859_0'>
+<div class='div schedule-info-text-wrapper' id='ise7w3ozz_0'>
+<div class='text text-paragraph-medium text-weight-bold' id='ih75rtloy_0'>
+<span class='text-block-wrap-div'>Терапия внутренних семейных систем (IFS)</span>
+</div>
+<div class='text caption-small text-color-violet-copy not-active' id='iay25360c_0'>
+<span class='text-block-wrap-div'>5000&nbsp; ₽</span>
+</div>
+</div>
+</div>
+<div class='div schedule-item-price' id='ix5h41o9a_0'>
+<div class='div schedule-link-button' id='ijjux3vvm_0'>
+<div class='text' id='ix1eliqy1_0'>
+<span class='text-block-wrap-div'>Записаться</span>
+</div>
+</div>
+</div>
+</div>
+</a>
+<a href='https://modern-psy.ru/ifs?utm_source=web&utm_medium=cpc&utm_campaign=schedule' data-action-element='' target='_blank' class='link-block schedule-link not-active' id='id9rvqqoc_0'>
+<div class='div div--u-iud93ib88 schedule-item-wait' id='iud93ib88_0'>
+<div class='div schedule-item-info div--u-iwrht6dhb' id='iwrht6dhb_0'>
+<div class='div schedule-info-text-wrapper' id='i1bor7311_0'>
+<div class='text text-paragraph-medium text-weight-bold' id='inzd78vgx_0'>
+<span class='text-block-wrap-div'>Терапия внутренних семейных систем (IFS)</span>
+</div>
+<div class='text caption-small text-color-violet-copy not-active' id='iqm8vpxl5_0'>
+<span class='text-block-wrap-div'>5000&nbsp; ₽</span>
+</div>
+</div>
+</div>
+<div class='div schedule-item-price' id='ikjvgfh18_0'>
+<div class='div schedule-link-button' id='i5206a612_0'>
+<div class='text' id='iz16k6q6d_0'>
+<span class='text-block-wrap-div'>Записаться</span>
+</div>
+</div>
+</div>
+</div>
+</a>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+</div>
+</div>
+</div>
+</div>
+<script type='application/json' id='data_do_json'>
+{"data":{"section":{"i1f5xpyt8":"2471424382"},"tt_link_universal":{"i313chemu":"2262851596","iwnz6nrdg":"2262851596","imkqq0d9z":"2262851596","ib6ifywah":"2262851596","iehg04726":"2262851596","i2d7jeaju":"2262851596","ia5juigt6":"2262851596","i2h59aw1g":"2262851596","iak2grrxn":"2262851596","ixybp8p2j":"2262851596","ic2e0597e":"2262851596","ibp8yj3wu":"2262851596","irvtc9387":"2262851596","iori1yn4l":"2262851596","i98j6bdqz":"2262851596","it439395w":"2395820077","ichpnldj1":"2395820077","izn5pex5n":"2395820077","i2apz7wpw":"2395820077","i4jzzkmk4":"2262851596","ie0k5usrk":"2262851596","iocn86z6y":"2262851596","inwtf8jus":"2262851596","iflqwjfkd":"2262851596","irqnp3avq":"2262851596","itqxmnfbh":"2262851596","itnv8cgr0":"2262851596","id9rvqqoc":"2262851596","i1or3nu8u":"2262851596","iwz9kufim":"2262851596","ii0owf31u":"2262851596","i9xu15oi9":"2262851596","izl2xplhh":"2262851596","ik02swww4":"2262851596","ijc40hba0":"2262851596","iszbmobfl":"2262851596","iv32gs54t":"2262851596","ipdgtg9f8":"2262851596","i2p4hzwpx":"2262851596","i3xt2lx2h":"2262851596","ioyvwf5yo":"2262851596","iw860bbbj":"2395820077","itd4lmryu":"2262851596","iji2t3l8l":"2395820077","i2d6hfarl":"2395820077","idlr1azd6":"2395820077","ieil2ch10":"2395820077","it1w1y6yw":"2395820077","i4f3zlbru":"2395820077","ia315i28z":"2395820077","ikexc9y5r":"2395820077","io0lt54cf":"2262851596","i9sksiysa":"2262851596","itbfuh8yd":"2262851596"},"tt_image":{"i4yv0q033":"4226276507","irk8l5t7b":"4226276507","i7hxc2vcq":"4226276507","ioycpv3xa":"4226276507","io3pj4nmk":"4226276507","ikkxgbomu":"4226276507","iddk245ji":"4226276507","ib5p4nzku":"4226276507","ih17aotqp":"4226276507","i9o25ym4p":"4226276507","i9h0k4o1q":"4226276507","iyeywm0o6":"4226276507","i1e0snukr":"4226276507","iucak70xz":"4226276507","ilgrtlw6g":"4226276507","iwwbsri4n":"4226276507","ic6rro7pe":"4226276507","ix3c4ms8y":"4226276507","itaratp2i":"4226276507","ip413g4gv":"4226276507","i0ivbqdcq":"4226276507","ig6lsvf3b":"4226276507","id63anq8x":"4226276507","i68sw8b10":"4226276507","igkrsnk66":"4226276507","isdbgsvhn":"4226276507","ik8gadize":"4226276507","i1ovg2urt":"4226276507","im9i325hk":"4226276507","icscdkhmf":"4226276507","ipj6ojv85":"4226276507","iq5urot35":"4226276507","i5zgy1nck":"4226276507","i2ju135kp":"4226276507","ifd51nugz":"4226276507","iruuw1oig":"4226276507","izzih3j6f":"4226276507","iirzkw8fl":"4226276507","i0jc2eu37":"4226276507","ixf7v5yeg":"4226276507","izvjjovz9":"4226276507","ii81cmg36":"4226276507","ibuzx2j2b":"4226276507","i22i8fkx3":"4226276507","i8uhu8t57":"4226276507","iffmdq796":"4226276507","iddrr37a4":"4226276507","ih61gddha":"4226276507","iui4272xt":"4226276507","iwl0w3gvu":"4226276507","ilir4exuc":"4226276507","ieewe805s":"4226276507","ifn8u8guh":"4226276507","iry9jqhfq":"4226276507","i5ittyn61":"4226276507","ijl4s7u3e":"4226276507","iolo74mfr":"4226276507","iyq2fnuku":"4226276507","ibrdlk5b1":"4226276507","iqd8sso4d":"4226276507","i72u2ocrt":"4226276507","iznlwzi26":"4226276507","iedkemw9j":"4226276507","imixfvr4m":"4226276507","ibfoaikk0":"4226276507","izemz64gs":"4226276507","ixemyy6bn":"4226276507","i1ssuhf81":"4226276507","iaftkzp9a":"4226276507","i4ltcjxpt":"4226276507","i1i31wlx2":"4226276507","ixhdg8dk2":"4226276507","in5uou4r2":"4226276507","ig418k8uy":"4226276507","ive9b5qdl":"4226276507","i13lgmm57":"4226276507","ikocruibs":"4226276507","ixgrfncwi":"4226276507","iz190zh50":"4226276507","iqp73ca2a":"4226276507","i42m06tmy":"4226276507","iksrllxuf":"4226276507","iu959cgvs":"4226276507","i1i5eg47q":"4226276507","iszlhpyqc":"4226276507","i6277wpk5":"4226276507","iw2asdt37":"4226276507","iuzydtp6e":"4226276507","ijws7cqec":"4226276507","ibbymjrdj":"4226276507","ij4zuyo6i":"4226276507","iyp24luxb":"4226276507","ith2gviym":"4226276507"}},"params":{"2471424382":"{\"screen\":{\"scroll\":false,\"smooth\":true}}","2262851596":"{\"screen\":{\"type\":\"link\",\"eventName\":\"click\",\"eventElement\":\"self\",\"eventAction\":\"\",\"displayType\":\"\",\"selectedTag\":\"\",\"linkType\":\"link\",\"blank\":true}}","4226276507":"{\"screen\":{\"objectFit\":\"cover\",\"lockRatio\":true}}","2395820077":"{\"screen\":{\"type\":\"link\",\"eventName\":\"click\",\"eventElement\":\"self\",\"eventAction\":\"\",\"displayType\":\"\",\"selectedTag\":\"\",\"linkType\":\"anchor\",\"blank\":false,\"speed\":400}}"}}
+</script>
+
+<!-- assets.bottom -->
+<!-- </noscript></script></style> -->
+<script src="/my/s3/js/site.min.js?1770813159" ></script>
+<script >/*<![CDATA[*/
+var megacounter_key="9e0ef0ade8ae9b295a0dc1076f1ebe19";
+(function(d){
+    var s = d.createElement("script");
+    s.src = "//counter.megagroup.ru/loader.js?"+new Date().getTime();
+    s.async = true;
+    d.getElementsByTagName("head")[0].appendChild(s);
+})(document);
+/*]]>*/</script>
+<script >/*<![CDATA[*/
+$ite.start({"sid":6711652,"vid":6787406,"aid":5012957,"stid":27,"cp":21,"active":true,"domain":"modernpsy.academy","lang":"en","trusted":false,"debug":false,"captcha":3,"onetap":[{"provider":"vkontakte","provider_id":"54105872","code_verifier":"OkyEMGxZUMWxDzD5QYEji4ZDYgNNTY1GDzNZMwYYB3k"}]});
+/*]]>*/</script>
+<!-- /assets.bottom -->
+</body>
+</html>

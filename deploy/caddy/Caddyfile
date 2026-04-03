@@ -1,0 +1,9 @@
+{
+  email {$LETSENCRYPT_EMAIL}
+}
+
+{$DOMAIN:localhost} {
+  encode zstd gzip
+
+  reverse_proxy strapi:1337
+}

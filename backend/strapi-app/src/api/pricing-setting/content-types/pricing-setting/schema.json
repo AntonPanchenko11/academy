@@ -1,0 +1,75 @@
+{
+  "kind": "singleType",
+  "collectionName": "pricing_settings",
+  "info": {
+    "singularName": "pricing-setting",
+    "pluralName": "pricing-settings",
+    "displayName": "Pricing Settings",
+    "description": "Глобальные настройки повышения цен"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "config": {
+    "settings": {
+      "bulkable": true,
+      "filterable": true,
+      "searchable": true,
+      "pageSize": 10,
+      "mainField": "id",
+      "defaultSortBy": "id",
+      "defaultSortOrder": "ASC"
+    },
+    "layouts": {
+      "edit": [
+        [
+          {
+            "name": "scheduledIncreases",
+            "size": 12
+          }
+        ],
+        [
+          {
+            "name": "courseDiscounts",
+            "size": 12
+          }
+        ]
+      ],
+      "list": []
+    },
+    "metadatas": {
+      "scheduledIncreases": {
+        "edit": {
+          "label": "Запланированные повышения цен"
+        },
+        "list": {
+          "label": "Запланированные повышения цен",
+          "searchable": false,
+          "sortable": false
+        }
+      },
+      "courseDiscounts": {
+        "edit": {
+          "label": "Скидки на курсы"
+        },
+        "list": {
+          "label": "Скидки на курсы",
+          "searchable": false,
+          "sortable": false
+        }
+      }
+    }
+  },
+  "attributes": {
+    "scheduledIncreases": {
+      "type": "component",
+      "repeatable": true,
+      "component": "pricing.price-increase"
+    },
+    "courseDiscounts": {
+      "type": "component",
+      "repeatable": true,
+      "component": "pricing.course-discount"
+    }
+  }
+}

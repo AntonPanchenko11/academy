@@ -1,0 +1,20 @@
+.git
+.gitignore
+.env
+.env.*
+node_modules
+npm-debug.log
+.DS_Store
+
+# local/dev artifacts
+extracted-courses.json
+source-schedule.html
+local/
+
+# keep strapi secrets out of build context
+backend/strapi-app/.env
+backend/strapi-app/.tmp
+backend/strapi-app/.cache
+backend/strapi-app/build
+backend/strapi-app/node_modules
+webstudio

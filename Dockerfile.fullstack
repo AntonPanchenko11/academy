@@ -1,0 +1,29 @@
+FROM node:20-alpine AS build
+WORKDIR /opt/app
+
+COPY backend/strapi-app/package*.json ./
+RUN npm ci
+
+COPY backend/strapi-app ./
+
+# Frontend is bundled into Strapi public directory, so one container serves both.
+COPY index.html ./public/index.html
+COPY frontend-db.js ./public/frontend-db.js
+COPY assets ./public/assets
+
+RUN npm run build
+
+FROM node:20-alpine
+WORKDIR /opt/app
+
+ENV NODE_ENV=production
+
+COPY --from=build /opt/app/package*.json ./
+COPY --from=build /opt/app/node_modules ./node_modules
+COPY --from=build /opt/app ./
+
+RUN chown -R node:node /opt/app
+USER node
+
+EXPOSE 1337
+CMD ["npm", "run", "start"]
