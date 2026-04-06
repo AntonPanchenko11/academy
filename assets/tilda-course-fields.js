@@ -27,12 +27,30 @@
     });
   }
 
+  function splitFields(value) {
+    return toText(value)
+      .split(',')
+      .map(function (field) {
+        return toText(field);
+      })
+      .filter(Boolean);
+  }
+
   function getRequestedFields(root) {
+    var renderFields = Array.prototype.slice.call(root.querySelectorAll('[data-course-field]'))
+      .map(function (node) {
+        return toText(node.getAttribute('data-course-field'));
+      });
+    var requestFields = Array.prototype.slice.call(root.querySelectorAll('[data-course-request-field]'))
+      .map(function (node) {
+        return toText(node.getAttribute('data-course-request-field'));
+      });
+    var extraFields = splitFields(root.getAttribute('data-course-fields-extra'));
+
     return unique(
-      Array.prototype.slice.call(root.querySelectorAll('[data-course-field]'))
-        .map(function (node) {
-          return toText(node.getAttribute('data-course-field'));
-        })
+      renderFields
+        .concat(requestFields)
+        .concat(extraFields)
     );
   }
 

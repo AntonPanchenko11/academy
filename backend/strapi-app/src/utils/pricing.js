@@ -9,6 +9,20 @@ const DEFAULT_APP_UTC_OFFSET = '+03:00';
 const PRICING_SETTINGS_COMPONENTS_TABLE = 'pricing_settings_cmps';
 const PRICE_INCREASE_COMPONENTS_TABLE = 'components_pricing_price_increases';
 const COURSE_DISCOUNT_COMPONENTS_TABLE = 'components_pricing_course_discounts';
+const MONTHS_GENITIVE_LOWER = [
+  'января',
+  'февраля',
+  'марта',
+  'апреля',
+  'мая',
+  'июня',
+  'июля',
+  'августа',
+  'сентября',
+  'октября',
+  'ноября',
+  'декабря',
+];
 const { ValidationError } = errors;
 const PRICE_INCREASE_APPLY_ALL = 'Поднять цены всем';
 const PRICE_INCREASE_APPLY_SELECTED = 'Поднять цены выбранным';
@@ -181,6 +195,27 @@ const buildEffectiveAtValue = (effectiveDate, effectiveTime) => {
   return `${normalizedDate}T${normalizeTimeValue(effectiveTime)}${APP_UTC_OFFSET}`;
 };
 
+const formatDateLabelRu = (value) => {
+  const raw = toTrimmedString(value, 32);
+  if (!raw) return null;
+
+  const match = raw.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!match) return raw;
+
+  const monthIndex = Number.parseInt(match[2], 10) - 1;
+  const day = Number.parseInt(match[3], 10);
+  const month = MONTHS_GENITIVE_LOWER[monthIndex] || null;
+  if (!month || !Number.isFinite(day)) return raw;
+
+  return `${day} ${month}`;
+};
+
+const formatPriceDisplay = (value) => {
+  const amount = parseInteger(value);
+  if (!Number.isFinite(amount)) return '';
+  return `${amount.toLocaleString('ru-RU')}\u00A0₽`;
+};
+
 const resolveCoursePricing = (input = {}, existingCourse = null, options = {}) => {
   const current = {
     ...(existingCourse || {}),
@@ -247,20 +282,44 @@ const extractDiscountCourseIds = (discount) => {
     .filter((value) => Number.isFinite(value));
 };
 
-const resolveCourseDiscountPercent = (course, settings) => {
+const resolveCourseDiscount = (course, settings) => {
   const courseId = parseInteger(course && course.id);
   if (!Number.isFinite(courseId) || !settings || !Array.isArray(settings.courseDiscounts)) {
-    return 0;
+    return null;
   }
 
-  return settings.courseDiscounts.reduce((maxPercent, discount) => {
-    if (!discount || discount.active === false) return maxPercent;
+  const matchedDiscount = settings.courseDiscounts.reduce((bestMatch, discount) => {
+    if (!discount || discount.active === false) return bestMatch;
 
     const courseIds = extractDiscountCourseIds(discount);
-    if (!courseIds.includes(courseId)) return maxPercent;
+    if (!courseIds.includes(courseId)) return bestMatch;
 
-    return Math.max(maxPercent, normalizePercent(discount.percent));
-  }, 0);
+    const currentPercent = normalizePercent(discount.percent);
+    if (!currentPercent) return bestMatch;
+    if (!bestMatch || currentPercent > bestMatch.percent) {
+      return {
+        title: toTrimmedString(discount.title, 255) || null,
+        percent: currentPercent,
+      };
+    }
+
+    return bestMatch;
+  }, null);
+
+  if (!matchedDiscount) return null;
+
+  return {
+    title: matchedDiscount.title,
+    percent: matchedDiscount.percent,
+    label: matchedDiscount.title
+      ? `${matchedDiscount.title}: скидка ${matchedDiscount.percent}%`
+      : `Скидка ${matchedDiscount.percent}%`,
+  };
+};
+
+const resolveCourseDiscountPercent = (course, settings) => {
+  const discount = resolveCourseDiscount(course, settings);
+  return discount ? discount.percent : 0;
 };
 
 const hasCoursePricingDiff = (course, pricing) => {
@@ -715,19 +774,24 @@ const resolveScheduledIncreaseIds = (course, settings) => {
 const buildCoursePriceIncreaseInfo = (course, settings, now = new Date()) => {
   const currentBasePrice = parseInteger(course && course.basePrice);
   const currentPrice = parseInteger(course && course.price);
-  const discountPercent = normalizePercent(course && course.discountPercent);
+  const activeDiscount = resolveCourseDiscount(course, settings);
+  const discountPercent = activeDiscount ? activeDiscount.percent : normalizePercent(course && course.discountPercent);
   const upcomingIncreases = getUpcomingScheduledIncreases(settings, now)
     .filter((increase) => scheduledIncreaseAppliesToCourse(increase, course));
 
   let simulatedBasePrice = Number.isFinite(currentBasePrice) ? currentBasePrice : null;
 
   const projectedIncreases = upcomingIncreases.map((increase) => {
+    const effectiveDateLabel = formatDateLabelRu(increase.effectiveDate);
     if (!Number.isFinite(simulatedBasePrice)) {
       return {
         ...increase,
+        effectiveDateLabel,
+        label: effectiveDateLabel ? `Цена с ${effectiveDateLabel}` : 'Цена позже',
         projectedBasePrice: null,
         projectedPrice: null,
         projectedDiscountPercent: discountPercent,
+        projectedPriceLabel: '',
       };
     }
 
@@ -736,15 +800,20 @@ const buildCoursePriceIncreaseInfo = (course, settings, now = new Date()) => {
 
     return {
       ...increase,
+      effectiveDateLabel,
+      label: effectiveDateLabel ? `Цена с ${effectiveDateLabel}` : 'Цена позже',
       projectedBasePrice: simulatedBasePrice,
       projectedPrice: buildStoredPrice({ discountedPrice: projectedPrice }),
       projectedDiscountPercent: discountPercent,
+      projectedPriceLabel: formatPriceDisplay(projectedPrice),
     };
   });
 
   return {
     currentBasePrice: Number.isFinite(currentBasePrice) ? currentBasePrice : null,
     currentPrice: Number.isFinite(currentPrice) ? currentPrice : null,
+    currentPriceLabel: formatPriceDisplay(currentPrice),
+    activeDiscount,
     discountPercent,
     nextIncrease: projectedIncreases[0] || null,
     upcomingIncreases: projectedIncreases,
@@ -927,6 +996,7 @@ module.exports = {
   applyDiscount,
   buildCoursePriceIncreaseInfo,
   buildStoredPrice,
+  formatPriceDisplay,
   getUpcomingScheduledIncreases,
   loadPricingSettings,
   migrateCoursePriceToInteger,
@@ -935,6 +1005,7 @@ module.exports = {
   parseInteger,
   prepareCoursePricingData,
   repairPricingSettingsComponents,
+  resolveCourseDiscount,
   resolveCoursePricing,
   sanitizePricingSettingsData,
   syncPricingState,

@@ -1,0 +1,330 @@
+<style>
+  .academy-price-card,
+  .academy-price-card * {
+    box-sizing: border-box;
+  }
+
+  .academy-price-card {
+    width: 100%;
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 64px;
+    border-radius: 16px;
+    background: #d7d6ef;
+    color: #1d1d33;
+    font-family: "Wix Madefor Text", Arial, sans-serif;
+  }
+
+  .academy-price-card__content {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(420px, 564px);
+    gap: 24px;
+    align-items: start;
+  }
+
+  .academy-price-card__intro {
+    max-width: 564px;
+  }
+
+  .academy-price-card__title {
+    margin: 0 0 16px;
+    font-size: 48px;
+    line-height: 1;
+    font-weight: 600;
+    letter-spacing: -0.03em;
+  }
+
+  .academy-price-card__description {
+    margin: 0;
+    font-size: 18px;
+    line-height: 1.45;
+    font-weight: 400;
+    color: #1d1d33;
+  }
+
+  .academy-price-card__prices {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 16px;
+    width: 100%;
+    max-width: 564px;
+    margin-left: auto;
+  }
+
+  .academy-price-card__chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    align-self: flex-end;
+    width: fit-content;
+    min-height: 40px;
+    padding: 8px 16px;
+    border-radius: 8px;
+    background: #ffd814;
+    font-size: 16px;
+    line-height: 1.45;
+    font-weight: 500;
+    color: #1d1d33;
+  }
+
+  .academy-price-card__chip[hidden] {
+    display: none !important;
+  }
+
+  .academy-price-card__chip-icon {
+    width: 24px;
+    height: 24px;
+    flex: 0 0 24px;
+  }
+
+  .academy-price-card__row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    width: 100%;
+    border-radius: 16px;
+  }
+
+  .academy-price-card__future-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .academy-price-card__future-list[hidden] {
+    display: none !important;
+  }
+
+  .academy-price-card__row--current {
+    padding: 24px;
+    background: #ffffff;
+  }
+
+  .academy-price-card__row--future {
+    padding: 16px 32px;
+    background: #eff2f9;
+    border: 1px solid #eff2f9;
+  }
+
+  .academy-price-card__label,
+  .academy-price-card__value {
+    margin: 0;
+  }
+
+  .academy-price-card__row--current .academy-price-card__label,
+  .academy-price-card__row--current .academy-price-card__value {
+    font-size: 32px;
+    line-height: 1.25;
+    letter-spacing: 0.015em;
+    font-weight: 700;
+    color: #1d1d33;
+  }
+
+  .academy-price-card__row--future .academy-price-card__label,
+  .academy-price-card__row--future .academy-price-card__value {
+    font-size: 24px;
+    line-height: 1.15;
+    letter-spacing: 0.015em;
+    font-weight: 600;
+    color: #8b8bac;
+  }
+
+  .academy-price-card__value {
+    text-align: right;
+    white-space: nowrap;
+  }
+
+  @media (max-width: 980px) {
+    .academy-price-card {
+      padding: 40px;
+    }
+
+    .academy-price-card__content {
+      grid-template-columns: 1fr;
+    }
+
+    .academy-price-card__prices {
+      max-width: none;
+      margin-left: 0;
+    }
+
+    .academy-price-card__chip {
+      align-self: flex-start;
+    }
+  }
+
+  @media (max-width: 640px) {
+    .academy-price-card {
+      padding: 28px 20px;
+      border-radius: 12px;
+    }
+
+    .academy-price-card__title {
+      margin-bottom: 12px;
+      font-size: 32px;
+    }
+
+    .academy-price-card__description {
+      font-size: 16px;
+    }
+
+    .academy-price-card__prices {
+      gap: 12px;
+    }
+
+    .academy-price-card__chip {
+      width: 100%;
+      justify-content: flex-start;
+      font-size: 15px;
+    }
+
+    .academy-price-card__row,
+    .academy-price-card__row--future,
+    .academy-price-card__row--current {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .academy-price-card__row--current {
+      padding: 20px;
+    }
+
+    .academy-price-card__row--future {
+      padding: 16px 20px;
+    }
+
+    .academy-price-card__row--current .academy-price-card__label,
+    .academy-price-card__row--current .academy-price-card__value {
+      font-size: 28px;
+    }
+
+    .academy-price-card__row--future .academy-price-card__label,
+    .academy-price-card__row--future .academy-price-card__value {
+      font-size: 22px;
+    }
+
+    .academy-price-card__value {
+      text-align: left;
+    }
+  }
+</style>
+
+<div
+  class="academy-price-card js-tilda-course-fields"
+  data-api-base="https://dbmpa.ru"
+  data-course-slug="detskaya-psihologiya"
+  data-course-fields-extra="price,activeDiscount,nextPriceIncrease,upcomingPriceIncreases"
+>
+  <div class="academy-price-card__content">
+    <div class="academy-price-card__intro">
+      <h2 class="academy-price-card__title">Оплатите заранее<br>и сэкономьте</h2>
+      <p class="academy-price-card__description">Стоимость курса ниже, если оплатить до старта потока.</p>
+    </div>
+
+    <div class="academy-price-card__prices">
+      <div class="academy-price-card__chip" data-price-block-discount hidden>
+        <svg class="academy-price-card__chip-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M12 3.75L14.168 2.89C14.5671 2.73183 15.012 2.77447 15.3738 3.00485C15.7356 3.23524 15.9712 3.62642 16.0125 4.05375L16.236 6.36975L18.369 7.764C18.7363 8.00367 18.9745 8.39761 19.0164 8.83413C19.0584 9.27064 18.8995 9.70306 18.5858 10.0103L16.92 11.6408L17.292 13.9238C17.3607 14.3458 17.226 14.7768 16.927 15.0832C16.628 15.3895 16.2003 15.5351 15.7793 15.4767L13.5 15.1605L12.1545 17.331C11.9176 17.7133 11.5177 17.9644 11.0717 18.0114C10.6258 18.0583 10.181 17.8958 9.86925 17.5718L8.25075 15.89L5.96325 16.2225C5.54086 16.284 5.11081 16.1496 4.80468 15.8508C4.49854 15.5521 4.35286 15.1248 4.41075 14.703L4.72725 12.423L2.5575 11.0775C2.17511 10.8406 1.92411 10.4407 1.87714 9.99473C1.83017 9.54874 1.99275 9.10396 2.31675 8.79225L4.0005 7.173L3.6675 4.8855C3.60602 4.46311 3.74036 4.03306 4.03916 3.72693C4.33795 3.42079 4.76516 3.27511 5.187 3.333L7.46775 3.6495L8.81325 1.47975C9.05015 1.09737 9.45001 0.846359 9.89601 0.79939C10.342 0.752421 10.7868 0.915001 11.0985 1.239L12 3.75Z" stroke="#1D1D33" stroke-width="1.5" stroke-linejoin="round"/>
+          <path d="M9.75 12L11.25 13.5L14.75 10" stroke="#1D1D33" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span data-price-block-discount-text>Курс месяца: скидка 10%</span>
+      </div>
+
+      <div class="academy-price-card__row academy-price-card__row--current">
+        <p class="academy-price-card__label">Цена сейчас</p>
+        <p class="academy-price-card__value" data-price-block-current-price>20&nbsp;000&nbsp;₽</p>
+      </div>
+
+      <div class="academy-price-card__future-list" data-price-block-future-list hidden></div>
+    </div>
+  </div>
+</div>
+
+<script>
+  (function () {
+    'use strict';
+
+    function formatPrice(value) {
+      var amount = Number(value);
+      if (!Number.isFinite(amount)) return '';
+
+      return amount.toLocaleString('ru-RU') + '\u00A0₽';
+    }
+
+    function renderPriceBlock(root, course) {
+      if (!root || !course) return;
+
+      var discountNode = root.querySelector('[data-price-block-discount]');
+      var discountTextNode = root.querySelector('[data-price-block-discount-text]');
+      var currentPriceNode = root.querySelector('[data-price-block-current-price]');
+      var futureListNode = root.querySelector('[data-price-block-future-list]');
+      var upcoming = Array.isArray(course.upcomingPriceIncreases) ? course.upcomingPriceIncreases : [];
+      var activeDiscount = course.activeDiscount || null;
+
+      if (currentPriceNode) {
+        currentPriceNode.textContent = formatPrice(course.price);
+      }
+
+      if (discountNode && discountTextNode) {
+        if (activeDiscount && activeDiscount.label) {
+          discountTextNode.textContent = activeDiscount.label;
+          discountNode.hidden = false;
+        } else {
+          discountNode.hidden = true;
+        }
+      }
+
+      if (!futureListNode) return;
+
+      futureListNode.innerHTML = '';
+
+      upcoming.forEach(function (increase) {
+        if (!increase || !increase.label || !Number.isFinite(Number(increase.projectedPrice))) return;
+
+        var row = document.createElement('div');
+        row.className = 'academy-price-card__row academy-price-card__row--future';
+
+        var label = document.createElement('p');
+        label.className = 'academy-price-card__label';
+        label.textContent = increase.label;
+
+        var value = document.createElement('p');
+        value.className = 'academy-price-card__value';
+        value.textContent = formatPrice(increase.projectedPrice);
+
+        row.appendChild(label);
+        row.appendChild(value);
+        futureListNode.appendChild(row);
+      });
+
+      futureListNode.hidden = !futureListNode.children.length;
+    }
+
+    function initPriceBlocks() {
+      var roots = document.querySelectorAll('.academy-price-card.js-tilda-course-fields');
+      if (!roots.length) return;
+
+      roots.forEach(function (root) {
+        if (root.getAttribute('data-price-block-bound') === '1') return;
+        root.setAttribute('data-price-block-bound', '1');
+
+        root.addEventListener('academy:tilda:course-data', function (event) {
+          renderPriceBlock(root, event && event.detail ? event.detail.course : null);
+        });
+      });
+    }
+
+    if (typeof window.t_onReady === 'function') {
+      window.t_onReady(initPriceBlocks);
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initPriceBlocks);
+    } else {
+      initPriceBlocks();
+    }
+  })();
+</script>
+<script src="https://dbmpa.ru/assets/tilda-course-fields.js"></script>

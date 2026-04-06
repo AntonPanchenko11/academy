@@ -33,11 +33,12 @@ const toTrimmedString = (value, maxLen = 255) => {
 };
 
 const loadSerializedCourses = async (strapi) => {
+  const settings = await loadPricingSettings(strapi);
   const courses = await strapi.db.query('api::course.course').findMany({
     orderBy: [{ date: 'asc' }, { title: 'asc' }],
   });
 
-  return courses.map(serializeCourse);
+  return courses.map((course) => serializeCourse(course, { settings }));
 };
 
 const checkDatabaseHealth = async (strapi) => {

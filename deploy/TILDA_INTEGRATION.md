@@ -27,6 +27,8 @@ Backend routes:
 <div
   class="js-tilda-course-fields"
   data-api-base="https://your-domain.com"
+  data-course-slug="act"
+  data-course-fields-extra="activeDiscount,upcomingPriceIncreases"
 >
   <h1 data-course-field="title"></h1>
   <div data-course-field="price"></div>
@@ -46,6 +48,10 @@ Backend routes:
 - `data-course-url="https://modern-psy.ru/act"`
 - `data-course-path="/act"`
 
+Если нужно запросить поля без прямой вставки в DOM:
+- `data-course-fields-extra="activeDiscount,upcomingPriceIncreases"`
+- или скрытый узел с `data-course-request-field="activeDiscount"`
+
 Поддерживаемые поля:
 - `title`
 - `comment`
@@ -63,6 +69,10 @@ Backend routes:
 - `discountPercent`
 - `discountedPrice`
 - `price`
+- `scheduledIncreaseIds`
+- `activeDiscount`
+- `nextPriceIncrease`
+- `upcomingPriceIncreases`
 - `educationDocument`
 - `courseLink`
 - `coursePath`
