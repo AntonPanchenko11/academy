@@ -2,6 +2,23 @@
   'use strict';
 
   var ROOT_SELECTOR = '.js-tilda-course-fields, [data-tilda-course]';
+  var REQUEST_CACHE = new Map();
+  var SCRIPT_SRC = (function () {
+    var current = document.currentScript && document.currentScript.src
+      ? document.currentScript.src
+      : '';
+    if (current) return current;
+
+    var scripts = document.querySelectorAll('script[src]');
+    for (var index = scripts.length - 1; index >= 0; index -= 1) {
+      var src = scripts[index].src || scripts[index].getAttribute('src') || '';
+      if (src.indexOf('/assets/tilda-course-fields.js') !== -1) {
+        return src;
+      }
+    }
+
+    return '';
+  })();
 
   function toText(value) {
     if (value === undefined || value === null) return '';
@@ -13,9 +30,45 @@
     return text === '1' || text === 'true' || text === 'yes' || text === 'on';
   }
 
-  function normalizeBase(base) {
-    var value = toText(base) || window.location.origin;
-    return value.replace(/\/+$/, '');
+  function safeDecode(value) {
+    var text = toText(value);
+    if (!text) return '';
+
+    try {
+      return decodeURIComponent(text);
+    } catch (error) {
+      return text;
+    }
+  }
+
+  function normalizePathname(value) {
+    var text = toText(value);
+    if (!text) return '';
+
+    var withoutHost = text.replace(/^https?:\/\/[^/]+/i, '');
+    var beforeHash = withoutHost.split('#')[0];
+    var beforeQuery = beforeHash.split('?')[0];
+    var decoded = safeDecode(beforeQuery);
+    var path = decoded.charAt(0) === '/' ? decoded : '/' + decoded;
+
+    return path
+      .replace(/\/{2,}/g, '/')
+      .replace(/\/+$/, '') || '/';
+  }
+
+  function normalizeAbsoluteUrl(value) {
+    var text = toText(value);
+    if (!text) return '';
+
+    try {
+      var parsed = new URL(text, window.location.href);
+      parsed.hash = '';
+      parsed.search = '';
+      parsed.pathname = normalizePathname(parsed.pathname);
+      return parsed.toString().replace(/\/+$/, '');
+    } catch (error) {
+      return '';
+    }
   }
 
   function unique(values) {
@@ -36,31 +89,155 @@
       .filter(Boolean);
   }
 
-  function getRequestedFields(root) {
-    var renderFields = Array.prototype.slice.call(root.querySelectorAll('[data-course-field]'))
-      .map(function (node) {
-        return toText(node.getAttribute('data-course-field'));
-      });
-    var requestFields = Array.prototype.slice.call(root.querySelectorAll('[data-course-request-field]'))
-      .map(function (node) {
-        return toText(node.getAttribute('data-course-request-field'));
-      });
-    var extraFields = splitFields(root.getAttribute('data-course-fields-extra'));
+  function getGlobalConfig() {
+    return window.ACADEMY_TILDA_COURSE && typeof window.ACADEMY_TILDA_COURSE === 'object'
+      ? window.ACADEMY_TILDA_COURSE
+      : {};
+  }
 
-    return unique(
-      renderFields
-        .concat(requestFields)
-        .concat(extraFields)
+  function getScriptBase() {
+    if (!SCRIPT_SRC) return '';
+
+    try {
+      return new URL(SCRIPT_SRC, window.location.href).origin;
+    } catch (error) {
+      return '';
+    }
+  }
+
+  function normalizeBase(base) {
+    var value = toText(base)
+      || toText(getGlobalConfig().apiBase)
+      || getScriptBase()
+      || window.location.origin;
+
+    return value.replace(/\/+$/, '');
+  }
+
+  function readScopedAttribute(root, attributeName) {
+    if (!attributeName) return '';
+
+    var current = root;
+    while (current && current.nodeType === 1) {
+      var currentValue = current.getAttribute(attributeName);
+      if (currentValue !== null && toText(currentValue)) {
+        return toText(currentValue);
+      }
+      current = current.parentElement;
+    }
+
+    var bodyValue = document.body ? document.body.getAttribute(attributeName) : null;
+    if (bodyValue !== null && toText(bodyValue)) {
+      return toText(bodyValue);
+    }
+
+    var htmlValue = document.documentElement ? document.documentElement.getAttribute(attributeName) : null;
+    if (htmlValue !== null && toText(htmlValue)) {
+      return toText(htmlValue);
+    }
+
+    return '';
+  }
+
+  function readConfigValue(root, attributeName, configKey) {
+    return readScopedAttribute(root, attributeName) || toText(getGlobalConfig()[configKey]);
+  }
+
+  function getMetaContent(selector) {
+    var node = document.querySelector(selector);
+    return node ? toText(node.getAttribute('content') || node.getAttribute('href')) : '';
+  }
+
+  function getDefaultPageUrl() {
+    return normalizeAbsoluteUrl(
+      getMetaContent('link[rel="canonical"]')
+      || getMetaContent('meta[property="og:url"]')
+      || getMetaContent('meta[name="og:url"]')
+      || window.location.href
     );
   }
 
-  function buildRequestUrl(root) {
-    var apiBase = normalizeBase(root.getAttribute('data-api-base'));
-    var slug = toText(root.getAttribute('data-course-slug'));
-    var courseId = toText(root.getAttribute('data-course-id'));
-    var documentId = toText(root.getAttribute('data-course-document-id'));
-    var courseUrl = toText(root.getAttribute('data-course-url'));
-    var coursePath = toText(root.getAttribute('data-course-path'));
+  function getDefaultPagePath() {
+    return normalizePathname(
+      readConfigValue(document.body || document.documentElement, 'data-course-path', 'path')
+      || getDefaultPageUrl()
+      || window.location.pathname
+    );
+  }
+
+  function getRequestedFields(root) {
+    var renderFields = Array.prototype.slice.call(root.querySelectorAll('[data-course-field]'))
+      .map(function (node) {
+        return toText(node.getAttribute('data-course-field')).split('.')[0];
+      });
+    var requestFields = Array.prototype.slice.call(root.querySelectorAll('[data-course-request-field]'))
+      .map(function (node) {
+        return toText(node.getAttribute('data-course-request-field')).split('.')[0];
+      });
+    var extraFields = splitFields(root.getAttribute('data-course-fields-extra'))
+      .map(function (field) {
+        return toText(field).split('.')[0];
+      });
+
+    return unique(renderFields.concat(requestFields).concat(extraFields));
+  }
+
+  function resolveFieldValue(source, path) {
+    var fieldPath = toText(path);
+    if (!fieldPath) return '';
+
+    return fieldPath.split('.').reduce(function (value, part) {
+      if (value === undefined || value === null) return undefined;
+      if (!part) return value;
+
+      if (Array.isArray(value) && /^\d+$/.test(part)) {
+        return value[Number(part)];
+      }
+
+      return value[part];
+    }, source);
+  }
+
+  function serializeDomValue(value) {
+    if (value === undefined || value === null) return '';
+    if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
+      return String(value);
+    }
+
+    if (Array.isArray(value)) {
+      if (!value.length) return '';
+      var serializedItems = value.map(function (item) {
+        if (item === undefined || item === null) return '';
+        if (typeof item === 'string' || typeof item === 'number' || typeof item === 'boolean') {
+          return String(item);
+        }
+        if (item && typeof item === 'object' && typeof item.label === 'string') {
+          return item.label;
+        }
+        return '';
+      }).filter(Boolean);
+
+      return serializedItems.length ? serializedItems.join(', ') : JSON.stringify(value);
+    }
+
+    if (typeof value === 'object') {
+      if (typeof value.label === 'string') return value.label;
+      if (typeof value.projectedPriceLabel === 'string') return value.projectedPriceLabel;
+      if (typeof value.title === 'string') return value.title;
+      return JSON.stringify(value);
+    }
+
+    return String(value);
+  }
+
+  function buildRequest(root) {
+    var apiBase = normalizeBase(readConfigValue(root, 'data-api-base', 'apiBase'));
+    var slug = readConfigValue(root, 'data-course-slug', 'slug');
+    var courseId = readConfigValue(root, 'data-course-id', 'id');
+    var documentId = readConfigValue(root, 'data-course-document-id', 'documentId');
+    var courseUrl = normalizeAbsoluteUrl(readConfigValue(root, 'data-course-url', 'url') || getDefaultPageUrl());
+    var coursePath = normalizePathname(readConfigValue(root, 'data-course-path', 'path') || getDefaultPagePath());
+    var courseTitle = readConfigValue(root, 'data-course-title', 'title') || document.title;
     var fields = getRequestedFields(root);
     var params = new URLSearchParams();
 
@@ -69,24 +246,42 @@
     }
 
     if (courseId) {
-      return apiBase + '/api/tilda/courses/' + encodeURIComponent(courseId) + (params.toString() ? '?' + params.toString() : '');
+      return {
+        url: apiBase + '/api/tilda/courses/' + encodeURIComponent(courseId) + (params.toString() ? '?' + params.toString() : ''),
+        identifier: courseId,
+      };
     }
 
     if (documentId) {
-      return apiBase + '/api/tilda/courses/' + encodeURIComponent(documentId) + (params.toString() ? '?' + params.toString() : '');
+      return {
+        url: apiBase + '/api/tilda/courses/' + encodeURIComponent(documentId) + (params.toString() ? '?' + params.toString() : ''),
+        identifier: documentId,
+      };
     }
 
     if (slug) {
-      return apiBase + '/api/tilda/courses/' + encodeURIComponent(slug) + (params.toString() ? '?' + params.toString() : '');
+      return {
+        url: apiBase + '/api/tilda/courses/' + encodeURIComponent(slug) + (params.toString() ? '?' + params.toString() : ''),
+        identifier: slug,
+      };
     }
 
     if (courseUrl) {
       params.set('url', courseUrl);
-    } else {
-      params.set('path', coursePath || window.location.pathname);
     }
 
-    return apiBase + '/api/tilda/courses/resolve?' + params.toString();
+    if (coursePath) {
+      params.set('path', coursePath);
+    }
+
+    if (courseTitle) {
+      params.set('title', courseTitle);
+    }
+
+    return {
+      url: apiBase + '/api/tilda/courses/resolve?' + params.toString(),
+      identifier: courseUrl || coursePath || courseTitle,
+    };
   }
 
   function applyNodeValue(node, value) {
@@ -105,7 +300,7 @@
         node.setAttribute(attrName, String(finalValue));
       }
     } else {
-      node.textContent = finalValue === undefined || finalValue === null ? '' : String(finalValue);
+      node.textContent = serializeDomValue(finalValue);
     }
 
     if (isTruthy(node.getAttribute('data-course-hide-empty'))) {
@@ -113,60 +308,157 @@
     }
   }
 
-  function renderCourse(root, course) {
+  function clearCourse(root) {
     var nodes = root.querySelectorAll('[data-course-field]');
 
     nodes.forEach(function (node) {
-      var fieldName = toText(node.getAttribute('data-course-field'));
-      applyNodeValue(node, course ? course[fieldName] : '');
+      applyNodeValue(node, '');
+    });
+  }
+
+  function renderCourse(root, course, request) {
+    if (!course) {
+      clearCourse(root);
+      root.setAttribute('data-course-state', 'not-found');
+      root.dispatchEvent(new CustomEvent('academy:tilda:course-not-found', {
+        detail: { course: null, request: request || null }
+      }));
+      return;
+    }
+
+    var nodes = root.querySelectorAll('[data-course-field]');
+
+    nodes.forEach(function (node) {
+      var fieldPath = toText(node.getAttribute('data-course-field'));
+      applyNodeValue(node, resolveFieldValue(course, fieldPath));
     });
 
     root.setAttribute('data-course-state', 'success');
     root.dispatchEvent(new CustomEvent('academy:tilda:course-data', {
-      detail: { course: course || null }
+      detail: { course: course, request: request || null }
     }));
   }
 
+  function fetchCourse(requestUrl) {
+    if (!REQUEST_CACHE.has(requestUrl)) {
+      REQUEST_CACHE.set(requestUrl, fetch(requestUrl, {
+        headers: { Accept: 'application/json' },
+        cache: 'no-store',
+      }).then(function (response) {
+        return response.json().catch(function () {
+          return null;
+        }).then(function (payload) {
+          return {
+            ok: response.ok,
+            status: response.status,
+            payload: payload,
+          };
+        });
+      }));
+    }
+
+    return REQUEST_CACHE.get(requestUrl);
+  }
+
   async function loadCourse(root) {
-    if (!root || root.getAttribute('data-course-bound') === '1') return;
-    root.setAttribute('data-course-bound', '1');
+    if (!root) return;
+
+    var request = buildRequest(root);
+    if (!request || !request.url) {
+      root.setAttribute('data-course-state', 'idle');
+      return;
+    }
+
+    if (root.getAttribute('data-course-state') === 'loading'
+      && root.getAttribute('data-course-request-url') === request.url) {
+      return;
+    }
+
+    if (root.getAttribute('data-course-state') === 'success'
+      && root.getAttribute('data-course-request-url') === request.url) {
+      return;
+    }
+
+    root.setAttribute('data-course-request-url', request.url);
     root.setAttribute('data-course-state', 'loading');
+    root.dispatchEvent(new CustomEvent('academy:tilda:course-loading', {
+      detail: { request: request }
+    }));
 
     try {
-      var response = await fetch(buildRequestUrl(root), {
-        headers: { Accept: 'application/json' }
-      });
+      var response = await fetchCourse(request.url);
+      var payload = response ? response.payload : null;
+      var course = payload && payload.data ? payload.data : null;
 
-      if (!response.ok) {
-        throw new Error('HTTP ' + response.status);
+      if (!response || !response.ok) {
+        var message = payload && payload.error
+          ? payload.error
+          : ('HTTP ' + (response ? response.status : '0'));
+        throw new Error(message);
       }
 
-      var payload = await response.json();
-      renderCourse(root, payload && payload.data ? payload.data : null);
+      renderCourse(root, course, request);
     } catch (error) {
+      clearCourse(root);
       root.setAttribute('data-course-state', 'error');
       root.dispatchEvent(new CustomEvent('academy:tilda:course-error', {
-        detail: { error: error }
+        detail: { error: error, request: request }
       }));
       console.error('Failed to load Tilda course fields', error);
     }
   }
 
-  function init() {
-    var roots = document.querySelectorAll(ROOT_SELECTOR);
+  function init(context) {
+    var scope = context && context.querySelectorAll ? context : document;
+    var roots = scope.querySelectorAll(ROOT_SELECTOR);
     if (!roots.length) return;
 
-    roots.forEach(loadCourse);
+    roots.forEach(function (root) {
+      loadCourse(root);
+    });
+  }
+
+  function observe() {
+    if (typeof MutationObserver !== 'function') return;
+    if (window.__academyTildaCourseObserverBound === true) return;
+
+    window.__academyTildaCourseObserverBound = true;
+    var observer = new MutationObserver(function (mutations) {
+      mutations.forEach(function (mutation) {
+        Array.prototype.forEach.call(mutation.addedNodes || [], function (node) {
+          if (!node || node.nodeType !== 1) return;
+          if (node.matches && node.matches(ROOT_SELECTOR)) {
+            loadCourse(node);
+            return;
+          }
+          if (node.querySelectorAll) {
+            init(node);
+          }
+        });
+      });
+    });
+
+    observer.observe(document.documentElement, {
+      childList: true,
+      subtree: true,
+    });
   }
 
   if (typeof window.t_onReady === 'function') {
-    window.t_onReady(init);
+    window.t_onReady(function () {
+      init();
+      observe();
+    });
   }
 
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
+    document.addEventListener('DOMContentLoaded', function () {
+      init();
+      observe();
+    });
   } else {
     init();
+    observe();
   }
 
   window.setTimeout(init, 0);

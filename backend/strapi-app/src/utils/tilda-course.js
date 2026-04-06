@@ -111,6 +111,17 @@ const toTrimmedString = (value, maxLen = 1000) => {
   return String(value).replace(/\s+/g, ' ').trim().slice(0, maxLen);
 };
 
+const safeDecodeURIComponent = (value) => {
+  const text = toTrimmedString(value, 2000);
+  if (!text) return '';
+
+  try {
+    return decodeURIComponent(text);
+  } catch (error) {
+    return text;
+  }
+};
+
 const parseInteger = (value) => {
   if (value === undefined || value === null || value === '') return null;
 
@@ -164,9 +175,12 @@ const normalizePathname = (value) => {
   const withoutHost = text.replace(/^https?:\/\/[^/]+/i, '');
   const beforeHash = withoutHost.split('#')[0];
   const beforeQuery = beforeHash.split('?')[0];
-  const path = beforeQuery.startsWith('/') ? beforeQuery : `/${beforeQuery}`;
+  const decoded = safeDecodeURIComponent(beforeQuery);
+  const path = decoded.startsWith('/') ? decoded : `/${decoded}`;
 
-  return path.replace(/\/+$/, '') || '/';
+  return path
+    .replace(/\/{2,}/g, '/')
+    .replace(/\/+$/, '') || '/';
 };
 
 const normalizeAbsoluteUrl = (value) => {
@@ -177,6 +191,7 @@ const normalizeAbsoluteUrl = (value) => {
     const parsed = new URL(text);
     parsed.hash = '';
     parsed.search = '';
+    parsed.pathname = normalizePathname(parsed.pathname);
     return parsed.toString().replace(/\/+$/, '');
   } catch (error) {
     return '';
@@ -356,6 +371,54 @@ const matchesIdentifier = (course, identifier) => {
   return false;
 };
 
+const getMatchScore = (course, identifier) => {
+  const raw = toTrimmedString(identifier, 500);
+  if (!raw) return -1;
+
+  const normalizedIdentifier = raw.toLowerCase();
+  const normalizedPath = normalizePathname(raw).toLowerCase();
+  const normalizedUrl = normalizeAbsoluteUrl(raw).toLowerCase();
+
+  const courseId = course.id === null || course.id === undefined ? '' : String(course.id).toLowerCase();
+  const documentId = toTrimmedString(course.documentId, 120).toLowerCase();
+  const slug = toTrimmedString(course.slug, 255).toLowerCase();
+  const coursePath = normalizePathname(course.coursePath).toLowerCase();
+  const courseUrl = normalizeAbsoluteUrl(course.courseLink).toLowerCase();
+  const title = toTrimmedString(course.title, 255).toLowerCase();
+
+  if (normalizedIdentifier === courseId) return 600;
+  if (normalizedIdentifier === documentId) return 500;
+  if (normalizedUrl && normalizedUrl === courseUrl) return 450;
+  if (normalizedPath && normalizedPath === coursePath) return 400;
+  if (normalizedIdentifier === slug) return 300;
+  if (normalizedIdentifier === title) return 200;
+
+  return -1;
+};
+
+const buildIdentifierCandidates = (query = {}, identifier = '') => {
+  const rawCandidates = [
+    identifier,
+    query.id,
+    query.documentId,
+    query.slug,
+    query.url,
+    query.path,
+    query.title,
+  ];
+  const seen = new Set();
+
+  return rawCandidates
+    .map((value) => toTrimmedString(value, 1000))
+    .filter(Boolean)
+    .filter((value) => {
+      const key = value.toLowerCase();
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+};
+
 const filterCourses = (courses, query = {}) => {
   const waitlistFilter = normalizeBooleanQuery(query.waitlist);
   const includeUnpublished = normalizeBooleanQuery(query.includeUnpublished) === true;
@@ -388,14 +451,27 @@ const filterCourses = (courses, query = {}) => {
 const resolveSingleCourse = (courses, query = {}, identifier = '') => {
   const includeUnpublished = normalizeBooleanQuery(query.includeUnpublished) === true;
   const requestedFields = normalizeRequestedFields(query.fields);
-  const value = toTrimmedString(identifier || query.slug || query.id || query.documentId || query.path || query.url || query.title, 1000);
+  const candidates = buildIdentifierCandidates(query, identifier);
 
-  if (!value) return null;
+  if (!candidates.length) return null;
 
-  const matchedCourse = courses.find((course) => {
-    if (!includeUnpublished && !course.publish) return false;
-    return matchesIdentifier(course, value);
-  });
+  let matchedCourse = null;
+  let matchedScore = -1;
+
+  for (const value of candidates) {
+    for (const course of courses) {
+      if (!includeUnpublished && !course.publish) continue;
+      if (!matchesIdentifier(course, value)) continue;
+
+      const score = getMatchScore(course, value);
+      if (score <= matchedScore) continue;
+
+      matchedCourse = course;
+      matchedScore = score;
+    }
+
+    if (matchedScore >= 400) break;
+  }
 
   return matchedCourse ? pickCourseFields(matchedCourse, requestedFields) : null;
 };

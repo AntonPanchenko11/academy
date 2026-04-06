@@ -11,6 +11,7 @@ const {
   COURSE_UID,
   PRICING_SETTINGS_UID,
   buildCoursePriceIncreaseInfo,
+  assertCourseIsUnique,
   getUpcomingScheduledIncreases,
   migrateCoursePriceToInteger,
   loadPricingSettings,
@@ -103,12 +104,14 @@ module.exports = {
     strapi.db.lifecycles.subscribe({
       models: [COURSE_UID],
       async beforeCreate(event) {
+        await assertCourseIsUnique(strapi, event.params.data || {}, null);
         event.params.data = {
           ...(event.params.data || {}),
           ...(await prepareCoursePricingData(strapi, event.params.data || {}, null)),
         };
       },
       async beforeUpdate(event) {
+        await assertCourseIsUnique(strapi, event.params.data || {}, event.params.where || null);
         event.params.data = {
           ...(event.params.data || {}),
           ...(await prepareCoursePricingData(strapi, event.params.data || {}, event.params.where || null)),

@@ -157,6 +157,14 @@ webstudio build --template docker
 <script src="https://your-domain.com/assets/tilda-course-fields.js"></script>
 ```
 
+`data-api-base` можно не указывать, если helper подключается напрямую с backend-домена:
+- `<script src="https://your-domain.com/assets/tilda-course-fields.js"></script>`
+- тогда `apiBase` будет автоматически взят из `src` скрипта
+
+Можно задавать идентификатор курса один раз на всю Tilda-страницу:
+- на `body`, `html` или любой общий контейнер через `data-course-slug`, `data-course-id`, `data-course-document-id`, `data-course-url`, `data-course-path`
+- или через `window.ACADEMY_TILDA_COURSE = { apiBase, slug|id|documentId|url|path }`
+
 Если страница Tilda не совпадает по URL с `courseLink`, можно задать:
 - `data-course-slug="act"`
 - `data-course-id="12"`
@@ -167,6 +175,10 @@ webstudio build --template docker
 Для запроса полей, которые не нужно вставлять напрямую в DOM:
 - `data-course-fields-extra="activeDiscount,upcomingPriceIncreases"`
 - или `data-course-request-field="activeDiscount"` на скрытом узле
+
+Для вложенных pricing-полей можно использовать путь через точку:
+- `data-course-field="activeDiscount.label"`
+- `data-course-field="nextPriceIncrease.projectedPriceLabel"`
 
 Поддерживаемые public fields:
 - `title`

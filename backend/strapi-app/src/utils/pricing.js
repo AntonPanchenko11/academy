@@ -38,6 +38,7 @@ const PRICING_SETTINGS_COMPONENT_FIELDS = {
 };
 
 let isPricingSyncRunning = false;
+let isPricingSettingsNormalizationRunning = false;
 
 const toTrimmedString = (value, maxLen = 255) => {
   if (value === undefined || value === null) return '';
@@ -118,7 +119,49 @@ const normalizeUtcOffset = (value) => {
   return `${match[1]}${match[2]}:${match[3]}`;
 };
 
+const safeDecodeURIComponent = (value) => {
+  const text = toTrimmedString(value, 2000);
+  if (!text) return '';
+
+  try {
+    return decodeURIComponent(text);
+  } catch (error) {
+    return text;
+  }
+};
+
+const normalizePathname = (value) => {
+  const text = toTrimmedString(value, 1000);
+  if (!text) return '';
+
+  const withoutHost = text.replace(/^https?:\/\/[^/]+/i, '');
+  const beforeHash = withoutHost.split('#')[0];
+  const beforeQuery = beforeHash.split('?')[0];
+  const decoded = safeDecodeURIComponent(beforeQuery);
+  const path = decoded.startsWith('/') ? decoded : `/${decoded}`;
+
+  return path
+    .replace(/\/{2,}/g, '/')
+    .replace(/\/+$/, '') || '/';
+};
+
+const normalizeAbsoluteUrl = (value) => {
+  const text = toTrimmedString(value, 1000);
+  if (!text) return '';
+
+  try {
+    const parsed = new URL(text);
+    parsed.hash = '';
+    parsed.search = '';
+    parsed.pathname = normalizePathname(parsed.pathname);
+    return parsed.toString().replace(/\/+$/, '').toLowerCase();
+  } catch (error) {
+    return '';
+  }
+};
+
 const APP_UTC_OFFSET = normalizeUtcOffset(process.env.APP_UTC_OFFSET);
+const DB_CLIENT_NAME = toTrimmedString(process.env.DATABASE_CLIENT, 40).toLowerCase();
 const APP_UTC_OFFSET_MINUTES = (() => {
   const match = APP_UTC_OFFSET.match(/^([+-])(\d{2}):(\d{2})$/);
   if (!match) return 180;
@@ -128,6 +171,18 @@ const APP_UTC_OFFSET_MINUTES = (() => {
   const minutes = Number.parseInt(match[3], 10);
   return sign * ((hours * 60) + minutes);
 })();
+
+const supportsSelectForUpdate = (strapi) => {
+  const clientName = toTrimmedString(
+    DB_CLIENT_NAME
+      || (strapi && strapi.db && strapi.db.connection && strapi.db.connection.client && strapi.db.connection.client.config
+        ? strapi.db.connection.client.config.client
+        : ''),
+    40
+  ).toLowerCase();
+
+  return clientName && !clientName.includes('sqlite');
+};
 
 const extractAmount = (value) => {
   const raw = toTrimmedString(value, 255);
@@ -186,6 +241,30 @@ const applyDiscount = (basePrice, discountPercent) => {
 const buildStoredPrice = ({ discountedPrice }) => {
   if (!Number.isFinite(discountedPrice)) return null;
   return Math.max(0, Math.round(discountedPrice));
+};
+
+const normalizeCourseLinkIdentity = (value) => {
+  const normalizedUrl = normalizeAbsoluteUrl(value);
+  if (normalizedUrl) return `url:${normalizedUrl}`;
+
+  const normalizedPath = normalizePathname(value).toLowerCase();
+  if (normalizedPath && normalizedPath !== '/') return `path:${normalizedPath}`;
+
+  const raw = toTrimmedString(value, 1000).toLowerCase();
+  return raw ? `raw:${raw}` : '';
+};
+
+const buildCourseUniquenessKey = (course = {}) => {
+  const linkKey = normalizeCourseLinkIdentity(course.courseLink);
+  const date = toTrimmedString(course.date, 32);
+  const title = toTrimmedString(course.title, 255).toLowerCase();
+  const waitlist = course.waitlist === true ? '1' : '0';
+
+  if (linkKey && date) return `${linkKey}::${date}::${waitlist}`;
+  if (linkKey && title) return `${linkKey}::${title}::${waitlist}`;
+  if (title && date) return `title:${title}::${date}::${waitlist}`;
+
+  return '';
 };
 
 const buildEffectiveAtValue = (effectiveDate, effectiveTime) => {
@@ -365,6 +444,35 @@ const prepareCoursePricingData = async (strapi, data, where) => {
   };
 };
 
+const assertCourseIsUnique = async (strapi, data, where = null) => {
+  const existingCourse = await loadCourseByWhere(strapi, where);
+  const candidate = {
+    ...(existingCourse || {}),
+    ...(data || {}),
+  };
+  const candidateKey = buildCourseUniquenessKey(candidate);
+  if (!candidateKey) return;
+
+  const currentCourseId = parseInteger(existingCourse && existingCourse.id);
+  const courses = await strapi.db.query(COURSE_UID).findMany({
+    orderBy: [{ id: 'asc' }],
+  });
+
+  const duplicate = courses.find((course) => {
+    const courseId = parseInteger(course && course.id);
+    if (Number.isFinite(currentCourseId) && courseId === currentCourseId) return false;
+
+    return buildCourseUniquenessKey(course) === candidateKey;
+  });
+
+  if (!duplicate) return;
+
+  throw new ValidationError(
+    `Курс "${toTrimmedString(candidate.title, 255) || 'без названия'}" уже существует `
+    + `для этой даты/ссылки. Используйте существующую запись вместо повторного создания.`
+  );
+};
+
 const syncCourseRecord = async (strapi, course, settings, sourceData = null) => {
   if (!course || !course.id) return false;
 
@@ -529,6 +637,8 @@ const repairPricingSettingsComponents = async (strapi, settingsId) => {
     await removeUnlinkedComponents(strapi, settingsId, field, config.componentType, config.componentTable);
     await dedupePricingSettingsComponentLinks(strapi, settingsId, field, config.componentType);
   }
+
+  await normalizePricingSettingsState(strapi, settingsId);
 
   return { repaired: true };
 };
@@ -707,22 +817,113 @@ const buildCourseDiscountFingerprint = (item = {}) => {
   ].join('::');
 };
 
-const dedupePricingItems = (items, fingerprintBuilder) => {
-  const list = Array.isArray(items) ? items : [];
-  const seen = new Set();
+const choosePreferredDuplicateItem = (existing, candidate) => {
+  const existingId = parseInteger(existing && existing.id);
+  const candidateId = parseInteger(candidate && candidate.id);
 
-  return list.filter((item) => {
-    if (!item) return false;
+  if (existing && existing.applied === true && (!candidate || candidate.applied !== true)) {
+    return existing;
+  }
+
+  if (candidate && candidate.applied === true && (!existing || existing.applied !== true)) {
+    return candidate;
+  }
+
+  if (Number.isFinite(existingId) && !Number.isFinite(candidateId)) return existing;
+  if (!Number.isFinite(existingId) && Number.isFinite(candidateId)) return candidate;
+
+  return existing || candidate || null;
+};
+
+const mergeDuplicatePricingItems = (existing, candidate, options = {}) => {
+  const preserveAppliedState = options && options.preserveAppliedState === true;
+  const preferred = choosePreferredDuplicateItem(existing, candidate) || existing || candidate || {};
+  const fallback = preferred === existing ? candidate : existing;
+  const merged = {
+    ...(fallback || {}),
+    ...(preferred || {}),
+    id: parseInteger(preferred && preferred.id) || parseInteger(fallback && fallback.id) || undefined,
+  };
+
+  if (preserveAppliedState) {
+    merged.applied = (preferred && preferred.applied === true) || (fallback && fallback.applied === true);
+    merged.appliedAt = toTrimmedString(
+      (preferred && preferred.appliedAt) || (fallback && fallback.appliedAt),
+      64
+    ) || null;
+  }
+
+  return merged;
+};
+
+const dedupePricingItems = (items, fingerprintBuilder, options = {}) => {
+  const list = Array.isArray(items) ? items : [];
+  const seenIds = new Set();
+  const seenFingerprints = new Map();
+  const result = [];
+
+  for (const item of list) {
+    if (!item) continue;
 
     const itemId = parseInteger(item.id);
-    const identity = Number.isFinite(itemId)
-      ? `id:${itemId}`
-      : `fingerprint:${fingerprintBuilder(item)}`;
+    if (Number.isFinite(itemId) && seenIds.has(itemId)) {
+      continue;
+    }
 
-    if (seen.has(identity)) return false;
-    seen.add(identity);
-    return true;
-  });
+    const fingerprint = fingerprintBuilder(item);
+    if (fingerprint && seenFingerprints.has(fingerprint)) {
+      const existingIndex = seenFingerprints.get(fingerprint);
+      result[existingIndex] = mergeDuplicatePricingItems(result[existingIndex], item, options);
+
+      if (Number.isFinite(itemId)) {
+        seenIds.add(itemId);
+      }
+
+      const mergedId = parseInteger(result[existingIndex] && result[existingIndex].id);
+      if (Number.isFinite(mergedId)) {
+        seenIds.add(mergedId);
+      }
+
+      continue;
+    }
+
+    if (Number.isFinite(itemId)) {
+      seenIds.add(itemId);
+    }
+
+    if (fingerprint) {
+      seenFingerprints.set(fingerprint, result.length);
+    }
+
+    result.push(item);
+  }
+
+  return result;
+};
+
+const buildScheduledIncreaseComparableState = (item = {}) => {
+  return [
+    String(parseInteger(item.id) || ''),
+    buildScheduledIncreaseFingerprint(item),
+    item.applied === true ? '1' : '0',
+    toTrimmedString(item.appliedAt, 64),
+  ].join('::');
+};
+
+const buildCourseDiscountComparableState = (item = {}) => {
+  return [
+    String(parseInteger(item.id) || ''),
+    buildCourseDiscountFingerprint(item),
+  ].join('::');
+};
+
+const havePricingItemsChanged = (currentItems, normalizedItems, stateBuilder) => {
+  const current = Array.isArray(currentItems) ? currentItems : [];
+  const normalized = Array.isArray(normalizedItems) ? normalizedItems : [];
+
+  if (current.length !== normalized.length) return true;
+
+  return current.some((item, index) => stateBuilder(item) !== stateBuilder(normalized[index]));
 };
 
 const sanitizePricingSettingsData = async (strapi, data, existingSettings = null) => {
@@ -747,7 +948,11 @@ const sanitizePricingSettingsData = async (strapi, data, existingSettings = null
 
     input.scheduledIncreases = (Array.isArray(input.scheduledIncreases) ? input.scheduledIncreases : [])
       .map((item) => sanitizeScheduledIncreaseItem(item, item && item.id ? existingById.get(item.id) || null : null));
-    input.scheduledIncreases = dedupePricingItems(input.scheduledIncreases, buildScheduledIncreaseFingerprint);
+    input.scheduledIncreases = dedupePricingItems(
+      input.scheduledIncreases,
+      buildScheduledIncreaseFingerprint,
+      { preserveAppliedState: true }
+    );
 
     validateScheduledIncreaseTargets(input.scheduledIncreases);
   }
@@ -767,6 +972,46 @@ const sanitizePricingSettingsData = async (strapi, data, existingSettings = null
   }
 
   return input;
+};
+
+const normalizePricingSettingsState = async (strapi, settingsId) => {
+  if (!settingsId || isPricingSettingsNormalizationRunning) return { normalized: false };
+
+  const current = await loadPopulatedPricingSettings(strapi, settingsId);
+  if (!current) return { normalized: false };
+
+  const normalized = await sanitizePricingSettingsData(strapi, {
+    scheduledIncreases: current.scheduledIncreases,
+    courseDiscounts: current.courseDiscounts,
+  }, current);
+
+  const hasScheduledIncreasesDiff = havePricingItemsChanged(
+    current.scheduledIncreases,
+    normalized.scheduledIncreases,
+    buildScheduledIncreaseComparableState
+  );
+  const hasCourseDiscountsDiff = havePricingItemsChanged(
+    current.courseDiscounts,
+    normalized.courseDiscounts,
+    buildCourseDiscountComparableState
+  );
+
+  if (!hasScheduledIncreasesDiff && !hasCourseDiscountsDiff) {
+    return { normalized: false };
+  }
+
+  isPricingSettingsNormalizationRunning = true;
+
+  try {
+    await strapi.db.query(PRICING_SETTINGS_UID).update({
+      where: { id: settingsId },
+      data: normalized,
+    });
+  } finally {
+    isPricingSettingsNormalizationRunning = false;
+  }
+
+  return { normalized: true };
 };
 
 const buildEffectiveDateTime = (item) => {
@@ -928,54 +1173,94 @@ const applyScheduledIncreases = async (strapi, settings, courses) => {
 
   if (!dueIncreases.length) return 0;
 
-  const appliedIds = new Set();
+  const appliedAt = formatTimestampWithoutTimezone(now);
+  const rowLockingEnabled = supportsSelectForUpdate(strapi);
+  const courseStateById = new Map(
+    (Array.isArray(courses) ? courses : [])
+      .filter((course) => course && course.id)
+      .map((course) => [course.id, course])
+  );
+  const appliedIds = await strapi.db.connection.transaction(async (trx) => {
+    const committedIds = [];
 
-  for (const increase of dueIncreases) {
-    const percent = normalizePercent(increase.percent);
-    if (!percent) continue;
+    for (const increase of dueIncreases) {
+      const increaseId = parseInteger(increase && increase.id);
+      if (!Number.isFinite(increaseId)) continue;
 
-    const targetCourses = courses.filter((course) => scheduledIncreaseAppliesToCourse(increase, course));
-    if (!targetCourses.length) continue;
+      let increaseQuery = trx(PRICE_INCREASE_COMPONENTS_TABLE)
+        .select(['id', 'active', 'applied', 'percent'])
+        .where({ id: increaseId });
 
-    for (const course of targetCourses) {
-      const basePrice = parseInteger(course.basePrice);
-      if (!Number.isFinite(basePrice)) continue;
+      if (rowLockingEnabled && typeof increaseQuery.forUpdate === 'function') {
+        increaseQuery = increaseQuery.forUpdate();
+      }
 
-      const nextBasePrice = Math.max(0, Math.round(basePrice * ((100 + percent) / 100)));
-      await strapi.db.query(COURSE_UID).update({
-        where: { id: course.id },
-        data: { basePrice: nextBasePrice },
-      });
+      const lockedIncrease = await increaseQuery.first();
+      if (!lockedIncrease || lockedIncrease.active === false || lockedIncrease.applied === true) {
+        continue;
+      }
 
-      course.basePrice = nextBasePrice;
-      const synced = resolveCoursePricing({ basePrice: nextBasePrice }, course);
-      Object.assign(course, synced);
+      const percent = normalizePercent(lockedIncrease.percent !== undefined ? lockedIncrease.percent : increase.percent);
+      if (!percent) continue;
+
+      const targetCourses = courses.filter((course) => scheduledIncreaseAppliesToCourse(increase, course));
+      if (!targetCourses.length) continue;
+
+      for (const course of targetCourses) {
+        const courseId = parseInteger(course && course.id);
+        if (!Number.isFinite(courseId)) continue;
+
+        let courseQuery = trx('courses')
+          .select(['id', 'base_price'])
+          .where({ id: courseId });
+
+        if (rowLockingEnabled && typeof courseQuery.forUpdate === 'function') {
+          courseQuery = courseQuery.forUpdate();
+        }
+
+        const lockedCourse = await courseQuery.first();
+        if (!lockedCourse) continue;
+
+        const currentCourse = courseStateById.get(courseId) || course;
+        const basePrice = parseInteger(
+          lockedCourse.base_price !== undefined ? lockedCourse.base_price : currentCourse.basePrice
+        );
+        if (!Number.isFinite(basePrice)) continue;
+
+        const nextBasePrice = Math.max(0, Math.round(basePrice * ((100 + percent) / 100)));
+        await trx('courses')
+          .where({ id: courseId })
+          .update({ base_price: nextBasePrice });
+
+        const synced = resolveCoursePricing({ basePrice: nextBasePrice }, currentCourse);
+        Object.assign(currentCourse, { basePrice: nextBasePrice }, synced);
+        courseStateById.set(courseId, currentCourse);
+      }
+
+      await trx(PRICE_INCREASE_COMPONENTS_TABLE)
+        .where({ id: increaseId })
+        .update({
+          applied: true,
+          applied_at: appliedAt,
+        });
+
+      committedIds.push(increaseId);
     }
 
-    if (increase.id) {
-      appliedIds.add(increase.id);
-    }
+    return committedIds;
+  });
+
+  if (!appliedIds.length) return 0;
+
+  const appliedIdsSet = new Set(appliedIds);
+  for (const item of settings.scheduledIncreases || []) {
+    if (!appliedIdsSet.has(item.id)) continue;
+
+    item.applied = true;
+    item.appliedAt = appliedAt;
   }
 
-  if (appliedIds.size) {
-    const appliedAt = formatTimestampWithoutTimezone(now);
-
-    await strapi.db.connection(PRICE_INCREASE_COMPONENTS_TABLE)
-      .whereIn('id', Array.from(appliedIds))
-      .update({
-        applied: true,
-        applied_at: appliedAt,
-      });
-
-    for (const item of settings.scheduledIncreases || []) {
-      if (!appliedIds.has(item.id)) continue;
-
-      item.applied = true;
-      item.appliedAt = appliedAt;
-    }
-  }
-
-  return appliedIds.size;
+  return appliedIds.length;
 };
 
 const syncPricingState = async (strapi) => {
@@ -1078,7 +1363,9 @@ module.exports = {
   repairPricingSettingsComponents,
   resolveCourseDiscount,
   resolveCoursePricing,
+  assertCourseIsUnique,
   sanitizePricingSettingsData,
   syncPricingState,
   loadPricingSettingsWithoutRepair,
+  normalizePricingSettingsState,
 };
