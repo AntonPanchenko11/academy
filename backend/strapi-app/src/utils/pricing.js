@@ -385,18 +385,19 @@ const syncCourseRecord = async (strapi, course, settings, sourceData = null) => 
   return true;
 };
 
-const loadPricingSettings = async (strapi) => {
+const loadPricingSettingsRecord = async (strapi) => {
   const items = await strapi.db.query(PRICING_SETTINGS_UID).findMany({
     limit: 1,
   });
 
-  const settings = items[0] || null;
-  if (!settings) return null;
+  return items[0] || null;
+};
 
-  await repairPricingSettingsComponents(strapi, settings.id);
+const loadPopulatedPricingSettings = async (strapi, settingsId) => {
+  if (!settingsId) return null;
 
   return strapi.db.query(PRICING_SETTINGS_UID).findOne({
-    where: { id: settings.id },
+    where: { id: settingsId },
     populate: {
       scheduledIncreases: {
         populate: ['courses'],
@@ -406,6 +407,22 @@ const loadPricingSettings = async (strapi) => {
       },
     },
   });
+};
+
+const loadPricingSettingsWithoutRepair = async (strapi) => {
+  const settings = await loadPricingSettingsRecord(strapi);
+  if (!settings) return null;
+
+  return loadPopulatedPricingSettings(strapi, settings.id);
+};
+
+const loadPricingSettings = async (strapi) => {
+  const settings = await loadPricingSettingsRecord(strapi);
+  if (!settings) return null;
+
+  await repairPricingSettingsComponents(strapi, settings.id);
+
+  return loadPopulatedPricingSettings(strapi, settings.id);
 };
 
 const loadPricingSettingsComponentLinks = async (strapi, settingsId, field) => {
@@ -656,6 +673,58 @@ const validateScheduledIncreaseTargets = (scheduledIncreases = []) => {
   }
 };
 
+const buildNormalizedCourseRefKeys = (courses = []) => {
+  return (Array.isArray(courses) ? courses : [])
+    .map((course) => {
+      const courseId = parseInteger(course && course.id);
+      const courseDocumentId = toTrimmedString(course && course.documentId, 64);
+      return Number.isFinite(courseId) ? `id:${courseId}` : (courseDocumentId ? `documentId:${courseDocumentId}` : '');
+    })
+    .filter(Boolean)
+    .sort();
+};
+
+const buildScheduledIncreaseFingerprint = (item = {}) => {
+  const courseKeys = buildNormalizedCourseRefKeys(item.courses);
+  return [
+    toTrimmedString(item.effectiveDate, 32),
+    normalizeTimeValue(item.effectiveTime),
+    String(normalizePercent(item.percent)),
+    normalizePriceIncreaseApplyMode(item.applyMode),
+    item.active === false ? '0' : '1',
+    toTrimmedString(item.comment, 255),
+    courseKeys.join('|'),
+  ].join('::');
+};
+
+const buildCourseDiscountFingerprint = (item = {}) => {
+  const courseKeys = buildNormalizedCourseRefKeys(item.courses);
+  return [
+    toTrimmedString(item.title, 255),
+    String(normalizePercent(item.percent)),
+    item.active === false ? '0' : '1',
+    courseKeys.join('|'),
+  ].join('::');
+};
+
+const dedupePricingItems = (items, fingerprintBuilder) => {
+  const list = Array.isArray(items) ? items : [];
+  const seen = new Set();
+
+  return list.filter((item) => {
+    if (!item) return false;
+
+    const itemId = parseInteger(item.id);
+    const identity = Number.isFinite(itemId)
+      ? `id:${itemId}`
+      : `fingerprint:${fingerprintBuilder(item)}`;
+
+    if (seen.has(identity)) return false;
+    seen.add(identity);
+    return true;
+  });
+};
+
 const sanitizePricingSettingsData = async (strapi, data, existingSettings = null) => {
   const input = {
     ...(data || {}),
@@ -668,7 +737,7 @@ const sanitizePricingSettingsData = async (strapi, data, existingSettings = null
     return input;
   }
 
-  const existing = existingSettings || await loadPricingSettings(strapi);
+  const existing = existingSettings || await loadPricingSettingsWithoutRepair(strapi);
   if (hasScheduledIncreases) {
     const existingById = new Map(
       (existing && Array.isArray(existing.scheduledIncreases) ? existing.scheduledIncreases : [])
@@ -678,6 +747,7 @@ const sanitizePricingSettingsData = async (strapi, data, existingSettings = null
 
     input.scheduledIncreases = (Array.isArray(input.scheduledIncreases) ? input.scheduledIncreases : [])
       .map((item) => sanitizeScheduledIncreaseItem(item, item && item.id ? existingById.get(item.id) || null : null));
+    input.scheduledIncreases = dedupePricingItems(input.scheduledIncreases, buildScheduledIncreaseFingerprint);
 
     validateScheduledIncreaseTargets(input.scheduledIncreases);
   }
@@ -691,6 +761,7 @@ const sanitizePricingSettingsData = async (strapi, data, existingSettings = null
 
     input.courseDiscounts = (Array.isArray(input.courseDiscounts) ? input.courseDiscounts : [])
       .map((item) => sanitizeCourseDiscountItem(item, item && item.id ? existingById.get(item.id) || null : null));
+    input.courseDiscounts = dedupePricingItems(input.courseDiscounts, buildCourseDiscountFingerprint);
 
     validateUniqueDiscountCourses(input.courseDiscounts);
   }
@@ -1009,4 +1080,5 @@ module.exports = {
   resolveCoursePricing,
   sanitizePricingSettingsData,
   syncPricingState,
+  loadPricingSettingsWithoutRepair,
 };

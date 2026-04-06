@@ -33,7 +33,14 @@ const toTrimmedString = (value, maxLen = 255) => {
 };
 
 const loadSerializedCourses = async (strapi) => {
-  const settings = await loadPricingSettings(strapi);
+  let settings = null;
+
+  try {
+    settings = await loadPricingSettings(strapi);
+  } catch (error) {
+    strapi.log.error('Failed to load pricing settings for course serialization; using course data without pricing settings', error);
+  }
+
   const courses = await strapi.db.query('api::course.course').findMany({
     orderBy: [{ date: 'asc' }, { title: 'asc' }],
   });
