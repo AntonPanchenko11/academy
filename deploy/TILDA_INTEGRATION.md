@@ -29,7 +29,7 @@ Backend routes:
   class="js-tilda-course-fields"
   data-api-base="https://your-domain.com"
   data-course-slug="act"
-  data-course-fields-extra="activeDiscount,upcomingPriceIncreases"
+  data-course-fields-extra="price"
 >
   <h1 data-course-field="title"></h1>
   <div data-course-field="price"></div>
@@ -75,12 +75,8 @@ Backend routes:
 ```
 
 Если нужно запросить поля без прямой вставки в DOM:
-- `data-course-fields-extra="activeDiscount,upcomingPriceIncreases"`
-- или скрытый узел с `data-course-request-field="activeDiscount"`
-
-Для вложенных pricing-данных можно использовать dot-path:
-- `data-course-field="activeDiscount.label"`
-- `data-course-field="nextPriceIncrease.projectedPriceLabel"`
+- `data-course-fields-extra="price"`
+- или скрытый узел с `data-course-request-field="price"`
 
 Поддерживаемые поля:
 - `title`
@@ -95,14 +91,7 @@ Backend routes:
 - `studyDays`
 - `hours`
 - `hoursLabel`
-- `basePrice`
-- `discountPercent`
-- `discountedPrice`
 - `price`
-- `scheduledIncreaseIds`
-- `activeDiscount`
-- `nextPriceIncrease`
-- `upcomingPriceIncreases`
 - `educationDocument`
 - `courseLink`
 - `coursePath`

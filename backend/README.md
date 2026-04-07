@@ -1,10 +1,8 @@
 # Backend (Strapi)
 
-## Dev режим
-```bash
-cd backend
-docker compose up -d
-```
+## Актуальные режимы запуска
+
+Локальный backend-only compose в директории `backend/` больше не используется.
 
 ## Production режим (единый образ фронт+бэк)
 Используйте корневые файлы:
@@ -44,9 +42,7 @@ docker compose up -d
 - `search=...` — поиск по public-полям.
 - `includeUnpublished=true` — включить неопубликованные курсы.
 
-## Pricing Settings
-- В Strapi добавлен singleton `Pricing Settings` с repeatable-списком `scheduledIncreases`.
-- Каждый элемент хранит дату и процент глобального повышения.
-- Повышение применяется ко всем курсам прямо в БД после наступления даты.
-- В `Course` добавлены поля `basePrice`, `discountPercent`, `discountedPrice`.
-- Поле `price` теперь поддерживается backend'ом автоматически и остается совместимым с текущим фронтом.
+## Цены
+- В Strapi курс хранит `Course.basePrice`.
+- Публичные API и фронт работают только с итоговым полем `price`, которое сериализуется из `basePrice`.
+- Отдельных сущностей для скидок и повышений цены в проекте больше нет.

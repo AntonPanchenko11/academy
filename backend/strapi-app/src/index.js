@@ -9,19 +9,30 @@ const {
 } = require('./utils/tilda-course');
 const {
   COURSE_UID,
-  PRICING_SETTINGS_UID,
-  buildCoursePriceIncreaseInfo,
   assertCourseIsUnique,
-  getUpcomingScheduledIncreases,
-  migrateCoursePriceToInteger,
-  loadPricingSettings,
-  prepareCoursePricingData,
-  repairPricingSettingsComponents,
-  sanitizePricingSettingsData,
-  syncPricingState,
-} = require('./utils/pricing');
+  hasCoursePricingChanges,
+  hasCourseUniquenessChanges,
+  migrateCourseBasePrice,
+  prepareCourseData,
+} = require('./utils/course');
+const {
+  COURSE_PRICE_INCREASE_UID,
+  applyDueCoursePriceIncreases,
+  loadGlobalCoursePriceIncreases,
+  mergeCoursePriceIncreases,
+  migrateCoursePriceIncreaseNames,
+  prepareCoursePriceIncreaseData,
+} = require('./utils/course-price-increase');
+const {
+  DISCOUNT_UID,
+  clearDiscountRelations,
+  prepareDiscountData,
+} = require('./utils/course-discount');
+const {
+  syncContentManagerConfig,
+} = require('./utils/content-manager-config');
 
-const PRICING_SYNC_INTERVAL_MS = 60 * 1000;
+const COURSE_PRICE_INCREASE_SYNC_INTERVAL_MS = 60 * 1000;
 
 const toTrimmedString = (value, maxLen = 255) => {
   if (value === undefined || value === null) return '';
@@ -34,19 +45,23 @@ const toTrimmedString = (value, maxLen = 255) => {
 };
 
 const loadSerializedCourses = async (strapi) => {
-  let settings = null;
+  const [courses, globalPriceIncreases] = await Promise.all([
+    strapi.db.query('api::course.course').findMany({
+      populate: {
+        discount: true,
+        priceIncreases: {
+          populate: ['courses'],
+        },
+      },
+      orderBy: [{ date: 'asc' }, { title: 'asc' }],
+    }),
+    loadGlobalCoursePriceIncreases(strapi),
+  ]);
 
-  try {
-    settings = await loadPricingSettings(strapi);
-  } catch (error) {
-    strapi.log.error('Failed to load pricing settings for course serialization; using course data without pricing settings', error);
-  }
-
-  const courses = await strapi.db.query('api::course.course').findMany({
-    orderBy: [{ date: 'asc' }, { title: 'asc' }],
-  });
-
-  return courses.map((course) => serializeCourse(course, { settings }));
+  return courses.map((course) => serializeCourse({
+    ...course,
+    priceIncreases: mergeCoursePriceIncreases(course, globalPriceIncreases),
+  }));
 };
 
 const checkDatabaseHealth = async (strapi) => {
@@ -93,12 +108,30 @@ module.exports = {
     };
 
     try {
-      const migration = await migrateCoursePriceToInteger(strapi);
+      const migration = await migrateCourseBasePrice(strapi);
       if (migration && !migration.skipped) {
-        strapi.log.info(`Migrated course.price to integer for ${migration.updatedCourses} course(s)`);
+        strapi.log.info(`Migrated course.basePrice from legacy price for ${migration.updatedCourses} course(s)`);
       }
     } catch (error) {
-      strapi.log.error('Failed to migrate course.price to integer', error);
+      strapi.log.error('Failed to migrate course.basePrice from legacy price', error);
+    }
+
+    try {
+      const migration = await migrateCoursePriceIncreaseNames(strapi);
+      if (migration && !migration.skipped) {
+        strapi.log.info(`Migrated course-price-increase.name for ${migration.updatedIncreases} record(s)`);
+      }
+    } catch (error) {
+      strapi.log.error('Failed to migrate course-price-increase.name', error);
+    }
+
+    try {
+      const configSync = await syncContentManagerConfig(strapi);
+      if (configSync && !configSync.skipped && configSync.updatedKeys.length) {
+        strapi.log.info(`Synced content-manager config for ${configSync.updatedKeys.join(', ')}`);
+      }
+    } catch (error) {
+      strapi.log.error('Failed to sync content-manager config', error);
     }
 
     strapi.db.lifecycles.subscribe({
@@ -107,59 +140,71 @@ module.exports = {
         await assertCourseIsUnique(strapi, event.params.data || {}, null);
         event.params.data = {
           ...(event.params.data || {}),
-          ...(await prepareCoursePricingData(strapi, event.params.data || {}, null)),
+          ...(await prepareCourseData(strapi, event.params.data || {}, null)),
         };
       },
       async beforeUpdate(event) {
-        await assertCourseIsUnique(strapi, event.params.data || {}, event.params.where || null);
-        event.params.data = {
-          ...(event.params.data || {}),
-          ...(await prepareCoursePricingData(strapi, event.params.data || {}, event.params.where || null)),
-        };
+        const data = event.params.data || {};
+
+        if (hasCourseUniquenessChanges(data)) {
+          await assertCourseIsUnique(strapi, data, event.params.where || null);
+        }
+
+        if (hasCoursePricingChanges(data)) {
+          event.params.data = {
+            ...data,
+            ...(await prepareCourseData(strapi, data, event.params.where || null)),
+          };
+        }
       },
     });
 
     strapi.db.lifecycles.subscribe({
-      models: [PRICING_SETTINGS_UID],
+      models: [COURSE_PRICE_INCREASE_UID],
       async beforeCreate(event) {
-        event.params.data = await sanitizePricingSettingsData(strapi, event.params.data || {}, null);
+        event.params.data = await prepareCoursePriceIncreaseData(strapi, event.params.data || {}, null);
       },
       async beforeUpdate(event) {
-        event.params.data = await sanitizePricingSettingsData(strapi, event.params.data || {}, null);
+        event.params.data = await prepareCoursePriceIncreaseData(
+          strapi,
+          event.params.data || {},
+          event.params.where || null
+        );
       },
-      async afterCreate(event) {
-        if (event && event.result && event.result.id) {
-          await repairPricingSettingsComponents(strapi, event.result.id);
-          setTimeout(() => {
-            repairPricingSettingsComponents(strapi, event.result.id).catch((error) => {
-              strapi.log.error('Failed to repair pricing settings components after create', error);
-            });
-          }, 250);
-        }
-        await syncPricingState(strapi);
+      async afterCreate() {
+        await applyDueCoursePriceIncreases(strapi);
       },
-      async afterUpdate(event) {
-        if (event && event.result && event.result.id) {
-          await repairPricingSettingsComponents(strapi, event.result.id);
-          setTimeout(() => {
-            repairPricingSettingsComponents(strapi, event.result.id).catch((error) => {
-              strapi.log.error('Failed to repair pricing settings components after update', error);
-            });
-          }, 250);
-        }
-        await syncPricingState(strapi);
+      async afterUpdate() {
+        await applyDueCoursePriceIncreases(strapi);
       },
     });
 
-    syncPricingState(strapi).catch((error) => {
-      strapi.log.error('Failed to sync course pricing on bootstrap', error);
+    strapi.db.lifecycles.subscribe({
+      models: [DISCOUNT_UID],
+      async beforeCreate(event) {
+        event.params.data = await prepareDiscountData(strapi, event.params.data || {}, null);
+      },
+      async beforeUpdate(event) {
+        event.params.data = await prepareDiscountData(
+          strapi,
+          event.params.data || {},
+          event.params.where || null
+        );
+      },
+      async beforeDelete(event) {
+        await clearDiscountRelations(strapi, event.params.where || null);
+      },
+    });
+
+    applyDueCoursePriceIncreases(strapi).catch((error) => {
+      strapi.log.error('Failed to apply due course price increases on bootstrap', error);
     });
 
     setInterval(() => {
-      syncPricingState(strapi).catch((error) => {
-        strapi.log.error('Failed to sync scheduled course pricing', error);
+      applyDueCoursePriceIncreases(strapi).catch((error) => {
+        strapi.log.error('Failed to apply due course price increases', error);
       });
-    }, PRICING_SYNC_INTERVAL_MS);
+    }, COURSE_PRICE_INCREASE_SYNC_INTERVAL_MS);
 
     strapi.server.use(async (ctx, next) => {
       if ((ctx.method === 'GET' || ctx.method === 'HEAD') && (ctx.path === '/api/health/live' || ctx.path === '/api/health/live/')) {
@@ -246,63 +291,6 @@ module.exports = {
           strapi.log.error('Failed to resolve Tilda course', error);
           ctx.status = 500;
           ctx.body = { ok: false, error: 'Failed to resolve course.' };
-        }
-        return;
-      }
-
-      if ((ctx.method === 'GET' || ctx.method === 'HEAD') && (ctx.path === '/api/tilda/pricing' || ctx.path === '/api/tilda/pricing/')) {
-        if (ctx.method === 'HEAD') {
-          ctx.status = 200;
-          return;
-        }
-
-        try {
-          const settings = await loadPricingSettings(strapi);
-          const upcomingIncreases = getUpcomingScheduledIncreases(settings);
-
-          ctx.body = {
-            ok: true,
-            data: {
-              nextIncrease: upcomingIncreases[0] || null,
-              upcomingIncreases,
-            },
-          };
-        } catch (error) {
-          strapi.log.error('Failed to load Tilda pricing settings', error);
-          ctx.status = 500;
-          ctx.body = { ok: false, error: 'Failed to load pricing settings.' };
-        }
-        return;
-      }
-
-      if ((ctx.method === 'GET' || ctx.method === 'HEAD') && (ctx.path === '/api/tilda/pricing/resolve' || ctx.path === '/api/tilda/pricing/resolve/')) {
-        if (ctx.method === 'HEAD') {
-          ctx.status = 200;
-          return;
-        }
-
-        try {
-          const courses = await loadSerializedCourses(strapi);
-          const course = resolveSingleCourse(courses, ctx.query || {});
-
-          if (!course) {
-            ctx.status = 404;
-            ctx.body = { ok: false, error: 'Course not found.' };
-            return;
-          }
-
-          const settings = await loadPricingSettings(strapi);
-          ctx.body = {
-            ok: true,
-            data: {
-              course,
-              pricing: buildCoursePriceIncreaseInfo(course, settings),
-            },
-          };
-        } catch (error) {
-          strapi.log.error('Failed to resolve Tilda pricing info', error);
-          ctx.status = 500;
-          ctx.body = { ok: false, error: 'Failed to resolve pricing info.' };
         }
         return;
       }

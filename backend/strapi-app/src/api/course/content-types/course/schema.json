@@ -70,7 +70,7 @@
         ],
         [
           {
-            "name": "scheduledIncreaseIds",
+            "name": "priceIncreases",
             "size": 12
           }
         ]
@@ -105,34 +105,6 @@
         },
         "list": {
           "label": "Показывать на витрине"
-        }
-      },
-      "basePrice": {
-        "edit": {
-          "label": "Базовая цена"
-        },
-        "list": {
-          "label": "Базовая цена"
-        }
-      },
-      "discountPercent": {
-        "edit": {
-          "label": "Скидка, %",
-          "visible": false,
-          "editable": false
-        },
-        "list": {
-          "label": "Скидка, %"
-        }
-      },
-      "discountedPrice": {
-        "edit": {
-          "label": "Цена со скидкой",
-          "visible": false,
-          "editable": false
-        },
-        "list": {
-          "label": "Цена со скидкой"
         }
       },
       "comment": {
@@ -183,26 +155,12 @@
           "label": "Количество часов"
         }
       },
-      "price": {
+      "basePrice": {
         "edit": {
-          "label": "Итоговая цена",
-          "visible": false,
-          "editable": false
+          "label": "Базовая цена"
         },
         "list": {
-          "label": "Итоговая цена"
-        }
-      },
-      "scheduledIncreaseIds": {
-        "edit": {
-          "label": "ID запланированных повышений",
-          "visible": true,
-          "editable": false
-        },
-        "list": {
-          "label": "ID запланированных повышений",
-          "searchable": false,
-          "sortable": false
+          "label": "Базовая цена"
         }
       },
       "educationDocument": {
@@ -219,6 +177,18 @@
         },
         "list": {
           "label": "Ссылка на курс"
+        }
+      },
+      "priceIncreases": {
+        "edit": {
+          "label": "Повышения цены",
+          "mainField": "name"
+        },
+        "list": {
+          "label": "Повышения цены",
+          "mainField": "name",
+          "searchable": false,
+          "sortable": false
         }
       }
     }
@@ -240,30 +210,6 @@
       "type": "boolean",
       "required": true,
       "default": true
-    },
-    "basePrice": {
-      "type": "integer",
-      "min": 0
-    },
-    "discountPercent": {
-      "type": "integer",
-      "min": 0,
-      "max": 100,
-      "default": 0,
-      "pluginOptions": {
-        "content-manager": {
-          "visible": false
-        }
-      }
-    },
-    "discountedPrice": {
-      "type": "integer",
-      "min": 0,
-      "pluginOptions": {
-        "content-manager": {
-          "visible": false
-        }
-      }
     },
     "comment": {
       "type": "text"
@@ -291,17 +237,9 @@
       "type": "integer",
       "min": 0
     },
-    "price": {
+    "basePrice": {
       "type": "integer",
-      "min": 0,
-      "pluginOptions": {
-        "content-manager": {
-          "visible": false
-        }
-      }
-    },
-    "scheduledIncreaseIds": {
-      "type": "json"
+      "min": 0
     },
     "educationDocument": {
       "type": "enumeration",
@@ -314,6 +252,23 @@
     "courseLink": {
       "type": "string",
       "required": true
+    },
+    "discount": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::discount.discount",
+      "inversedBy": "courses",
+      "pluginOptions": {
+        "content-manager": {
+          "visible": false
+        }
+      }
+    },
+    "priceIncreases": {
+      "type": "relation",
+      "relation": "manyToMany",
+      "target": "api::course-price-increase.course-price-increase",
+      "mappedBy": "courses"
     }
   }
 }

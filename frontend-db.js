@@ -48,7 +48,6 @@
 
   function toCourse(row) {
     var src = row && row.attributes ? row.attributes : row || {};
-    var parsedDiscountPercent = parseInt(src.discountPercent, 10);
 
     return {
       id: row && row.id ? row.id : src.id,
@@ -60,10 +59,7 @@
       courseStatus: src.courseStatus || '',
       studyDays: src.studyDays || '',
       hours: src.hours,
-      discountPercent: isNaN(parsedDiscountPercent) ? 0 : parsedDiscountPercent,
-      price: src.price !== undefined && src.price !== null && src.price !== ''
-        ? src.price
-        : src.discountedPrice,
+      price: src.price,
       educationDocument: src.educationDocument || '',
       courseLink: src.courseLink || '#'
     };
@@ -155,7 +151,6 @@
     if (!amount) return null;
 
     return {
-      discount: course && course.discountPercent > 0 ? '-' + String(course.discountPercent) + '%' : '',
       amount: amount,
       currency: '₽'
     };
@@ -165,17 +160,8 @@
     var parsed = parsePrice(course);
     if (!parsed) return '';
 
-    var discountBlock = parsed.discount
-      ? (
-          '<div class="div schedule-price-tag not-active">' +
-          '<div class="text"><span class="text-block-wrap-div">' + escapeHtml(parsed.discount) + '</span></div>' +
-          '</div>'
-        )
-      : '';
-
     return (
       '<div class="div flex-wrapper">' +
-      discountBlock +
       '<div class="div schedule-price">' +
       '<div class="text text-paragraph-medium text-weight-bold"><span class="text-block-wrap-div">' + escapeHtml(parsed.amount) + '</span></div>' +
       '<div class="text text-paragraph-medium text-weight-bold"><span class="text-block-wrap-div">' + escapeHtml(parsed.currency) + '</span></div>' +
@@ -382,7 +368,7 @@
   async function loadCourses() {
     var endpoints = [
       '/api/courses-feed',
-      '/api/courses?filters[publish][$eq]=true&sort[0]=date:asc&sort[1]=title:asc&pagination[pageSize]=500'
+      '/api/tilda/courses'
     ];
 
     var lastError = null;

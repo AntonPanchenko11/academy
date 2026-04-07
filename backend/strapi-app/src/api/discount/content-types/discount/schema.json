@@ -1,17 +1,22 @@
 {
-  "collectionName": "components_pricing_course_discounts",
+  "kind": "collectionType",
+  "collectionName": "discounts",
   "info": {
-    "displayName": "Course Discount",
-    "description": "Скидка для выбранных курсов"
+    "singularName": "discount",
+    "pluralName": "discounts",
+    "displayName": "Скидка",
+    "description": "Скидка на один или несколько курсов"
   },
-  "options": {},
+  "options": {
+    "draftAndPublish": false
+  },
   "config": {
     "layouts": {
       "edit": [
         [
           {
             "name": "title",
-            "size": 5
+            "size": 6
           },
           {
             "name": "percent",
@@ -19,7 +24,7 @@
           },
           {
             "name": "active",
-            "size": 4
+            "size": 3
           }
         ],
         [
@@ -27,17 +32,28 @@
             "name": "courses",
             "size": 12
           }
+        ],
+        [
+          {
+            "name": "comment",
+            "size": 12
+          }
         ]
       ],
-      "list": []
+      "list": [
+        "id",
+        "title",
+        "percent",
+        "active"
+      ]
     },
     "metadatas": {
       "title": {
         "edit": {
-          "label": "Название скидки"
+          "label": "Название"
         },
         "list": {
-          "label": "Название скидки"
+          "label": "Название"
         }
       },
       "percent": {
@@ -50,10 +66,10 @@
       },
       "active": {
         "edit": {
-          "label": "Активно"
+          "label": "Активна"
         },
         "list": {
-          "label": "Активно"
+          "label": "Активна"
         }
       },
       "courses": {
@@ -63,9 +79,15 @@
         },
         "list": {
           "label": "Курсы",
-          "searchable": false,
-          "sortable": false,
           "mainField": "title"
+        }
+      },
+      "comment": {
+        "edit": {
+          "label": "Комментарий"
+        },
+        "list": {
+          "label": "Комментарий"
         }
       }
     }
@@ -83,12 +105,17 @@
     },
     "active": {
       "type": "boolean",
+      "required": true,
       "default": true
     },
     "courses": {
       "type": "relation",
-      "relation": "manyToMany",
-      "target": "api::course.course"
+      "relation": "oneToMany",
+      "target": "api::course.course",
+      "mappedBy": "discount"
+    },
+    "comment": {
+      "type": "text"
     }
   }
 }

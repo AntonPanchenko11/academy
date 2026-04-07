@@ -1,9 +1,14 @@
 'use strict';
 
 const {
-  buildCoursePriceIncreaseInfo,
+  resolveNextCoursePriceIncrease,
+  serializeCoursePriceIncrease,
+  sortPriceIncreases,
+} = require('./course-price-increase');
+const {
+  calculateDiscountedPrice,
   resolveCourseDiscount,
-} = require('./pricing');
+} = require('./course-discount');
 
 const MONTHS_NOMINATIVE = [
   'Январь',
@@ -93,12 +98,10 @@ const PUBLIC_COURSE_FIELDS = [
   'hoursLabel',
   'basePrice',
   'discountPercent',
-  'discountedPrice',
   'price',
-  'scheduledIncreaseIds',
   'activeDiscount',
+  'priceIncreases',
   'nextPriceIncrease',
-  'upcomingPriceIncreases',
   'educationDocument',
   'courseLink',
   'coursePath',
@@ -267,31 +270,18 @@ const deriveCourseSlug = (course) => {
   return slugify(course && course.title);
 };
 
-const serializeCourse = (course, options = {}) => {
-  const settings = options && options.settings ? options.settings : null;
+const serializeCourse = (course) => {
   const dateParts = buildDateParts(course && course.date);
   const coursePath = extractPathFromCourseLink(course && course.courseLink);
   const courseStatus = toTrimmedString(course && (course.courseStatus || course.status), 120) || 'Идет набор';
   const hours = Number.isFinite(course && course.hours) ? course.hours : (course && course.hours) || null;
-  const basePrice = Number.isFinite(course && course.basePrice) ? course.basePrice : (course && course.basePrice) || null;
-  const discountPercent = Number.isFinite(course && course.discountPercent)
-    ? course.discountPercent
-    : ((course && course.discountPercent) || 0);
-  const discountedPrice = Number.isFinite(course && course.discountedPrice)
-    ? course.discountedPrice
-    : (course && course.discountedPrice) || null;
-  const price = parseInteger(course && course.price);
-  const scheduledIncreaseIds = Array.isArray(course && course.scheduledIncreaseIds)
-    ? course.scheduledIncreaseIds
-      .map((value) => parseInteger(value))
-      .filter((value) => Number.isFinite(value))
-    : [];
-  const pricingInfo = settings ? buildCoursePriceIncreaseInfo(course, settings) : {
-    activeDiscount: null,
-    nextIncrease: null,
-    upcomingIncreases: [],
-  };
-  const activeDiscount = settings ? resolveCourseDiscount(course, settings) : null;
+  const basePrice = parseInteger(course && (course.basePrice ?? course.price));
+  const activeDiscount = resolveCourseDiscount(course);
+  const discountPercent = activeDiscount ? activeDiscount.percent : 0;
+  const price = calculateDiscountedPrice(basePrice, activeDiscount);
+  const priceIncreases = sortPriceIncreases(course && course.priceIncreases)
+    .map((increase) => serializeCoursePriceIncrease(increase))
+    .filter(Boolean);
 
   return {
     id: course && course.id ? course.id : null,
@@ -313,12 +303,10 @@ const serializeCourse = (course, options = {}) => {
     hoursLabel: hours === null || hours === undefined || hours === '' ? '' : `${hours} ак. ч.`,
     basePrice,
     discountPercent,
-    discountedPrice,
     price,
-    scheduledIncreaseIds,
-    activeDiscount: pricingInfo.activeDiscount || activeDiscount,
-    nextPriceIncrease: pricingInfo.nextIncrease || null,
-    upcomingPriceIncreases: Array.isArray(pricingInfo.upcomingIncreases) ? pricingInfo.upcomingIncreases : [],
+    activeDiscount,
+    priceIncreases,
+    nextPriceIncrease: resolveNextCoursePriceIncrease({ priceIncreases }),
     educationDocument: toTrimmedString(course && course.educationDocument, 120),
     courseLink: toTrimmedString(course && course.courseLink, 1000),
     coursePath,
@@ -477,10 +465,7 @@ const resolveSingleCourse = (courses, query = {}, identifier = '') => {
 };
 
 module.exports = {
-  PUBLIC_COURSE_FIELDS,
   filterCourses,
-  normalizeRequestedFields,
-  pickCourseFields,
   resolveSingleCourse,
   serializeCourse,
 };

@@ -18,28 +18,18 @@
 - `slug` — стабильный slug для Tilda и API
 - `publish` — публикация на витрине
 - `basePrice` — базовая цена курса в рублях
-- `discountPercent` — скидка на курс в процентах
 - `comment` — комментарий
 - `date` — дата
 - `waitlist` — лист ожидания
 - `courseStatus` — статус курса
 - `studyDays` — дни обучения
 - `hours` — часы
-- `price` — цена
 - `educationDocument` — документ об образовании
 - `courseLink` — ссылка на страницу курса
 
-## Цены и скидки
+## Цены
 
-Для админа есть два уровня управления ценой:
-- `Pricing Settings` — singleton в Strapi с глобальными будущими повышениями цен
-- `Course` — базовая цена `basePrice` и скидка `discountPercent`
-
-Как это работает:
-- админ в `Pricing Settings` добавляет несколько дат с процентом повышения
-- когда дата наступает, backend применяет повышение ко всем курсам прямо в БД
-- при сохранении курса backend автоматически пересчитывает итоговую цену и кеширует ее в поле `price`
-- frontend и Tilda продолжают читать готовую цену без своей бизнес-логики
+Во фронтовых интеграциях и публичных feed'ах используется только итоговое поле `price`.
 
 ## Production / self-hosting
 
@@ -140,7 +130,7 @@ webstudio build --template docker
   class="js-tilda-course-fields"
   data-api-base="https://your-domain.com"
   data-course-slug="act"
-  data-course-fields-extra="activeDiscount,upcomingPriceIncreases"
+  data-course-fields-extra="price"
 >
   <h1 data-course-field="title"></h1>
   <div data-course-field="price"></div>
@@ -173,12 +163,8 @@ webstudio build --template docker
 - `data-course-path="/act"`
 
 Для запроса полей, которые не нужно вставлять напрямую в DOM:
-- `data-course-fields-extra="activeDiscount,upcomingPriceIncreases"`
-- или `data-course-request-field="activeDiscount"` на скрытом узле
-
-Для вложенных pricing-полей можно использовать путь через точку:
-- `data-course-field="activeDiscount.label"`
-- `data-course-field="nextPriceIncrease.projectedPriceLabel"`
+- `data-course-fields-extra="price"`
+- или `data-course-request-field="price"` на скрытом узле
 
 Поддерживаемые public fields:
 - `title`
@@ -193,14 +179,7 @@ webstudio build --template docker
 - `studyDays`
 - `hours`
 - `hoursLabel`
-- `basePrice`
-- `discountPercent`
-- `discountedPrice`
 - `price`
-- `scheduledIncreaseIds`
-- `activeDiscount`
-- `nextPriceIncrease`
-- `upcomingPriceIncreases`
 - `educationDocument`
 - `courseLink`
 - `coursePath`
