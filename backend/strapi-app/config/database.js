@@ -2,6 +2,13 @@ const path = require('path');
 
 module.exports = ({ env }) => {
   const client = env('DATABASE_CLIENT', 'sqlite');
+  const pool = {
+    min: env.int('DATABASE_POOL_MIN', 0),
+    max: env.int('DATABASE_POOL_MAX', 4),
+    idleTimeoutMillis: env.int('DATABASE_POOL_IDLE_TIMEOUT', 30000),
+    reapIntervalMillis: env.int('DATABASE_POOL_REAP_INTERVAL', 1000),
+    createRetryIntervalMillis: env.int('DATABASE_POOL_CREATE_RETRY_INTERVAL', 200),
+  };
 
   const connections = {
     mysql: {
@@ -20,7 +27,7 @@ module.exports = ({ env }) => {
           rejectUnauthorized: env.bool('DATABASE_SSL_REJECT_UNAUTHORIZED', true),
         },
       },
-      pool: { min: env.int('DATABASE_POOL_MIN', 2), max: env.int('DATABASE_POOL_MAX', 10) },
+      pool,
     },
     postgres: {
       connection: {
@@ -40,7 +47,7 @@ module.exports = ({ env }) => {
         },
         schema: env('DATABASE_SCHEMA', 'public'),
       },
-      pool: { min: env.int('DATABASE_POOL_MIN', 2), max: env.int('DATABASE_POOL_MAX', 10) },
+      pool,
     },
     sqlite: {
       connection: {

@@ -1,7 +1,24 @@
+x-default-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: ${DOCKER_LOG_MAX_SIZE:-10m}
+    max-file: "${DOCKER_LOG_MAX_FILE:-3}"
+
 services:
   postgres:
     image: postgres:16-alpine
+    command:
+      - postgres
+      - -c
+      - max_connections=${POSTGRES_MAX_CONNECTIONS:-40}
+      - -c
+      - shared_buffers=${POSTGRES_SHARED_BUFFERS:-128MB}
+      - -c
+      - work_mem=${POSTGRES_WORK_MEM:-4MB}
+      - -c
+      - maintenance_work_mem=${POSTGRES_MAINTENANCE_WORK_MEM:-64MB}
     restart: unless-stopped
+    mem_limit: ${POSTGRES_MEM_LIMIT:-512m}
     environment:
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_USER: ${POSTGRES_USER}
@@ -13,17 +30,23 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    logging: *default-logging
 
   strapi:
     build:
       context: .
       dockerfile: Dockerfile.fullstack
     restart: unless-stopped
+    init: true
+    mem_limit: ${STRAPI_MEM_LIMIT:-768m}
+    pids_limit: ${STRAPI_PIDS_LIMIT:-256}
     depends_on:
       postgres:
         condition: service_healthy
     environment:
       NODE_ENV: production
+      NODE_OPTIONS: --max-old-space-size=${NODE_MAX_OLD_SPACE_SIZE:-384}
+      STRAPI_TELEMETRY_DISABLED: "true"
       TZ: ${APP_TIMEZONE:-Etc/GMT-3}
       APP_UTC_OFFSET: ${APP_UTC_OFFSET:-+03:00}
       HOST: 0.0.0.0
@@ -38,6 +61,9 @@ services:
       DATABASE_USERNAME: ${POSTGRES_USER}
       DATABASE_PASSWORD: ${POSTGRES_PASSWORD}
       DATABASE_SSL: "false"
+      DATABASE_POOL_MIN: ${DATABASE_POOL_MIN:-0}
+      DATABASE_POOL_MAX: ${DATABASE_POOL_MAX:-4}
+      DATABASE_POOL_IDLE_TIMEOUT: ${DATABASE_POOL_IDLE_TIMEOUT:-30000}
       APP_KEYS: ${STRAPI_APP_KEYS}
       API_TOKEN_SALT: ${STRAPI_API_TOKEN_SALT}
       ADMIN_JWT_SECRET: ${STRAPI_ADMIN_JWT_SECRET}
@@ -56,6 +82,7 @@ services:
       timeout: 10s
       retries: 5
       start_period: 45s
+    logging: *default-logging
 
 volumes:
   pg-data:

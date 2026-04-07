@@ -1,8 +1,11 @@
-FROM node:20-alpine AS build
+FROM node:20-alpine AS deps
 WORKDIR /opt/app
 
 COPY backend/strapi-app/package*.json ./
 RUN npm ci
+
+FROM deps AS build
+WORKDIR /opt/app
 
 COPY backend/strapi-app ./
 
@@ -11,14 +14,27 @@ COPY index.html ./public/index.html
 COPY frontend-db.js ./public/frontend-db.js
 COPY assets ./public/assets
 
+ENV NODE_ENV=production
+ENV STRAPI_TELEMETRY_DISABLED=true
 RUN npm run build
 
-FROM node:20-alpine
+FROM node:20-alpine AS runtime
 WORKDIR /opt/app
 
 ENV NODE_ENV=production
+ENV STRAPI_TELEMETRY_DISABLED=true
+ENV NPM_CONFIG_UPDATE_NOTIFIER=false
 
-COPY --from=build --chown=node:node /opt/app ./
+COPY --from=build --chown=node:node /opt/app/package.json ./package.json
+COPY --from=build --chown=node:node /opt/app/package-lock.json ./package-lock.json
+COPY --from=build --chown=node:node /opt/app/config ./config
+COPY --from=build --chown=node:node /opt/app/database ./database
+COPY --from=build --chown=node:node /opt/app/public ./public
+COPY --from=build --chown=node:node /opt/app/src ./src
+COPY --from=build --chown=node:node /opt/app/build ./build
+COPY --from=build --chown=node:node /opt/app/favicon.png ./favicon.png
+COPY --from=deps --chown=node:node /opt/app/node_modules ./node_modules
+
 USER node
 
 EXPOSE 1337

@@ -9,6 +9,13 @@
 - `docker-compose.prod.yml` — запуск `postgres + app`.
 - `docker-compose.webstudio-vps.yml` — запуск `postgres + strapi + webstudio + caddy`.
 
+## Как собирается Docker
+- stage `deps` в [Dockerfile.fullstack](/Users/antonpancenko/Documents/academy/Dockerfile.fullstack) ставит npm-зависимости Strapi;
+- stage `build` копирует backend и статический frontend в `public/`, затем выполняет `npm run build`;
+- stage `runtime` собирает чистый production-образ и копирует только то, что нужно для запуска: `config/`, `database/`, `public/`, `src/`, `build/`, `node_modules/`, `package*.json`.
+
+Такой runtime-слой не тащит лишние локальные файлы и не включает служебный мусор из рабочей директории.
+
 ## Модель Course
 Сущность `Course` находится в:
 - `backend/strapi-app/src/api/course/content-types/course/schema.json`
@@ -53,6 +60,16 @@ cp .env.prod.example .env.prod
 ```bash
 docker compose --env-file .env.prod -f docker-compose.prod.yml up -d --build
 ```
+
+### 3.1) Ограничение памяти на сервере
+В `.env.prod` можно управлять ресурсами без правки compose-файлов:
+- `NODE_MAX_OLD_SPACE_SIZE=384` — ограничивает heap процесса Node/Strapi;
+- `STRAPI_MEM_LIMIT=768m` — верхняя граница памяти контейнера Strapi;
+- `POSTGRES_MEM_LIMIT=512m` — верхняя граница памяти контейнера PostgreSQL;
+- `DATABASE_POOL_MIN=0`, `DATABASE_POOL_MAX=4` — уменьшенный пул подключений к БД;
+- `DOCKER_LOG_MAX_SIZE=10m`, `DOCKER_LOG_MAX_FILE=3` — ротация логов, чтобы не разрастался диск.
+
+Для маленького VPS это обычно достаточно, чтобы приложение не раздувало RAM и не накапливало старые docker-логи.
 
 ### 4) Проверка
 ```bash
