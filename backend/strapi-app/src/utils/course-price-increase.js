@@ -350,6 +350,11 @@ const columnExists = async (strapi, tableName, columnName) => {
 
 const prepareCoursePriceIncreaseData = async (strapi, data, where = null) => {
   const existingIncrease = await loadCoursePriceIncreaseByWhere(strapi, where);
+
+  if (existingIncrease) {
+    throw new ValidationError('Созданное повышение цены нельзя редактировать. Создайте новое повышение цены вместо изменения существующего.');
+  }
+
   const isCreate = !existingIncrease;
   const nextStatus = isCreate
     ? 'scheduled'

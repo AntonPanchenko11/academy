@@ -59,7 +59,10 @@
       courseStatus: src.courseStatus || '',
       studyDays: src.studyDays || '',
       hours: src.hours,
+      basePrice: src.basePrice,
       price: src.price,
+      discountPercent: src.discountPercent,
+      activeDiscount: src.activeDiscount || null,
       educationDocument: src.educationDocument || '',
       courseLink: src.courseLink || '#'
     };
@@ -146,7 +149,24 @@
   }
 
   function parsePrice(course) {
-    var amountValue = parseNumericPrice(course && course.price);
+    var basePriceValue = parseNumericPrice(course && course.basePrice);
+    var explicitDiscountPercent = parseNumericPrice(course && course.discountPercent);
+    var activeDiscountPercent = parseNumericPrice(course && course.activeDiscount && course.activeDiscount.percent);
+    var discountPercent = activeDiscountPercent === null ? explicitDiscountPercent : activeDiscountPercent;
+    var amountValue = null;
+
+    if (basePriceValue !== null && discountPercent !== null && discountPercent > 0) {
+      amountValue = Math.max(0, Math.round(basePriceValue * ((100 - discountPercent) / 100)));
+    }
+
+    if (amountValue === null) {
+      amountValue = parseNumericPrice(course && course.price);
+    }
+
+    if (amountValue === null) {
+      amountValue = basePriceValue;
+    }
+
     var amount = amountValue === null ? '' : formatPriceNumber(amountValue);
     if (!amount) return null;
 

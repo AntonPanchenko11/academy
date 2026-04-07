@@ -177,6 +177,11 @@ const calculateDiscountedPrice = (basePrice, discount) => {
 
 const prepareDiscountData = async (strapi, data, where = null) => {
   const existingDiscount = await loadDiscountByWhere(strapi, where);
+
+  if (existingDiscount) {
+    throw new ValidationError('Созданную скидку нельзя редактировать. Создайте новую скидку вместо изменения существующей.');
+  }
+
   const percent = parseInteger(
     data && Object.prototype.hasOwnProperty.call(data, 'percent')
       ? data.percent
