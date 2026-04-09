@@ -1,0 +1,119 @@
+{
+  "kind": "collectionType",
+  "collectionName": "course_price_changes",
+  "info": {
+    "singularName": "course-price-change",
+    "pluralName": "course-price-changes",
+    "displayName": "Запланированное изменение цены",
+    "description": "Будущее изменение базовой цены курса"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "config": {
+    "layouts": {
+      "edit": [
+        [
+          {
+            "name": "course",
+            "size": 6
+          },
+          {
+            "name": "targetBasePrice",
+            "size": 3
+          },
+          {
+            "name": "effectiveAt",
+            "size": 3
+          }
+        ],
+        [
+          {
+            "name": "name",
+            "size": 12
+          }
+        ],
+        [
+          {
+            "name": "comment",
+            "size": 12
+          }
+        ]
+      ],
+      "list": [
+        "id",
+        "name",
+        "targetBasePrice",
+        "effectiveAt"
+      ]
+    },
+    "metadatas": {
+      "course": {
+        "edit": {
+          "label": "Курс",
+          "mainField": "title"
+        },
+        "list": {
+          "label": "Курс",
+          "mainField": "title"
+        }
+      },
+      "name": {
+        "edit": {
+          "label": "Название"
+        },
+        "list": {
+          "label": "Название"
+        }
+      },
+      "targetBasePrice": {
+        "edit": {
+          "label": "Новая базовая цена"
+        },
+        "list": {
+          "label": "Новая базовая цена"
+        }
+      },
+      "effectiveAt": {
+        "edit": {
+          "label": "Применить в"
+        },
+        "list": {
+          "label": "Применить в"
+        }
+      },
+      "comment": {
+        "edit": {
+          "label": "Комментарий"
+        },
+        "list": {
+          "label": "Комментарий"
+        }
+      }
+    }
+  },
+  "attributes": {
+    "course": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::course.course",
+      "inversedBy": "priceChanges",
+      "required": true
+    },
+    "name": {
+      "type": "string"
+    },
+    "effectiveAt": {
+      "type": "datetime",
+      "required": true
+    },
+    "targetBasePrice": {
+      "type": "integer",
+      "required": true,
+      "min": 0
+    },
+    "comment": {
+      "type": "text"
+    }
+  }
+}

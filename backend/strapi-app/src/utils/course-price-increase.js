@@ -4,10 +4,9 @@ const { errors } = require('@strapi/utils');
 
 const { ValidationError } = errors;
 const COURSE_UID = 'api::course.course';
-const COURSE_PRICE_INCREASE_UID = 'api::course-price-increase.course-price-increase';
+const COURSE_PRICE_CHANGE_UID = 'api::course-price-change.course-price-change';
+const COURSE_PRICE_CHANGES_FIELD = 'priceChanges';
 const MAX_BACKDATE_MS = 24 * 60 * 60 * 1000;
-const FINAL_STATUSES = new Set(['applied']);
-const ALLOWED_STATUSES = new Set(['scheduled', 'applied', 'cancelled']);
 
 const toTrimmedString = (value, maxLen = 255) => {
   if (value === undefined || value === null) return '';
@@ -15,6 +14,8 @@ const toTrimmedString = (value, maxLen = 255) => {
 
   return String(value).replace(/\s+/g, ' ').trim().slice(0, maxLen);
 };
+
+const hasOwn = (value, key) => Object.prototype.hasOwnProperty.call(value || {}, key);
 
 const parseInteger = (value) => {
   if (value === undefined || value === null || value === '') return null;
@@ -38,21 +39,6 @@ const parseDateTime = (value) => {
   return Number.isNaN(parsed.getTime()) ? null : parsed;
 };
 
-const normalizeStatus = (value) => {
-  const raw = toTrimmedString(value, 40).toLowerCase();
-  return ALLOWED_STATUSES.has(raw) ? raw : 'scheduled';
-};
-
-const normalizeBoolean = (value, fallback = false) => {
-  if (value === undefined || value === null) return fallback;
-  if (typeof value === 'boolean') return value;
-
-  const raw = toTrimmedString(value, 20).toLowerCase();
-  if (['1', 'true', 'yes', 'on'].includes(raw)) return true;
-  if (['0', 'false', 'no', 'off'].includes(raw)) return false;
-  return fallback;
-};
-
 const formatDateTimeForName = (value) => {
   const parsed = parseDateTime(value);
   if (!parsed) return '';
@@ -66,136 +52,53 @@ const formatDateTimeForName = (value) => {
   return `${year}-${month}-${day} ${hours}:${minutes} UTC`;
 };
 
-const buildCoursePriceIncreaseName = (value, increasePercent, effectiveAt) => {
+const buildCoursePriceChangeName = (value, targetBasePrice, effectiveAt) => {
   const explicitName = toTrimmedString(value, 255);
   if (explicitName) return explicitName;
 
-  const percent = parseInteger(increasePercent);
+  const price = parseInteger(targetBasePrice);
   const effectiveAtLabel = formatDateTimeForName(effectiveAt);
-  const percentLabel = Number.isFinite(percent) ? `${percent}%` : '';
 
   return toTrimmedString(
-    ['Повышение цены', percentLabel && `на ${percentLabel}`, effectiveAtLabel && `с ${effectiveAtLabel}`]
+    ['Цена', Number.isFinite(price) ? `${price} ₽` : '', effectiveAtLabel && `с ${effectiveAtLabel}`]
       .filter(Boolean)
       .join(' '),
     255
   );
 };
 
-const extractCourseRefs = (value) => {
-  const source = Array.isArray(value)
-    ? value
-    : value && typeof value === 'object' && value.connect !== undefined
-      ? value.connect
-      : value && typeof value === 'object' && value.set !== undefined
-        ? value.set
-        : value
-          ? [value]
-          : [];
+const extractCourseRef = (value) => {
+  if (typeof value === 'number' || typeof value === 'string') {
+    const id = parseInteger(value);
+    return {
+      id: Number.isFinite(id) ? id : null,
+      documentId: Number.isFinite(id) ? null : toTrimmedString(value, 120) || null,
+    };
+  }
 
-  const seen = new Set();
+  if (Array.isArray(value)) {
+    return extractCourseRef(value[0]);
+  }
 
-  return source
-    .map((item) => {
-      if (typeof item === 'number' || typeof item === 'string') {
-        const id = parseInteger(item);
-        const documentId = Number.isFinite(id) ? '' : toTrimmedString(item, 120);
+  if (!value || typeof value !== 'object') {
+    return { id: null, documentId: null };
+  }
 
-        return {
-          id: Number.isFinite(id) ? id : null,
-          documentId: documentId || null,
-        };
-      }
+  if (Array.isArray(value.connect) && value.connect.length) {
+    return extractCourseRef(value.connect[0]);
+  }
 
-      if (!item || typeof item !== 'object') return null;
+  if (Array.isArray(value.set) && value.set.length) {
+    return extractCourseRef(value.set[0]);
+  }
 
-      const id = parseInteger(item.id);
-      const documentId = toTrimmedString(item.documentId, 120);
-      if (!Number.isFinite(id) && !documentId) return null;
-
-      return {
-        id: Number.isFinite(id) ? id : null,
-        documentId: documentId || null,
-      };
-    })
-    .filter((item) => {
-      if (!item) return false;
-
-      const key = Number.isFinite(item.id) ? `id:${item.id}` : `documentId:${item.documentId}`;
-      if (seen.has(key)) return false;
-      seen.add(key);
-      return true;
-    });
-};
-
-const extractCourseIds = (items) => {
-  return (Array.isArray(items) ? items : [])
-    .map((item) => parseInteger(item && item.id))
-    .filter((value) => Number.isFinite(value));
-};
-
-const dedupeCoursePriceIncreases = (items = []) => {
-  const seen = new Set();
-
-  return (Array.isArray(items) ? items : []).filter((item) => {
-    const id = parseInteger(item && item.id);
-    if (!Number.isFinite(id)) return false;
-    if (seen.has(id)) return false;
-    seen.add(id);
-    return true;
-  });
-};
-
-const sortPriceIncreases = (items = []) => {
-  return [...dedupeCoursePriceIncreases(items)].sort((left, right) => {
-    const leftAt = parseDateTime(left && left.effectiveAt);
-    const rightAt = parseDateTime(right && right.effectiveAt);
-    const leftTs = leftAt ? leftAt.getTime() : Number.MAX_SAFE_INTEGER;
-    const rightTs = rightAt ? rightAt.getTime() : Number.MAX_SAFE_INTEGER;
-    if (leftTs !== rightTs) return leftTs - rightTs;
-
-    const leftId = parseInteger(left && left.id) || 0;
-    const rightId = parseInteger(right && right.id) || 0;
-    return leftId - rightId;
-  });
-};
-
-const serializeCoursePriceIncrease = (increase) => {
-  if (!increase) return null;
-
-  const courses = Array.isArray(increase.courses)
-    ? increase.courses.map((course) => ({
-      id: parseInteger(course && course.id),
-      documentId: toTrimmedString(course && course.documentId, 120) || null,
-      title: toTrimmedString(course && course.title, 255) || null,
-      slug: toTrimmedString(course && course.slug, 255) || null,
-    })).filter((course) => Number.isFinite(course.id) || course.documentId)
-    : [];
+  const id = parseInteger(value.id);
+  const documentId = toTrimmedString(value.documentId, 120);
 
   return {
-    id: parseInteger(increase.id),
-    documentId: toTrimmedString(increase.documentId, 120) || null,
-    name: buildCoursePriceIncreaseName(increase.name, increase.increasePercent, increase.effectiveAt) || null,
-    effectiveAt: toTrimmedString(increase.effectiveAt, 80) || null,
-    increasePercent: parseInteger(increase.increasePercent),
-    applyToAllCourses: normalizeBoolean(increase.applyToAllCourses, false),
-    courses,
-    status: normalizeStatus(increase.increaseState || increase.status),
-    appliedAt: toTrimmedString(increase.appliedAt, 80) || null,
-    comment: toTrimmedString(increase.comment, 1000) || '',
+    id: Number.isFinite(id) ? id : null,
+    documentId: documentId || null,
   };
-};
-
-const resolveNextCoursePriceIncrease = (course, now = new Date()) => {
-  const scheduled = sortPriceIncreases(course && course.priceIncreases)
-    .filter((increase) => normalizeStatus(increase && (increase.increaseState || increase.status)) === 'scheduled')
-    .map((increase) => ({
-      raw: increase,
-      effectiveAt: parseDateTime(increase && increase.effectiveAt),
-    }))
-    .filter((entry) => entry.effectiveAt && entry.effectiveAt.getTime() > now.getTime());
-
-  return scheduled.length ? serializeCoursePriceIncrease(scheduled[0].raw) : null;
 };
 
 const loadCourseByRef = async (strapi, courseRef) => {
@@ -216,56 +119,41 @@ const loadCourseByRef = async (strapi, courseRef) => {
   return null;
 };
 
-const loadAllCourseIds = async (strapi) => {
-  const courses = await strapi.db.query(COURSE_UID).findMany({
-    orderBy: [{ id: 'asc' }],
-  });
-
-  return Array.from(new Set(
-    (Array.isArray(courses) ? courses : [])
-      .map((course) => parseInteger(course && course.id))
-      .filter((id) => Number.isFinite(id))
-  ));
-};
-
-const resolveCourseIds = async (strapi, value) => {
-  const refs = extractCourseRefs(value);
-  const resolvedIds = [];
-
-  for (const ref of refs) {
-    const directId = parseInteger(ref && ref.id);
-    if (Number.isFinite(directId)) {
-      resolvedIds.push(directId);
-      continue;
-    }
-
-    const course = await loadCourseByRef(strapi, ref);
-    const courseId = parseInteger(course && course.id);
-    if (Number.isFinite(courseId)) {
-      resolvedIds.push(courseId);
-    }
-  }
-
-  return Array.from(new Set(resolvedIds));
-};
-
-const loadCoursePriceIncreaseByWhere = async (strapi, where) => {
+const loadCourseByWhere = async (strapi, where) => {
   if (!where || typeof where !== 'object') return null;
 
   if (where.id !== undefined && where.id !== null) {
-    return strapi.db.query(COURSE_PRICE_INCREASE_UID).findOne({
+    return strapi.db.query(COURSE_UID).findOne({
+      where: { id: where.id },
+    });
+  }
+
+  if (where.documentId) {
+    return strapi.db.query(COURSE_UID).findOne({
+      where: { documentId: where.documentId },
+    });
+  }
+
+  return null;
+};
+
+const loadCoursePriceChangeByWhere = async (strapi, where) => {
+  if (!where || typeof where !== 'object') return null;
+
+  if (where.id !== undefined && where.id !== null) {
+    return strapi.db.query(COURSE_PRICE_CHANGE_UID).findOne({
       where: { id: where.id },
       populate: {
-        courses: true,
+        course: true,
       },
     });
   }
 
   if (where.documentId) {
-    return strapi.db.query(COURSE_PRICE_INCREASE_UID).findOne({
+    return strapi.db.query(COURSE_PRICE_CHANGE_UID).findOne({
       where: { documentId: where.documentId },
       populate: {
-        courses: true,
+        course: true,
       },
     });
   }
@@ -273,326 +161,371 @@ const loadCoursePriceIncreaseByWhere = async (strapi, where) => {
   return null;
 };
 
-const loadGlobalCoursePriceIncreases = async (strapi) => {
-  return strapi.db.query(COURSE_PRICE_INCREASE_UID).findMany({
+const sortCoursePriceChanges = (items = []) => {
+  return [...(Array.isArray(items) ? items : [])]
+    .filter((item) => item && typeof item === 'object')
+    .sort((left, right) => {
+      const leftAt = parseDateTime(left && left.effectiveAt);
+      const rightAt = parseDateTime(right && right.effectiveAt);
+      const leftTs = leftAt ? leftAt.getTime() : Number.MAX_SAFE_INTEGER;
+      const rightTs = rightAt ? rightAt.getTime() : Number.MAX_SAFE_INTEGER;
+      if (leftTs !== rightTs) return leftTs - rightTs;
+
+      const leftId = parseInteger(left && left.id) || 0;
+      const rightId = parseInteger(right && right.id) || 0;
+      return leftId - rightId;
+    });
+};
+
+const serializeCoursePriceChange = (change) => {
+  if (!change || typeof change !== 'object') return null;
+
+  const effectiveAt = parseDateTime(change.effectiveAt);
+  const targetBasePrice = parseInteger(change.targetBasePrice);
+  if (!effectiveAt || !Number.isFinite(targetBasePrice)) return null;
+
+  return {
+    id: parseInteger(change.id),
+    documentId: toTrimmedString(change.documentId, 120) || null,
+    name: buildCoursePriceChangeName(change.name, targetBasePrice, effectiveAt.toISOString()),
+    effectiveAt: effectiveAt.toISOString(),
+    targetBasePrice,
+    comment: toTrimmedString(change.comment, 1000) || '',
+  };
+};
+
+const getCoursePriceChanges = (course) => {
+  return Array.isArray(course && course[COURSE_PRICE_CHANGES_FIELD])
+    ? course[COURSE_PRICE_CHANGES_FIELD]
+    : [];
+};
+
+const resolveDueCoursePriceChanges = (course, now = new Date()) => {
+  return sortCoursePriceChanges(getCoursePriceChanges(course))
+    .map((change) => serializeCoursePriceChange(change))
+    .filter(Boolean)
+    .filter((change) => {
+      const effectiveAt = parseDateTime(change && change.effectiveAt);
+      return Boolean(effectiveAt && effectiveAt.getTime() <= now.getTime());
+    });
+};
+
+const resolveCoursePriceChanges = (course, now = new Date()) => {
+  return sortCoursePriceChanges(getCoursePriceChanges(course))
+    .map((change) => serializeCoursePriceChange(change))
+    .filter(Boolean)
+    .filter((change) => {
+      const effectiveAt = parseDateTime(change && change.effectiveAt);
+      return Boolean(effectiveAt && effectiveAt.getTime() > now.getTime());
+    });
+};
+
+const resolveNextCoursePriceChange = (course, now = new Date()) => {
+  const scheduled = resolveCoursePriceChanges(course, now);
+  return scheduled.length ? scheduled[0] : null;
+};
+
+const calculateCurrentCourseBasePrice = (course, now = new Date()) => {
+  const rawBasePrice = parseInteger(course && course.basePrice);
+  if (!Number.isFinite(rawBasePrice)) return null;
+
+  const dueChanges = resolveDueCoursePriceChanges(course, now);
+  if (!dueChanges.length) return rawBasePrice;
+
+  return dueChanges[dueChanges.length - 1].targetBasePrice;
+};
+
+const assertCoursePriceChangeIsUnique = async (strapi, courseId, effectiveAt, currentChangeId = null) => {
+  const normalizedCourseId = parseInteger(courseId);
+  const effectiveDate = parseDateTime(effectiveAt);
+
+  if (!Number.isFinite(normalizedCourseId) || !effectiveDate) return;
+
+  const existingChanges = await strapi.db.query(COURSE_PRICE_CHANGE_UID).findMany({
     where: {
-      applyToAllCourses: true,
-      increaseState: { $ne: 'cancelled' },
+      course: {
+        id: normalizedCourseId,
+      },
     },
-    populate: {
-      courses: true,
+    orderBy: [{ id: 'asc' }],
+  });
+
+  const duplicate = (Array.isArray(existingChanges) ? existingChanges : []).find((change) => {
+    const changeId = parseInteger(change && change.id);
+    if (Number.isFinite(currentChangeId) && changeId === currentChangeId) return false;
+
+    const changeEffectiveAt = parseDateTime(change && change.effectiveAt);
+    return Boolean(changeEffectiveAt && changeEffectiveAt.getTime() === effectiveDate.getTime());
+  });
+
+  if (!duplicate) return;
+
+  throw new ValidationError('Для курса уже существует изменение цены на эту дату и время.');
+};
+
+const assertCoursePriceChangeRaisesPrice = async (
+  strapi,
+  course,
+  effectiveAt,
+  targetBasePrice,
+  currentChangeId = null
+) => {
+  const courseId = parseInteger(course && course.id);
+  const effectiveDate = parseDateTime(effectiveAt);
+  const candidatePrice = parseInteger(targetBasePrice);
+  const currentId = parseInteger(currentChangeId);
+  if (!Number.isFinite(courseId) || !effectiveDate || !Number.isFinite(candidatePrice)) return;
+
+  const existingChanges = await strapi.db.query(COURSE_PRICE_CHANGE_UID).findMany({
+    where: {
+      course: {
+        id: courseId,
+      },
     },
     orderBy: [{ effectiveAt: 'asc' }, { id: 'asc' }],
   });
+
+  const relevantChanges = sortCoursePriceChanges(
+    (Array.isArray(existingChanges) ? existingChanges : []).filter((change) => {
+      const changeId = parseInteger(change && change.id);
+      return !Number.isFinite(currentId) || changeId !== currentId;
+    })
+  );
+
+  let previousPrice = parseInteger(course && course.basePrice);
+  let nextScheduledPrice = null;
+
+  for (const change of relevantChanges) {
+    const changeEffectiveAt = parseDateTime(change && change.effectiveAt);
+    const changeTargetPrice = parseInteger(change && change.targetBasePrice);
+    if (!changeEffectiveAt || !Number.isFinite(changeTargetPrice)) continue;
+
+    if (changeEffectiveAt.getTime() < effectiveDate.getTime()) {
+      previousPrice = changeTargetPrice;
+      continue;
+    }
+
+    nextScheduledPrice = changeTargetPrice;
+    break;
+  }
+
+  if (!Number.isFinite(previousPrice)) {
+    previousPrice = 0;
+  }
+
+  if (candidatePrice <= previousPrice) {
+    throw new ValidationError(
+      `Новая базовая цена должна быть больше предыдущей цены ${previousPrice}.`
+    );
+  }
+
+  if (Number.isFinite(nextScheduledPrice) && candidatePrice >= nextScheduledPrice) {
+    throw new ValidationError(
+      `Новая базовая цена должна быть меньше следующей запланированной цены ${nextScheduledPrice}.`
+    );
+  }
 };
 
-const mergeCoursePriceIncreases = (course, globalIncreases = []) => {
-  return dedupeCoursePriceIncreases([
-    ...(Array.isArray(course && course.priceIncreases) ? course.priceIncreases : []),
-    ...(Array.isArray(globalIncreases) ? globalIncreases : []),
-  ]);
-};
+const prepareCoursePriceChangeData = async (strapi, data, where = null, now = new Date()) => {
+  const existingChange = await loadCoursePriceChangeByWhere(strapi, where);
+  const courseRef = hasOwn(data, 'course') ? data.course : (existingChange && existingChange.course);
+  const course = await loadCourseByRef(strapi, extractCourseRef(courseRef));
+  const courseId = parseInteger(course && course.id);
 
-const assertEffectiveAtWindow = (effectiveAtRaw, now = new Date()) => {
-  const effectiveAt = parseDateTime(effectiveAtRaw);
+  if (!Number.isFinite(courseId)) {
+    throw new ValidationError('Выберите существующий курс для изменения цены.');
+  }
+
+  const effectiveAt = parseDateTime(
+    hasOwn(data, 'effectiveAt') ? data.effectiveAt : (existingChange && existingChange.effectiveAt)
+  );
   if (!effectiveAt) {
     throw new ValidationError('Укажите корректные дату и время применения.');
   }
 
   if (effectiveAt.getTime() < now.getTime() - MAX_BACKDATE_MS) {
-    throw new ValidationError('Повышение цены можно создать в прошлом не более чем на 24 часа назад.');
+    throw new ValidationError('Изменение цены можно создать в прошлом не более чем на 24 часа назад.');
   }
 
-  return effectiveAt;
-};
-
-const assertManualStatusChangeAllowed = (nextStatus, existingIncrease = null) => {
-  const existingStatus = normalizeStatus(existingIncrease && (existingIncrease.increaseState || existingIncrease.status));
-
-  if (FINAL_STATUSES.has(existingStatus)) {
-    throw new ValidationError('Примененное повышение цены нельзя изменять.');
-  }
-
-  if (nextStatus === 'applied') {
-    throw new ValidationError('Статус "applied" выставляется автоматически после применения повышения цены.');
-  }
-};
-
-const assertIncreasePercentIsValid = (increasePercent) => {
-  if (!Number.isFinite(increasePercent) || increasePercent <= 0) {
-    throw new ValidationError('Процент повышения должен быть целым числом больше 0.');
-  }
-};
-
-const assertIncreaseNameIsValid = (name) => {
-  if (!name) {
-    throw new ValidationError('Укажите название повышения цены.');
-  }
-};
-
-const columnExists = async (strapi, tableName, columnName) => {
-  const result = await strapi.db.connection.raw(`
-    SELECT 1
-    FROM information_schema.columns
-    WHERE table_name = ?
-      AND column_name = ?
-    LIMIT 1
-  `, [tableName, columnName]);
-
-  const rows = Array.isArray(result && result.rows)
-    ? result.rows
-    : Array.isArray(result)
-      ? result
-      : [];
-
-  return rows.length > 0;
-};
-
-const prepareCoursePriceIncreaseData = async (strapi, data, where = null) => {
-  const existingIncrease = await loadCoursePriceIncreaseByWhere(strapi, where);
-
-  if (existingIncrease) {
-    throw new ValidationError('Созданное повышение цены нельзя редактировать. Создайте новое повышение цены вместо изменения существующего.');
-  }
-
-  const isCreate = !existingIncrease;
-  const nextStatus = isCreate
-    ? 'scheduled'
-    : normalizeStatus(
-      data && Object.prototype.hasOwnProperty.call(data, 'increaseState')
-        ? data.increaseState
-        : (existingIncrease && (existingIncrease.increaseState || existingIncrease.status))
-    );
-  const existingStatus = normalizeStatus(existingIncrease && (existingIncrease.increaseState || existingIncrease.status));
-
-  if (FINAL_STATUSES.has(existingStatus)) {
-    throw new ValidationError('Примененное повышение цены нельзя изменять.');
-  }
-
-  if (nextStatus === 'cancelled') {
-    return {
-      ...(data || {}),
-      increaseState: isCreate ? 'scheduled' : 'cancelled',
-      appliedAt: existingIncrease ? existingIncrease.appliedAt || null : null,
-      comment: toTrimmedString(data && data.comment, 1000) || toTrimmedString(existingIncrease && existingIncrease.comment, 1000) || null,
-    };
-  }
-
-  const effectiveAtRaw = toTrimmedString(
-    data && Object.prototype.hasOwnProperty.call(data, 'effectiveAt')
-      ? data.effectiveAt
-      : (existingIncrease && existingIncrease.effectiveAt),
-    80
+  const targetBasePrice = parseInteger(
+    hasOwn(data, 'targetBasePrice') ? data.targetBasePrice : (existingChange && existingChange.targetBasePrice)
   );
-  const effectiveAt = assertEffectiveAtWindow(effectiveAtRaw);
-  const applyToAllCourses = normalizeBoolean(
-    data && Object.prototype.hasOwnProperty.call(data, 'applyToAllCourses')
-      ? data.applyToAllCourses
-      : (existingIncrease && existingIncrease.applyToAllCourses),
-    false
-  );
-  const increasePercent = parseInteger(
-    data && Object.prototype.hasOwnProperty.call(data, 'increasePercent')
-      ? data.increasePercent
-      : (existingIncrease && existingIncrease.increasePercent)
-  );
-  const name = buildCoursePriceIncreaseName(
-    data && Object.prototype.hasOwnProperty.call(data, 'name')
-      ? data.name
-      : (existingIncrease && existingIncrease.name),
-    increasePercent,
+  if (!Number.isFinite(targetBasePrice) || targetBasePrice < 0) {
+    throw new ValidationError('Новая базовая цена должна быть целым числом больше или равна 0.');
+  }
+
+  const name = buildCoursePriceChangeName(
+    hasOwn(data, 'name') ? data.name : (existingChange && existingChange.name),
+    targetBasePrice,
     effectiveAt.toISOString()
   );
-  const selectedCourseIds = applyToAllCourses
-    ? await loadAllCourseIds(strapi)
-    : await resolveCourseIds(
-      strapi,
-      data && Object.prototype.hasOwnProperty.call(data, 'courses')
-        ? data.courses
-        : (existingIncrease && existingIncrease.courses)
-    );
-
-  assertManualStatusChangeAllowed(nextStatus, existingIncrease);
-  assertIncreaseNameIsValid(name);
-  assertIncreasePercentIsValid(increasePercent);
-
-  if (!applyToAllCourses && !selectedCourseIds.length) {
-    throw new ValidationError('Выберите хотя бы один курс или включите режим "Применить ко всем курсам".');
+  if (!name) {
+    throw new ValidationError('Укажите название изменения цены.');
   }
+
+  await assertCoursePriceChangeIsUnique(
+    strapi,
+    courseId,
+    effectiveAt.toISOString(),
+    parseInteger(existingChange && existingChange.id)
+  );
+  await assertCoursePriceChangeRaisesPrice(
+    strapi,
+    course,
+    effectiveAt.toISOString(),
+    targetBasePrice,
+    parseInteger(existingChange && existingChange.id)
+  );
 
   return {
     ...(data || {}),
+    course: { id: courseId },
     name,
     effectiveAt: effectiveAt.toISOString(),
-    increasePercent,
-    applyToAllCourses,
-    courses: selectedCourseIds.map((id) => ({ id })),
-    increaseState: isCreate ? 'scheduled' : nextStatus,
-    appliedAt: existingIncrease ? existingIncrease.appliedAt || null : null,
-    comment: toTrimmedString(data && data.comment, 1000) || toTrimmedString(existingIncrease && existingIncrease.comment, 1000) || null,
+    targetBasePrice,
+    comment: toTrimmedString(
+      hasOwn(data, 'comment') ? data.comment : (existingChange && existingChange.comment),
+      1000
+    ) || null,
   };
 };
 
-const migrateCoursePriceIncreaseNames = async (strapi) => {
-  const clientName = toTrimmedString(
-    strapi && strapi.db && strapi.db.connection && strapi.db.connection.client && strapi.db.connection.client.config
-      ? strapi.db.connection.client.config.client
-      : '',
-    40
-  ).toLowerCase();
+const findDueCoursePriceChanges = async (strapi, now = new Date()) => {
+  const dueChanges = await strapi.db.query(COURSE_PRICE_CHANGE_UID).findMany({
+    where: {
+      effectiveAt: {
+        $lte: now.toISOString(),
+      },
+    },
+    populate: {
+      course: true,
+    },
+    orderBy: [{ effectiveAt: 'asc' }, { id: 'asc' }],
+  });
 
-  if (!clientName || clientName.includes('sqlite')) {
-    return { skipped: true, reason: 'unsupported-client' };
-  }
+  return sortCoursePriceChanges(dueChanges).filter((change) => {
+    const courseId = parseInteger(change && change.course && change.course.id);
+    return Number.isFinite(courseId);
+  });
+};
 
-  const hasNameColumn = await columnExists(strapi, 'course_price_increases', 'name');
-  if (!hasNameColumn) {
-    return { skipped: true, reason: 'missing-name-column' };
-  }
+const applyDueCoursePriceChanges = async (strapi, now = new Date()) => {
+  const dueChanges = await findDueCoursePriceChanges(strapi, now);
+  const updatedCourseIds = new Set();
+  let appliedChanges = 0;
 
-  const increases = await strapi.db.connection('course_price_increases')
-    .select(['id', 'name', 'increase_percent', 'effective_at'])
-    .orderBy([{ column: 'id', order: 'asc' }]);
+  for (const change of dueChanges) {
+    const changeId = parseInteger(change && change.id);
+    const courseId = parseInteger(change && change.course && change.course.id);
+    const targetBasePrice = parseInteger(change && change.targetBasePrice);
+    if (!Number.isFinite(changeId) || !Number.isFinite(courseId) || !Number.isFinite(targetBasePrice)) continue;
 
-  let updatedIncreases = 0;
+    const existingChange = await strapi.db.query(COURSE_PRICE_CHANGE_UID).findOne({
+      where: { id: changeId },
+      populate: {
+        course: true,
+      },
+    });
+    if (!existingChange) continue;
 
-  for (const increase of increases) {
-    if (toTrimmedString(increase && increase.name, 255)) continue;
+    const effectiveAt = parseDateTime(existingChange.effectiveAt);
+    if (!effectiveAt || effectiveAt.getTime() > now.getTime()) continue;
 
-    const nextName = buildCoursePriceIncreaseName(
-      '',
-      increase && increase.increase_percent,
-      increase && increase.effective_at
-    );
+    await strapi.db.query(COURSE_UID).update({
+      where: { id: courseId },
+      data: {
+        basePrice: targetBasePrice,
+      },
+    });
 
-    if (!nextName) continue;
+    await strapi.db.query(COURSE_PRICE_CHANGE_UID).delete({
+      where: { id: changeId },
+    });
 
-    await strapi.db.connection('course_price_increases')
-      .where({ id: increase.id })
-      .update({ name: nextName });
-
-    updatedIncreases += 1;
+    updatedCourseIds.add(courseId);
+    appliedChanges += 1;
   }
 
   return {
-    skipped: false,
-    updatedIncreases,
+    appliedChanges,
+    updatedCourses: updatedCourseIds.size,
   };
 };
 
-let isApplyingCoursePriceIncreases = false;
+const deleteCoursePriceChangesForCourseWhere = async (strapi, where) => {
+  const course = await loadCourseByWhere(strapi, where);
+  const courseId = parseInteger(course && course.id);
+  if (!Number.isFinite(courseId)) {
+    return {
+      deletedChanges: 0,
+      courseId: null,
+    };
+  }
 
-const applyIncreasePercent = (basePrice, increasePercent) => {
-  const nextBasePrice = parseInteger(basePrice);
-  const percent = parseInteger(increasePercent);
-  if (!Number.isFinite(nextBasePrice) || !Number.isFinite(percent)) return null;
+  const changes = await strapi.db.query(COURSE_PRICE_CHANGE_UID).findMany({
+    where: {
+      course: {
+        id: courseId,
+      },
+    },
+    orderBy: [{ id: 'asc' }],
+  });
 
-  return Math.max(0, Math.round(nextBasePrice * ((100 + percent) / 100)));
+  let deletedChanges = 0;
+
+  for (const change of Array.isArray(changes) ? changes : []) {
+    const changeId = parseInteger(change && change.id);
+    if (!Number.isFinite(changeId)) continue;
+
+    await strapi.db.query(COURSE_PRICE_CHANGE_UID).delete({
+      where: { id: changeId },
+    });
+    deletedChanges += 1;
+  }
+
+  return {
+    deletedChanges,
+    courseId,
+  };
 };
 
-const applyDueCoursePriceIncreases = async (strapi, now = new Date()) => {
-  if (isApplyingCoursePriceIncreases) {
-    return { skipped: true, appliedIncreases: 0, updatedCourses: 0 };
+const deleteOrphanedCoursePriceChanges = async (strapi) => {
+  const changes = await strapi.db.query(COURSE_PRICE_CHANGE_UID).findMany({
+    populate: {
+      course: true,
+    },
+    orderBy: [{ id: 'asc' }],
+  });
+
+  let deletedChanges = 0;
+
+  for (const change of Array.isArray(changes) ? changes : []) {
+    const changeId = parseInteger(change && change.id);
+    const courseId = parseInteger(change && change.course && change.course.id);
+    if (!Number.isFinite(changeId) || Number.isFinite(courseId)) continue;
+
+    await strapi.db.query(COURSE_PRICE_CHANGE_UID).delete({
+      where: { id: changeId },
+    });
+    deletedChanges += 1;
   }
 
-  isApplyingCoursePriceIncreases = true;
-
-  try {
-    const dueIncreases = await strapi.db.query(COURSE_PRICE_INCREASE_UID).findMany({
-      where: {
-        increaseState: 'scheduled',
-        effectiveAt: { $lte: now.toISOString() },
-      },
-      populate: {
-        courses: true,
-      },
-      orderBy: [{ effectiveAt: 'asc' }, { id: 'asc' }],
-    });
-
-    if (!dueIncreases.length) {
-      return { skipped: false, appliedIncreases: 0, updatedCourses: 0 };
-    }
-
-    const courses = await strapi.db.query(COURSE_UID).findMany({
-      orderBy: [{ id: 'asc' }],
-    });
-    const courseMap = new Map(
-      courses.map((course) => [
-        parseInteger(course && course.id),
-        {
-          id: parseInteger(course && course.id),
-          basePrice: parseInteger(course && course.basePrice),
-        },
-      ]).filter(([id]) => Number.isFinite(id))
-    );
-    const allCourseIds = Array.from(courseMap.keys());
-    const appliedIds = [];
-    const changedCourseIds = new Set();
-
-    for (const increase of dueIncreases) {
-      const increaseId = parseInteger(increase && increase.id);
-      const percent = parseInteger(increase && increase.increasePercent);
-      if (!Number.isFinite(increaseId) || !Number.isFinite(percent)) continue;
-
-      const targetCourseIds = normalizeBoolean(increase && increase.applyToAllCourses, false)
-        ? allCourseIds
-        : extractCourseIds(increase && increase.courses);
-
-      for (const courseId of targetCourseIds) {
-        const course = courseMap.get(courseId);
-        if (!course || !Number.isFinite(course.basePrice)) continue;
-
-        const nextBasePrice = applyIncreasePercent(course.basePrice, percent);
-        if (!Number.isFinite(nextBasePrice)) continue;
-
-        course.basePrice = nextBasePrice;
-        changedCourseIds.add(courseId);
-      }
-
-      appliedIds.push(increaseId);
-    }
-
-    for (const courseId of changedCourseIds) {
-      const course = courseMap.get(courseId);
-      if (!course || !Number.isFinite(course.basePrice)) continue;
-
-      await strapi.db.query(COURSE_UID).update({
-        where: { id: courseId },
-        data: { basePrice: course.basePrice },
-      });
-    }
-
-    const appliedAt = now.toISOString();
-
-    if (appliedIds.length) {
-      await strapi.db.connection('course_price_increases')
-        .whereIn('id', appliedIds)
-        .andWhere('increase_state', 'scheduled')
-        .update({
-          increase_state: 'applied',
-          applied_at: appliedAt,
-          updated_at: appliedAt,
-        });
-    }
-
-    return {
-      skipped: false,
-      appliedIncreases: appliedIds.length,
-      updatedCourses: changedCourseIds.size,
-    };
-  } finally {
-    isApplyingCoursePriceIncreases = false;
-  }
+  return {
+    deletedChanges,
+  };
 };
 
 module.exports = {
-  COURSE_PRICE_INCREASE_UID,
-  applyDueCoursePriceIncreases,
-  loadGlobalCoursePriceIncreases,
-  mergeCoursePriceIncreases,
-  migrateCoursePriceIncreaseNames,
-  prepareCoursePriceIncreaseData,
-  resolveNextCoursePriceIncrease,
-  serializeCoursePriceIncrease,
-  sortPriceIncreases,
+  COURSE_PRICE_CHANGE_UID,
+  COURSE_PRICE_CHANGES_FIELD,
+  applyDueCoursePriceChanges,
+  calculateCurrentCourseBasePrice,
+  deleteCoursePriceChangesForCourseWhere,
+  deleteOrphanedCoursePriceChanges,
+  findDueCoursePriceChanges,
+  prepareCoursePriceChangeData,
+  resolveCoursePriceChanges,
+  resolveNextCoursePriceChange,
+  serializeCoursePriceChange,
+  sortCoursePriceChanges,
 };

@@ -16,23 +16,22 @@ const {
   prepareCourseData,
 } = require('./utils/course');
 const {
-  COURSE_PRICE_INCREASE_UID,
-  applyDueCoursePriceIncreases,
-  loadGlobalCoursePriceIncreases,
-  mergeCoursePriceIncreases,
-  migrateCoursePriceIncreaseNames,
-  prepareCoursePriceIncreaseData,
+  COURSE_PRICE_CHANGE_UID,
+  COURSE_PRICE_CHANGES_FIELD,
+  applyDueCoursePriceChanges,
+  deleteCoursePriceChangesForCourseWhere,
+  deleteOrphanedCoursePriceChanges,
+  prepareCoursePriceChangeData,
 } = require('./utils/course-price-increase');
 const {
   DISCOUNT_UID,
-  clearDiscountRelations,
   prepareDiscountData,
 } = require('./utils/course-discount');
 const {
   syncContentManagerConfig,
 } = require('./utils/content-manager-config');
 
-const COURSE_PRICE_INCREASE_SYNC_INTERVAL_MS = 60 * 1000;
+const COURSE_PRICE_CHANGE_APPLY_INTERVAL_MS = 10 * 1000;
 
 const toTrimmedString = (value, maxLen = 255) => {
   if (value === undefined || value === null) return '';
@@ -45,23 +44,15 @@ const toTrimmedString = (value, maxLen = 255) => {
 };
 
 const loadSerializedCourses = async (strapi) => {
-  const [courses, globalPriceIncreases] = await Promise.all([
-    strapi.db.query('api::course.course').findMany({
-      populate: {
-        discount: true,
-        priceIncreases: {
-          populate: ['courses'],
-        },
-      },
-      orderBy: [{ date: 'asc' }, { title: 'asc' }],
-    }),
-    loadGlobalCoursePriceIncreases(strapi),
-  ]);
+  const courses = await strapi.db.query('api::course.course').findMany({
+    populate: {
+      discount: true,
+      [COURSE_PRICE_CHANGES_FIELD]: true,
+    },
+    orderBy: [{ date: 'asc' }, { title: 'asc' }],
+  });
 
-  return courses.map((course) => serializeCourse({
-    ...course,
-    priceIncreases: mergeCoursePriceIncreases(course, globalPriceIncreases),
-  }));
+  return courses.map((course) => serializeCourse(course));
 };
 
 const checkDatabaseHealth = async (strapi) => {
@@ -117,15 +108,6 @@ module.exports = {
     }
 
     try {
-      const migration = await migrateCoursePriceIncreaseNames(strapi);
-      if (migration && !migration.skipped) {
-        strapi.log.info(`Migrated course-price-increase.name for ${migration.updatedIncreases} record(s)`);
-      }
-    } catch (error) {
-      strapi.log.error('Failed to migrate course-price-increase.name', error);
-    }
-
-    try {
       const configSync = await syncContentManagerConfig(strapi);
       if (configSync && !configSync.skipped && configSync.updatedKeys.length) {
         strapi.log.info(`Synced content-manager config for ${configSync.updatedKeys.join(', ')}`);
@@ -133,6 +115,58 @@ module.exports = {
     } catch (error) {
       strapi.log.error('Failed to sync content-manager config', error);
     }
+
+    let isApplyingCoursePriceChanges = false;
+    let isShuttingDown = false;
+    let currentApplyPromise = null;
+    let applyInterval = null;
+    const pendingApplyHandles = new Set();
+
+    try {
+      const orphanCleanup = await deleteOrphanedCoursePriceChanges(strapi);
+      if (orphanCleanup && orphanCleanup.deletedChanges) {
+        strapi.log.warn(`Deleted ${orphanCleanup.deletedChanges} orphaned scheduled course price change(s)`);
+      }
+    } catch (error) {
+      strapi.log.error('Failed to delete orphaned scheduled course price changes', error);
+    }
+
+    const runCoursePriceChangeApply = async () => {
+      if (isShuttingDown || isApplyingCoursePriceChanges) return null;
+
+      isApplyingCoursePriceChanges = true;
+      currentApplyPromise = (async () => {
+        const result = await applyDueCoursePriceChanges(strapi);
+        if (result && result.appliedChanges) {
+          strapi.log.info(
+            `Applied ${result.appliedChanges} scheduled course price change(s) for ${result.updatedCourses} course(s)`
+          );
+        }
+        return result;
+      })();
+
+      try {
+        return await currentApplyPromise;
+      } finally {
+        currentApplyPromise = null;
+        isApplyingCoursePriceChanges = false;
+      }
+    };
+
+    const scheduleCoursePriceChangeApply = (reason) => {
+      if (isShuttingDown) return;
+
+      const handle = setImmediate(() => {
+        pendingApplyHandles.delete(handle);
+        if (isShuttingDown) return;
+
+        runCoursePriceChangeApply().catch((error) => {
+          strapi.log.error(`Failed to apply scheduled course price changes ${reason}`, error);
+        });
+      });
+
+      pendingApplyHandles.add(handle);
+    };
 
     strapi.db.lifecycles.subscribe({
       models: [COURSE_UID],
@@ -157,25 +191,28 @@ module.exports = {
           };
         }
       },
+      async beforeDelete(event) {
+        await deleteCoursePriceChangesForCourseWhere(strapi, event.params.where || null);
+      },
     });
 
     strapi.db.lifecycles.subscribe({
-      models: [COURSE_PRICE_INCREASE_UID],
+      models: [COURSE_PRICE_CHANGE_UID],
       async beforeCreate(event) {
-        event.params.data = await prepareCoursePriceIncreaseData(strapi, event.params.data || {}, null);
+        event.params.data = await prepareCoursePriceChangeData(strapi, event.params.data || {}, null);
       },
       async beforeUpdate(event) {
-        event.params.data = await prepareCoursePriceIncreaseData(
+        event.params.data = await prepareCoursePriceChangeData(
           strapi,
           event.params.data || {},
           event.params.where || null
         );
       },
       async afterCreate() {
-        await applyDueCoursePriceIncreases(strapi);
+        scheduleCoursePriceChangeApply('after create');
       },
       async afterUpdate() {
-        await applyDueCoursePriceIncreases(strapi);
+        scheduleCoursePriceChangeApply('after update');
       },
     });
 
@@ -191,20 +228,49 @@ module.exports = {
           event.params.where || null
         );
       },
-      async beforeDelete(event) {
-        await clearDiscountRelations(strapi, event.params.where || null);
-      },
     });
 
-    applyDueCoursePriceIncreases(strapi).catch((error) => {
-      strapi.log.error('Failed to apply due course price increases on bootstrap', error);
-    });
+    try {
+      await runCoursePriceChangeApply();
+    } catch (error) {
+      strapi.log.error('Failed to apply scheduled course price changes on bootstrap', error);
+    }
 
-    setInterval(() => {
-      applyDueCoursePriceIncreases(strapi).catch((error) => {
-        strapi.log.error('Failed to apply due course price increases', error);
+    applyInterval = setInterval(() => {
+      if (isShuttingDown) return;
+
+      runCoursePriceChangeApply().catch((error) => {
+        strapi.log.error('Failed to apply scheduled course price changes', error);
       });
-    }, COURSE_PRICE_INCREASE_SYNC_INTERVAL_MS);
+    }, COURSE_PRICE_CHANGE_APPLY_INTERVAL_MS);
+    if (typeof applyInterval.unref === 'function') {
+      applyInterval.unref();
+    }
+
+    const originalDestroy = strapi.destroy.bind(strapi);
+    strapi.destroy = async (...args) => {
+      isShuttingDown = true;
+
+      if (applyInterval) {
+        clearInterval(applyInterval);
+        applyInterval = null;
+      }
+
+      for (const handle of pendingApplyHandles) {
+        clearImmediate(handle);
+      }
+      pendingApplyHandles.clear();
+
+      if (currentApplyPromise) {
+        try {
+          await currentApplyPromise;
+        } catch (error) {
+          strapi.log.error('Failed to finish scheduled course price changes before shutdown', error);
+        }
+      }
+
+      return originalDestroy(...args);
+    };
 
     strapi.server.use(async (ctx, next) => {
       if ((ctx.method === 'GET' || ctx.method === 'HEAD') && (ctx.path === '/api/health/live' || ctx.path === '/api/health/live/')) {

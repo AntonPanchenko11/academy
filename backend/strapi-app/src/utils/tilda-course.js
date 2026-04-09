@@ -1,9 +1,9 @@
 'use strict';
 
 const {
-  resolveNextCoursePriceIncrease,
-  serializeCoursePriceIncrease,
-  sortPriceIncreases,
+  calculateCurrentCourseBasePrice,
+  resolveCoursePriceChanges,
+  resolveNextCoursePriceChange,
 } = require('./course-price-increase');
 const {
   calculateDiscountedPrice,
@@ -100,6 +100,8 @@ const PUBLIC_COURSE_FIELDS = [
   'discountPercent',
   'price',
   'activeDiscount',
+  'priceChanges',
+  'nextPriceChange',
   'priceIncreases',
   'nextPriceIncrease',
   'educationDocument',
@@ -275,13 +277,12 @@ const serializeCourse = (course) => {
   const coursePath = extractPathFromCourseLink(course && course.courseLink);
   const courseStatus = toTrimmedString(course && (course.courseStatus || course.status), 120) || 'Идет набор';
   const hours = Number.isFinite(course && course.hours) ? course.hours : (course && course.hours) || null;
-  const basePrice = parseInteger(course && (course.basePrice ?? course.price));
+  const basePrice = calculateCurrentCourseBasePrice(course);
   const activeDiscount = resolveCourseDiscount(course);
   const discountPercent = activeDiscount ? activeDiscount.percent : 0;
   const price = calculateDiscountedPrice(basePrice, activeDiscount);
-  const priceIncreases = sortPriceIncreases(course && course.priceIncreases)
-    .map((increase) => serializeCoursePriceIncrease(increase))
-    .filter(Boolean);
+  const priceChanges = resolveCoursePriceChanges(course);
+  const nextPriceChange = resolveNextCoursePriceChange(course);
 
   return {
     id: course && course.id ? course.id : null,
@@ -305,8 +306,10 @@ const serializeCourse = (course) => {
     discountPercent,
     price,
     activeDiscount,
-    priceIncreases,
-    nextPriceIncrease: resolveNextCoursePriceIncrease({ priceIncreases }),
+    priceChanges,
+    nextPriceChange,
+    priceIncreases: priceChanges,
+    nextPriceIncrease: nextPriceChange,
     educationDocument: toTrimmedString(course && course.educationDocument, 120),
     courseLink: toTrimmedString(course && course.courseLink, 1000),
     coursePath,

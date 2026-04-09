@@ -70,7 +70,7 @@
         ],
         [
           {
-            "name": "priceIncreases",
+            "name": "priceChanges",
             "size": 12
           }
         ]
@@ -179,13 +179,13 @@
           "label": "Ссылка на курс"
         }
       },
-      "priceIncreases": {
+      "priceChanges": {
         "edit": {
-          "label": "Повышения цены",
+          "label": "Запланированные изменения цены",
           "mainField": "name"
         },
         "list": {
-          "label": "Повышения цены",
+          "label": "Запланированные изменения цены",
           "mainField": "name",
           "searchable": false,
           "sortable": false
@@ -264,11 +264,11 @@
         }
       }
     },
-    "priceIncreases": {
+    "priceChanges": {
       "type": "relation",
-      "relation": "manyToMany",
-      "target": "api::course-price-increase.course-price-increase",
-      "mappedBy": "courses"
+      "relation": "oneToMany",
+      "target": "api::course-price-change.course-price-change",
+      "mappedBy": "course"
     }
   }
 }

@@ -90,18 +90,20 @@ const buildCourseUniquenessKey = (course = {}) => {
   return '';
 };
 
-const loadEntityByWhere = async (strapi, uid, where) => {
+const loadEntityByWhere = async (strapi, uid, where, populate = undefined) => {
   if (!where || typeof where !== 'object') return null;
 
   if (where.id !== undefined && where.id !== null) {
     return strapi.db.query(uid).findOne({
       where: { id: where.id },
+      ...(populate ? { populate } : {}),
     });
   }
 
   if (where.documentId) {
     return strapi.db.query(uid).findOne({
       where: { documentId: where.documentId },
+      ...(populate ? { populate } : {}),
     });
   }
 
@@ -129,7 +131,8 @@ const resolveCourseBasePrice = (input = {}, existingCourse = null) => {
 const hasOwn = (value, key) => Object.prototype.hasOwnProperty.call(value || {}, key);
 
 const hasCoursePricingChanges = (data = {}) => {
-  return hasOwn(data, 'basePrice') || hasOwn(data, 'price');
+  return hasOwn(data, 'basePrice')
+    || hasOwn(data, 'price');
 };
 
 const hasCourseUniquenessChanges = (data = {}) => {
@@ -145,12 +148,11 @@ const prepareCourseData = async (strapi, data, where) => {
     ...(data || {}),
   };
 
-  if (!hasCoursePricingChanges(nextData)) {
-    delete nextData.price;
+  delete nextData.price;
+
+  if (!hasOwn(nextData, 'basePrice') && !hasOwn(data, 'price')) {
     return nextData;
   }
-
-  delete nextData.price;
 
   return {
     ...nextData,
@@ -166,6 +168,11 @@ const assertCourseIsUnique = async (strapi, data, where = null) => {
   };
   const candidateKey = buildCourseUniquenessKey(candidate);
   if (!candidateKey) return;
+
+  const existingKey = buildCourseUniquenessKey(existingCourse || {});
+  if (existingCourse && existingKey === candidateKey) {
+    return;
+  }
 
   const currentCourseId = parseInteger(existingCourse && existingCourse.id);
   const courses = await strapi.db.query(COURSE_UID).findMany({

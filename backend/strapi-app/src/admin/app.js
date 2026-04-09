@@ -1,10 +1,7 @@
 const HIDDEN_ROUTE_PATHS = new Set(["list-plugins", "plugins/cloud"]);
 const HIDDEN_SETTINGS_LINK_IDS = new Set(["plugins"]);
 const HIDDEN_SETTINGS_LINK_TARGETS = new Set(["list-plugins", "plugins/cloud"]);
-const LOCKED_CONTENT_MANAGER_MODELS = new Set([
-  "api::discount.discount",
-  "api::course-price-increase.course-price-increase",
-]);
+const LOCKED_CONTENT_MANAGER_MODELS = new Set([]);
 const LOCKED_CONTENT_MANAGER_ACTION_TYPES = new Set([
   "edit",
   "update",

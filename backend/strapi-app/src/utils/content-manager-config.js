@@ -2,9 +2,9 @@
 
 const CORE_STORE_TABLE = 'strapi_core_store_settings';
 const COURSE_UID = 'api::course.course';
-const COURSE_PRICE_INCREASE_UID = 'api::course-price-increase.course-price-increase';
 const COURSE_KEY = `plugin_content_manager_configuration_content_types::${COURSE_UID}`;
-const COURSE_PRICE_INCREASE_KEY = `plugin_content_manager_configuration_content_types::${COURSE_PRICE_INCREASE_UID}`;
+const COURSE_PRICE_CHANGES_FIELD = 'priceChanges';
+const LEGACY_COURSE_FIELDS = new Set(['priceIncreases', 'scheduledIncreaseIds', 'scheduledPriceIncreases']);
 
 const parseJson = (value, fallback = null) => {
   try {
@@ -18,27 +18,33 @@ const normalizeLayoutRow = (row) => {
   return Array.isArray(row) ? row.filter((item) => item && typeof item === 'object' && item.name) : [];
 };
 
-const prependFieldToEditLayout = (rows, fieldName, size = 12) => {
+const normalizeCourseEditLayout = (rows) => {
   const normalizedRows = (Array.isArray(rows) ? rows : [])
-    .map((row) => normalizeLayoutRow(row).filter((item) => item.name !== fieldName))
+    .map((row) => normalizeLayoutRow(row).filter((item) => !LEGACY_COURSE_FIELDS.has(item.name)))
     .filter((row) => row.length);
 
-  return [[{ name: fieldName, size }], ...normalizedRows];
+  const rowsWithoutPriceChanges = normalizedRows
+    .map((row) => row.filter((item) => item.name !== COURSE_PRICE_CHANGES_FIELD))
+    .filter((row) => row.length);
+
+  return [...rowsWithoutPriceChanges, [{ name: COURSE_PRICE_CHANGES_FIELD, size: 12 }]];
 };
 
-const insertFieldIntoListLayout = (fields, fieldName, anchorField = 'id') => {
-  const normalizedFields = (Array.isArray(fields) ? fields : []).filter((field) => typeof field === 'string' && field !== fieldName);
-  const anchorIndex = normalizedFields.indexOf(anchorField);
+const normalizeCourseListLayout = (fields) => {
+  return (Array.isArray(fields) ? fields : [])
+    .filter((field) => typeof field === 'string' && !LEGACY_COURSE_FIELDS.has(field));
+};
 
-  if (anchorIndex === -1) {
-    return [fieldName, ...normalizedFields];
-  }
+const normalizeCourseMetadatas = (metadatas) => {
+  const nextMetadatas = {
+    ...(metadatas && typeof metadatas === 'object' ? metadatas : {}),
+  };
 
-  return [
-    ...normalizedFields.slice(0, anchorIndex + 1),
-    fieldName,
-    ...normalizedFields.slice(anchorIndex + 1),
-  ];
+  LEGACY_COURSE_FIELDS.forEach((field) => {
+    delete nextMetadatas[field];
+  });
+
+  return nextMetadatas;
 };
 
 const loadStoreConfig = async (strapi, key) => {
@@ -54,52 +60,6 @@ const saveStoreConfig = async (strapi, id, value) => {
     .update({ value: JSON.stringify(value) });
 };
 
-const syncCoursePriceIncreaseConfig = async (strapi) => {
-  const row = await loadStoreConfig(strapi, COURSE_PRICE_INCREASE_KEY);
-  if (!row) return { skipped: true, reason: 'missing-course-price-increase-config' };
-
-  const current = parseJson(row.value, {});
-  const next = {
-    ...current,
-    settings: {
-      ...(current && current.settings ? current.settings : {}),
-      mainField: 'name',
-      defaultSortBy: 'effectiveAt',
-      defaultSortOrder: 'ASC',
-    },
-    layouts: {
-      ...(current && current.layouts ? current.layouts : {}),
-      edit: prependFieldToEditLayout(current && current.layouts && current.layouts.edit, 'name', 12),
-      list: insertFieldIntoListLayout(current && current.layouts && current.layouts.list, 'name'),
-    },
-    metadatas: {
-      ...(current && current.metadatas ? current.metadatas : {}),
-      courses: {
-        ...(current && current.metadatas && current.metadatas.courses ? current.metadatas.courses : {}),
-        edit: {
-          ...(current && current.metadatas && current.metadatas.courses && current.metadatas.courses.edit
-            ? current.metadatas.courses.edit
-            : {}),
-          mainField: 'title',
-        },
-        list: {
-          ...(current && current.metadatas && current.metadatas.courses && current.metadatas.courses.list
-            ? current.metadatas.courses.list
-            : {}),
-          mainField: 'title',
-        },
-      },
-    },
-  };
-
-  if (JSON.stringify(current) === JSON.stringify(next)) {
-    return { skipped: true, reason: 'up-to-date' };
-  }
-
-  await saveStoreConfig(strapi, row.id, next);
-  return { skipped: false, updatedKey: COURSE_PRICE_INCREASE_KEY };
-};
-
 const syncCourseConfig = async (strapi) => {
   const row = await loadStoreConfig(strapi, COURSE_KEY);
   if (!row) return { skipped: true, reason: 'missing-course-config' };
@@ -107,19 +67,28 @@ const syncCourseConfig = async (strapi) => {
   const current = parseJson(row.value, {});
   const next = {
     ...current,
+    layouts: {
+      ...(current && current.layouts ? current.layouts : {}),
+      edit: normalizeCourseEditLayout(current && current.layouts && current.layouts.edit),
+      list: normalizeCourseListLayout(current && current.layouts && current.layouts.list),
+    },
     metadatas: {
-      ...(current && current.metadatas ? current.metadatas : {}),
-      priceIncreases: {
-        ...(current && current.metadatas && current.metadatas.priceIncreases ? current.metadatas.priceIncreases : {}),
+      ...normalizeCourseMetadatas(current && current.metadatas),
+      [COURSE_PRICE_CHANGES_FIELD]: {
+        ...(current && current.metadatas && current.metadatas[COURSE_PRICE_CHANGES_FIELD]
+          ? current.metadatas[COURSE_PRICE_CHANGES_FIELD]
+          : {}),
         edit: {
-          ...(current && current.metadatas && current.metadatas.priceIncreases && current.metadatas.priceIncreases.edit
-            ? current.metadatas.priceIncreases.edit
+          ...(current && current.metadatas && current.metadatas[COURSE_PRICE_CHANGES_FIELD]
+            && current.metadatas[COURSE_PRICE_CHANGES_FIELD].edit
+            ? current.metadatas[COURSE_PRICE_CHANGES_FIELD].edit
             : {}),
           mainField: 'name',
         },
         list: {
-          ...(current && current.metadatas && current.metadatas.priceIncreases && current.metadatas.priceIncreases.list
-            ? current.metadatas.priceIncreases.list
+          ...(current && current.metadatas && current.metadatas[COURSE_PRICE_CHANGES_FIELD]
+            && current.metadatas[COURSE_PRICE_CHANGES_FIELD].list
+            ? current.metadatas[COURSE_PRICE_CHANGES_FIELD].list
             : {}),
           mainField: 'name',
         },
@@ -136,10 +105,7 @@ const syncCourseConfig = async (strapi) => {
 };
 
 const syncContentManagerConfig = async (strapi) => {
-  const results = await Promise.all([
-    syncCoursePriceIncreaseConfig(strapi),
-    syncCourseConfig(strapi),
-  ]);
+  const results = await Promise.all([syncCourseConfig(strapi)]);
 
   return {
     skipped: results.every((item) => item && item.skipped),

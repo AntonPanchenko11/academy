@@ -175,36 +175,31 @@ const calculateDiscountedPrice = (basePrice, discount) => {
   return Math.max(0, Math.round(base * ((100 - activeDiscount.percent) / 100)));
 };
 
+const hasOwn = (value, key) => Object.prototype.hasOwnProperty.call(value || {}, key);
+
 const prepareDiscountData = async (strapi, data, where = null) => {
   const existingDiscount = await loadDiscountByWhere(strapi, where);
-
-  if (existingDiscount) {
-    throw new ValidationError('Созданную скидку нельзя редактировать. Создайте новую скидку вместо изменения существующей.');
-  }
-
   const percent = parseInteger(
-    data && Object.prototype.hasOwnProperty.call(data, 'percent')
+    hasOwn(data, 'percent')
       ? data.percent
       : (existingDiscount && existingDiscount.percent)
   );
   const active = normalizeBoolean(
-    data && Object.prototype.hasOwnProperty.call(data, 'active')
+    hasOwn(data, 'active')
       ? data.active
       : (existingDiscount && existingDiscount.active),
     true
   );
   const title = toTrimmedString(
-    data && Object.prototype.hasOwnProperty.call(data, 'title')
+    hasOwn(data, 'title')
       ? data.title
       : (existingDiscount && existingDiscount.title),
     255
   );
-  const courseIds = await resolveCourseIds(
-    strapi,
-    data && Object.prototype.hasOwnProperty.call(data, 'courses')
-      ? data.courses
-      : (existingDiscount && existingDiscount.courses)
-  );
+  const nextCoursesValue = hasOwn(data, 'courses')
+    ? data.courses
+    : (existingDiscount && existingDiscount.courses);
+  const courseIds = await resolveCourseIds(strapi, nextCoursesValue);
 
   if (!title) {
     throw new ValidationError('Укажите название скидки.');
@@ -214,54 +209,22 @@ const prepareDiscountData = async (strapi, data, where = null) => {
     throw new ValidationError('Скидка должна быть целым числом от 1 до 100.');
   }
 
-  if (!courseIds.length) {
-    throw new ValidationError('Выберите хотя бы один курс для скидки.');
-  }
-
   return {
     ...(data || {}),
     title,
     percent,
     active,
     courses: courseIds.map((id) => ({ id })),
-    comment: toTrimmedString(data && data.comment, 1000) || toTrimmedString(existingDiscount && existingDiscount.comment, 1000) || null,
-  };
-};
-
-const clearDiscountRelations = async (strapi, where = null) => {
-  const discounts = where
-    ? await strapi.db.query(DISCOUNT_UID).findMany({
-      where,
-      populate: {
-        courses: true,
-      },
-    })
-    : [];
-
-  const courseIds = Array.from(new Set(
-    discounts.flatMap((discount) => (
-      Array.isArray(discount && discount.courses)
-        ? discount.courses.map((course) => parseInteger(course && course.id))
-        : []
-    )).filter((value) => Number.isFinite(value))
-  ));
-
-  for (const courseId of courseIds) {
-    await strapi.db.query(COURSE_UID).update({
-      where: { id: courseId },
-      data: { discount: null },
-    });
-  }
-
-  return {
-    updatedCourses: courseIds.length,
+    comment: toTrimmedString(
+      hasOwn(data, 'comment') ? data.comment : (existingDiscount && existingDiscount.comment),
+      1000
+    ) || null,
   };
 };
 
 module.exports = {
   DISCOUNT_UID,
   calculateDiscountedPrice,
-  clearDiscountRelations,
   prepareDiscountData,
   resolveCourseDiscount,
   serializeDiscount,
