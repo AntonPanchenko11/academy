@@ -1,12 +1,5 @@
-# Webstudio export placeholder
+# Legacy Webstudio Directory
 
-Сюда копируется результат:
+Актуальная документация по проекту, функциям, API, деплою и эксплуатации находится в корневом [README.md](/Users/antonpancenko/Documents/academy/README.md).
 
-```bash
-webstudio build --template docker
-```
-
-Ожидаемый минимум:
-- `Dockerfile`
-- `package.json`
-- `build/`
+Директория `webstudio/` сохранена только как legacy-placeholder и не является основным runtime-путем проекта.

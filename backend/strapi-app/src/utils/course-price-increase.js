@@ -1,37 +1,31 @@
 'use strict';
 
 const { errors } = require('@strapi/utils');
+const {
+  extractCourseRef,
+  loadCourseByRef,
+  parseInteger,
+  toTrimmedString,
+} = require('./course-reference');
 
 const { ValidationError } = errors;
-const COURSE_UID = 'api::course.course';
 const COURSE_PRICE_CHANGE_UID = 'api::course-price-change.course-price-change';
 const COURSE_PRICE_CHANGES_FIELD = 'priceChanges';
 const MAX_BACKDATE_MS = 24 * 60 * 60 * 1000;
-
-const toTrimmedString = (value, maxLen = 255) => {
-  if (value === undefined || value === null) return '';
-  if (typeof value === 'object') return '';
-
-  return String(value).replace(/\s+/g, ' ').trim().slice(0, maxLen);
-};
+const COURSE_UID = 'api::course.course';
 
 const hasOwn = (value, key) => Object.prototype.hasOwnProperty.call(value || {}, key);
 
-const parseInteger = (value) => {
-  if (value === undefined || value === null || value === '') return null;
-
-  if (typeof value === 'number' && Number.isFinite(value)) {
-    return Math.round(value);
+const parseDateTime = (value) => {
+  if (value instanceof Date) {
+    return Number.isNaN(value.getTime()) ? null : new Date(value.getTime());
   }
 
-  const digits = String(value).replace(/[^\d-]/g, '');
-  if (!digits) return null;
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    const parsedFromNumber = new Date(value);
+    return Number.isNaN(parsedFromNumber.getTime()) ? null : parsedFromNumber;
+  }
 
-  const parsed = Number.parseInt(digits, 10);
-  return Number.isFinite(parsed) ? parsed : null;
-};
-
-const parseDateTime = (value) => {
   const raw = toTrimmedString(value, 80);
   if (!raw) return null;
 
@@ -65,58 +59,6 @@ const buildCoursePriceChangeName = (value, targetBasePrice, effectiveAt) => {
       .join(' '),
     255
   );
-};
-
-const extractCourseRef = (value) => {
-  if (typeof value === 'number' || typeof value === 'string') {
-    const id = parseInteger(value);
-    return {
-      id: Number.isFinite(id) ? id : null,
-      documentId: Number.isFinite(id) ? null : toTrimmedString(value, 120) || null,
-    };
-  }
-
-  if (Array.isArray(value)) {
-    return extractCourseRef(value[0]);
-  }
-
-  if (!value || typeof value !== 'object') {
-    return { id: null, documentId: null };
-  }
-
-  if (Array.isArray(value.connect) && value.connect.length) {
-    return extractCourseRef(value.connect[0]);
-  }
-
-  if (Array.isArray(value.set) && value.set.length) {
-    return extractCourseRef(value.set[0]);
-  }
-
-  const id = parseInteger(value.id);
-  const documentId = toTrimmedString(value.documentId, 120);
-
-  return {
-    id: Number.isFinite(id) ? id : null,
-    documentId: documentId || null,
-  };
-};
-
-const loadCourseByRef = async (strapi, courseRef) => {
-  const courseId = parseInteger(courseRef && courseRef.id);
-  if (Number.isFinite(courseId)) {
-    return strapi.db.query(COURSE_UID).findOne({
-      where: { id: courseId },
-    });
-  }
-
-  const documentId = toTrimmedString(courseRef && courseRef.documentId, 120);
-  if (documentId) {
-    return strapi.db.query(COURSE_UID).findOne({
-      where: { documentId },
-    });
-  }
-
-  return null;
 };
 
 const loadCourseByWhere = async (strapi, where) => {
@@ -159,6 +101,28 @@ const loadCoursePriceChangeByWhere = async (strapi, where) => {
   }
 
   return null;
+};
+
+const getCoursePriceChangeStorage = (strapi) => {
+  const courseMeta = strapi.db.metadata.get(COURSE_UID);
+  const changeMeta = strapi.db.metadata.get(COURSE_PRICE_CHANGE_UID);
+  const relation = courseMeta && courseMeta.attributes
+    ? courseMeta.attributes[COURSE_PRICE_CHANGES_FIELD]
+    : null;
+  const joinTable = relation && relation.joinTable ? relation.joinTable : null;
+
+  return {
+    courseTableName: courseMeta && courseMeta.tableName ? courseMeta.tableName : 'courses',
+    changeTableName: changeMeta && changeMeta.tableName ? changeMeta.tableName : 'course_price_changes',
+    linkTableName: joinTable && joinTable.name ? joinTable.name : 'course_price_changes_course_lnk',
+    courseLinkColumn: joinTable && joinTable.joinColumn && joinTable.joinColumn.name
+      ? joinTable.joinColumn.name
+      : 'course_id',
+    changeLinkColumn: joinTable && joinTable.inverseJoinColumn && joinTable.inverseJoinColumn.name
+      ? joinTable.inverseJoinColumn.name
+      : 'course_price_change_id',
+    orderColumnName: joinTable && joinTable.orderColumnName ? joinTable.orderColumnName : null,
+  };
 };
 
 const sortCoursePriceChanges = (items = []) => {
@@ -233,6 +197,59 @@ const calculateCurrentCourseBasePrice = (course, now = new Date()) => {
   if (!dueChanges.length) return rawBasePrice;
 
   return dueChanges[dueChanges.length - 1].targetBasePrice;
+};
+
+const assertCoursePriceChangeSequenceIntegrity = (course) => {
+  const courseId = parseInteger(course && course.id);
+  const courseTitle = toTrimmedString(course && course.title, 255) || `#${courseId || 'unknown'}`;
+  const basePrice = parseInteger(course && course.basePrice);
+  const changes = sortCoursePriceChanges(getCoursePriceChanges(course));
+  const seenEffectiveAt = new Set();
+  let previousPrice = Number.isFinite(basePrice) ? basePrice : 0;
+
+  for (const change of changes) {
+    const effectiveAt = parseDateTime(change && change.effectiveAt);
+    const targetBasePrice = parseInteger(change && change.targetBasePrice);
+    const changeId = parseInteger(change && change.id);
+
+    if (!effectiveAt || !Number.isFinite(targetBasePrice)) {
+      throw new Error(`Course "${courseTitle}" has invalid scheduled price change payload.`);
+    }
+
+    const effectiveAtKey = effectiveAt.toISOString();
+    if (seenEffectiveAt.has(effectiveAtKey)) {
+      throw new Error(`Course "${courseTitle}" has duplicate scheduled price changes for ${effectiveAtKey}.`);
+    }
+
+    seenEffectiveAt.add(effectiveAtKey);
+
+    if (targetBasePrice <= previousPrice) {
+      throw new Error(
+        `Course "${courseTitle}" has non-increasing scheduled price change `
+        + `#${changeId || 'unknown'}: ${targetBasePrice} <= ${previousPrice}.`
+      );
+    }
+
+    previousPrice = targetBasePrice;
+  }
+};
+
+const assertPricingIntegrity = async (strapi) => {
+  const courses = await strapi.db.query(COURSE_UID).findMany({
+    populate: {
+      discount: true,
+      [COURSE_PRICE_CHANGES_FIELD]: true,
+    },
+    orderBy: [{ id: 'asc' }],
+  });
+
+  for (const course of Array.isArray(courses) ? courses : []) {
+    assertCoursePriceChangeSequenceIntegrity(course);
+  }
+
+  return {
+    checkedCourses: Array.isArray(courses) ? courses.length : 0,
+  };
 };
 
 const assertCoursePriceChangeIsUnique = async (strapi, courseId, effectiveAt, currentChangeId = null) => {
@@ -411,39 +428,99 @@ const findDueCoursePriceChanges = async (strapi, now = new Date()) => {
 
 const applyDueCoursePriceChanges = async (strapi, now = new Date()) => {
   const dueChanges = await findDueCoursePriceChanges(strapi, now);
+  const nowIso = now.toISOString();
+  const storage = getCoursePriceChangeStorage(strapi);
   const updatedCourseIds = new Set();
   let appliedChanges = 0;
+
+  const dueChangesByCourse = new Map();
 
   for (const change of dueChanges) {
     const changeId = parseInteger(change && change.id);
     const courseId = parseInteger(change && change.course && change.course.id);
-    const targetBasePrice = parseInteger(change && change.targetBasePrice);
-    if (!Number.isFinite(changeId) || !Number.isFinite(courseId) || !Number.isFinite(targetBasePrice)) continue;
+    if (!Number.isFinite(changeId) || !Number.isFinite(courseId)) continue;
 
-    const existingChange = await strapi.db.query(COURSE_PRICE_CHANGE_UID).findOne({
-      where: { id: changeId },
-      populate: {
-        course: true,
-      },
+    if (!dueChangesByCourse.has(courseId)) {
+      dueChangesByCourse.set(courseId, []);
+    }
+
+    dueChangesByCourse.get(courseId).push(changeId);
+  }
+
+  for (const [courseId, changeIds] of dueChangesByCourse.entries()) {
+    const appliedBatch = await strapi.db.connection.transaction(async (trx) => {
+      let linkQuery = trx(storage.linkTableName)
+        .select({
+          courseId: storage.courseLinkColumn,
+          changeId: storage.changeLinkColumn,
+        })
+        .whereIn(storage.changeLinkColumn, changeIds);
+
+      if (storage.orderColumnName) {
+        linkQuery = linkQuery.orderBy(storage.orderColumnName, 'asc');
+      }
+
+      const linkedRows = await linkQuery;
+      const validChangeIds = Array.from(new Set(
+        (Array.isArray(linkedRows) ? linkedRows : [])
+          .filter((row) => parseInteger(row && row.courseId) === courseId)
+          .map((row) => parseInteger(row && row.changeId))
+          .filter((id) => Number.isFinite(id))
+      ));
+
+      if (!validChangeIds.length) return null;
+
+      const storedChanges = await trx(storage.changeTableName)
+        .select({
+          id: 'id',
+          effectiveAt: 'effective_at',
+          targetBasePrice: 'target_base_price',
+        })
+        .whereIn('id', validChangeIds)
+        .orderBy([{ column: 'effective_at', order: 'asc' }, { column: 'id', order: 'asc' }]);
+
+      const applicableChanges = (Array.isArray(storedChanges) ? storedChanges : [])
+        .map((change) => ({
+          id: parseInteger(change && change.id),
+          effectiveAt: parseDateTime(change && change.effectiveAt),
+          targetBasePrice: parseInteger(change && change.targetBasePrice),
+        }))
+        .filter((change) => Number.isFinite(change.id))
+        .filter((change) => change.effectiveAt && change.effectiveAt.getTime() <= now.getTime())
+        .filter((change) => Number.isFinite(change.targetBasePrice));
+
+      if (!applicableChanges.length) return null;
+
+      const latestChange = applicableChanges[applicableChanges.length - 1];
+      const updatedCourses = await trx(storage.courseTableName)
+        .where({ id: courseId })
+        .update({
+          base_price: latestChange.targetBasePrice,
+          updated_at: nowIso,
+        });
+
+      if (!updatedCourses) {
+        throw new Error(`Failed to update course ${courseId} for scheduled price changes.`);
+      }
+
+      const deletedChanges = await trx(storage.changeTableName)
+        .whereIn('id', applicableChanges.map((change) => change.id))
+        .delete();
+
+      if (deletedChanges !== applicableChanges.length) {
+        throw new Error(`Failed to delete all scheduled price changes for course ${courseId} after applying them.`);
+      }
+
+      return {
+        courseId,
+        appliedChanges: applicableChanges.length,
+      };
     });
-    if (!existingChange) continue;
 
-    const effectiveAt = parseDateTime(existingChange.effectiveAt);
-    if (!effectiveAt || effectiveAt.getTime() > now.getTime()) continue;
+    if (!appliedBatch) continue;
 
-    await strapi.db.query(COURSE_UID).update({
-      where: { id: courseId },
-      data: {
-        basePrice: targetBasePrice,
-      },
-    });
-
-    await strapi.db.query(COURSE_PRICE_CHANGE_UID).delete({
-      where: { id: changeId },
-    });
-
-    updatedCourseIds.add(courseId);
-    appliedChanges += 1;
+    updatedCourseIds.add(appliedBatch.courseId);
+    appliedChanges += appliedBatch.appliedChanges;
   }
 
   return {
@@ -516,6 +593,8 @@ const deleteOrphanedCoursePriceChanges = async (strapi) => {
 };
 
 module.exports = {
+  assertCoursePriceChangeSequenceIntegrity,
+  assertPricingIntegrity,
   COURSE_PRICE_CHANGE_UID,
   COURSE_PRICE_CHANGES_FIELD,
   applyDueCoursePriceChanges,

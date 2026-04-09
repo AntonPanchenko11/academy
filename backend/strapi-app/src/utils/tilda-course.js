@@ -9,6 +9,13 @@ const {
   calculateDiscountedPrice,
   resolveCourseDiscount,
 } = require('./course-discount');
+const {
+  normalizeAbsoluteUrl,
+  normalizePathname,
+  parseInteger,
+  safeDecodeURIComponent,
+  toTrimmedString,
+} = require('./course-reference');
 
 const MONTHS_NOMINATIVE = [
   'Январь',
@@ -102,44 +109,10 @@ const PUBLIC_COURSE_FIELDS = [
   'activeDiscount',
   'priceChanges',
   'nextPriceChange',
-  'priceIncreases',
-  'nextPriceIncrease',
   'educationDocument',
   'courseLink',
   'coursePath',
 ];
-
-const toTrimmedString = (value, maxLen = 1000) => {
-  if (value === undefined || value === null) return '';
-  if (typeof value === 'object') return '';
-
-  return String(value).replace(/\s+/g, ' ').trim().slice(0, maxLen);
-};
-
-const safeDecodeURIComponent = (value) => {
-  const text = toTrimmedString(value, 2000);
-  if (!text) return '';
-
-  try {
-    return decodeURIComponent(text);
-  } catch (error) {
-    return text;
-  }
-};
-
-const parseInteger = (value) => {
-  if (value === undefined || value === null || value === '') return null;
-
-  if (typeof value === 'number' && Number.isFinite(value)) {
-    return Math.round(value);
-  }
-
-  const digits = String(value).replace(/[^\d-]/g, '');
-  if (!digits) return null;
-
-  const parsed = Number.parseInt(digits, 10);
-  return Number.isFinite(parsed) ? parsed : null;
-};
 
 const normalizeBooleanQuery = (value) => {
   const text = toTrimmedString(value, 20).toLowerCase();
@@ -171,36 +144,6 @@ const slugify = (value) => {
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '')
     .replace(/-{2,}/g, '-');
-};
-
-const normalizePathname = (value) => {
-  const text = toTrimmedString(value, 500);
-  if (!text) return '';
-
-  const withoutHost = text.replace(/^https?:\/\/[^/]+/i, '');
-  const beforeHash = withoutHost.split('#')[0];
-  const beforeQuery = beforeHash.split('?')[0];
-  const decoded = safeDecodeURIComponent(beforeQuery);
-  const path = decoded.startsWith('/') ? decoded : `/${decoded}`;
-
-  return path
-    .replace(/\/{2,}/g, '/')
-    .replace(/\/+$/, '') || '/';
-};
-
-const normalizeAbsoluteUrl = (value) => {
-  const text = toTrimmedString(value, 1000);
-  if (!text) return '';
-
-  try {
-    const parsed = new URL(text);
-    parsed.hash = '';
-    parsed.search = '';
-    parsed.pathname = normalizePathname(parsed.pathname);
-    return parsed.toString().replace(/\/+$/, '');
-  } catch (error) {
-    return '';
-  }
 };
 
 const extractPathFromCourseLink = (courseLink) => {
@@ -308,8 +251,6 @@ const serializeCourse = (course) => {
     activeDiscount,
     priceChanges,
     nextPriceChange,
-    priceIncreases: priceChanges,
-    nextPriceIncrease: nextPriceChange,
     educationDocument: toTrimmedString(course && course.educationDocument, 120),
     courseLink: toTrimmedString(course && course.courseLink, 1000),
     coursePath,

@@ -2,41 +2,14 @@
 
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
-const os = require('node:os');
-const path = require('node:path');
 const { createStrapi } = require('@strapi/strapi');
 
 const { serializeCourse } = require('../src/utils/tilda-course');
-
-const APP_DIR = path.resolve(__dirname, '..');
-const ENV_PATH = path.join(APP_DIR, '.env');
-const SOURCE_DB_PATH = path.join(APP_DIR, '.tmp', 'data.db');
-
-const loadEnvFile = (filePath) => {
-  const lines = fs.readFileSync(filePath, 'utf8').split(/\r?\n/);
-
-  for (const line of lines) {
-    const trimmedLine = line.trim();
-    if (!trimmedLine || trimmedLine.startsWith('#')) continue;
-
-    const separatorIndex = trimmedLine.indexOf('=');
-    if (separatorIndex === -1) continue;
-
-    const key = trimmedLine.slice(0, separatorIndex).trim();
-    const value = trimmedLine.slice(separatorIndex + 1);
-
-    if (!(key in process.env)) {
-      process.env[key] = value;
-    }
-  }
-};
-
-const createTempDatabaseCopy = () => {
-  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'academy-discount-regression-'));
-  const tempDbPath = path.join(tempDir, 'data.db');
-  fs.copyFileSync(SOURCE_DB_PATH, tempDbPath);
-  return { tempDir, tempDbPath };
-};
+const {
+  APP_DIR,
+  createTempDatabaseCopy,
+  loadEnvFile,
+} = require('./lib/strapi-script-helpers');
 
 const listDiscountLinks = async (strapi) => {
   return strapi.db.connection('courses_discount_lnk')
@@ -72,9 +45,9 @@ const createCourse = async (documents, suffix, name, basePrice) => {
 };
 
 const main = async () => {
-  loadEnvFile(ENV_PATH);
+  loadEnvFile();
 
-  const { tempDir, tempDbPath } = createTempDatabaseCopy();
+  const { tempDir, tempDbPath } = createTempDatabaseCopy('academy-discount-regression-');
   process.env.DATABASE_FILENAME = tempDbPath;
   process.env.HOST = '127.0.0.1';
   process.env.PORT = '0';

@@ -1,48 +1,11 @@
 # Backend (Strapi)
 
-## Актуальные режимы запуска
+Подробная и актуальная документация по backend находится в корневом [README.md](/Users/antonpancenko/Documents/academy/README.md).
 
-Локальный backend-only compose в директории `backend/` больше не используется.
+Смотри там разделы:
 
-## Production режим (единый образ фронт+бэк)
-Используйте корневые файлы:
-- `Dockerfile.fullstack`
-- `docker-compose.prod.yml`
-
-## Production режим на Selectel VPS
-
-Для удаленного сервера с TLS и reverse proxy используйте:
-- `docker-compose.selectel.yml`
-- `deploy/scripts/deploy-selectel.sh`
-- `deploy/SELECTEL_VPS.md`
-
-## Production режим через Webstudio CLI на VPS
-
-Если frontend экспортируется из Webstudio CLI как отдельный Docker runtime, используйте:
-- `docker-compose.webstudio-vps.yml`
-- `deploy/scripts/deploy-webstudio-vps.sh`
-- `deploy/WEBSTUDIO_VPS.md`
-
-## Course API для фронта
-- `GET /api/courses-feed` — отдает курсы из БД, отфильтрованные по `publish = true`.
-
-## Health API
-- `GET /api/health/live` — liveness probe для контейнера приложения.
-- `GET /api/health/ready` — readiness probe c проверкой доступа к БД.
-
-## Course API для Tilda
-- `GET /api/tilda/courses` — список public-полей курсов для Tilda.
-- `GET /api/tilda/courses/{slug|id|documentId}` — один курс по удобному идентификатору.
-- `GET /api/tilda/courses/resolve?path=/act` — находит курс по URL/path Tilda-страницы.
-- `GET /api/tilda/health` — health endpoint для публичного Tilda course API.
-
-Поддерживаются query-параметры:
-- `fields=title,price,dateLabel` — вернуть только нужные поля.
-- `waitlist=true|false` — фильтр для списка.
-- `search=...` — поиск по public-полям.
-- `includeUnpublished=true` — включить неопубликованные курсы.
-
-## Цены
-- В Strapi курс хранит `Course.basePrice`.
-- Публичные API и фронт работают только с итоговым полем `price`, которое сериализуется из `basePrice`.
-- Отдельных сущностей для скидок и повышений цены в проекте больше нет.
+- архитектура проекта;
+- сущности `Course`, `Discount`, `Course Price Change`;
+- public API и DTO;
+- локальный запуск, quality gate и maintenance;
+- production deploy, rollback и Tilda integration.

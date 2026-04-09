@@ -16,26 +16,22 @@
     'Декабрь'
   ];
 
-  var MONTHS_GENITIVE = [
-    'Января',
-    'Февраля',
-    'Марта',
-    'Апреля',
-    'Мая',
-    'Июня',
-    'Июля',
-    'Августа',
-    'Сентября',
-    'Октября',
-    'Ноября',
-    'Декабря'
-  ];
-
-  var WEEKDAYS_SHORT = ['пн', 'вт', 'ср', 'чт', 'пт', 'сб', 'вс'];
-
   var tabsContainer = document.getElementById('monthTabs');
   var monthsContainer = document.getElementById('monthsContainer');
   var waitlistContainer = document.getElementById('waitlistContainer');
+
+  function hasScheduleContainers() {
+    return Boolean(tabsContainer && monthsContainer && waitlistContainer);
+  }
+
+  function setHtml(node, html) {
+    if (!node) return;
+    node.innerHTML = html;
+  }
+
+  function buildTextState(message) {
+    return '<div class="text text-paragraph-medium"><span class="text-block-wrap-div">' + escapeHtml(message) + '</span></div>';
+  }
 
   function escapeHtml(value) {
     return String(value || '')
@@ -47,22 +43,20 @@
   }
 
   function toCourse(row) {
-    var src = row && row.attributes ? row.attributes : row || {};
+    var src = row || {};
 
     return {
-      id: row && row.id ? row.id : src.id,
+      id: src.id,
       title: src.title || '',
-      publish: src.publish !== false,
       comment: src.comment || '',
       date: src.date || '',
+      day: src.day || '',
+      dateLabel: src.dateLabel || '',
       waitlist: src.waitlist === true,
       courseStatus: src.courseStatus || '',
       studyDays: src.studyDays || '',
-      hours: src.hours,
-      basePrice: src.basePrice,
+      hoursLabel: src.hoursLabel || '',
       price: src.price,
-      discountPercent: src.discountPercent,
-      activeDiscount: src.activeDiscount || null,
       educationDocument: src.educationDocument || '',
       courseLink: src.courseLink || '#'
     };
@@ -72,17 +66,6 @@
     if (!dateValue) return null;
     var date = new Date(String(dateValue) + 'T00:00:00');
     return isNaN(date.getTime()) ? null : date;
-  }
-
-  function dayText(date) {
-    var day = date.getDate();
-    return day < 10 ? '0' + day : String(day);
-  }
-
-  function monthDayText(date) {
-    var month = MONTHS_GENITIVE[date.getMonth()];
-    var day = date.getDay() === 0 ? 6 : date.getDay() - 1;
-    return month + ', ' + WEEKDAYS_SHORT[day];
   }
 
   function statusClass(courseStatus) {
@@ -105,18 +88,16 @@
     );
   }
 
-  function buildHoursTag(hours) {
-    if (hours === null || hours === undefined || hours === '') return '';
+  function buildHoursTag(course) {
+    var hoursLabel = String(course && course.hoursLabel || '').trim();
+    if (!hoursLabel) return '';
 
     return (
       '<div class="div schedule-info-tag">' +
       '<div class="image schedule-tag-icon">' +
       '<img src="./assets/time-circle-icon.svg" alt="time-circle-icon" class="image__img">' +
       '</div>' +
-      '<div class="div tag-text-wrapper">' +
-      '<div class="text"><span class="text-block-wrap-div">' + escapeHtml(hours) + '</span></div>' +
-      '<div class="text"><span class="text-block-wrap-div">ак. ч.</span></div>' +
-      '</div>' +
+      '<div class="text"><span class="text-block-wrap-div">' + escapeHtml(hoursLabel) + '</span></div>' +
       '</div>'
     );
   }
@@ -149,24 +130,7 @@
   }
 
   function parsePrice(course) {
-    var basePriceValue = parseNumericPrice(course && course.basePrice);
-    var explicitDiscountPercent = parseNumericPrice(course && course.discountPercent);
-    var activeDiscountPercent = parseNumericPrice(course && course.activeDiscount && course.activeDiscount.percent);
-    var discountPercent = activeDiscountPercent === null ? explicitDiscountPercent : activeDiscountPercent;
-    var amountValue = null;
-
-    if (basePriceValue !== null && discountPercent !== null && discountPercent > 0) {
-      amountValue = Math.max(0, Math.round(basePriceValue * ((100 - discountPercent) / 100)));
-    }
-
-    if (amountValue === null) {
-      amountValue = parseNumericPrice(course && course.price);
-    }
-
-    if (amountValue === null) {
-      amountValue = basePriceValue;
-    }
-
+    var amountValue = parseNumericPrice(course && course.price);
     var amount = amountValue === null ? '' : formatPriceNumber(amountValue);
     if (!amount) return null;
 
@@ -193,6 +157,8 @@
   function buildDateCard(course) {
     var date = parseDate(course.date);
     if (!date) return '';
+    var dayLabel = String(course && course.day || '').trim();
+    var dateLabel = String(course && course.dateLabel || '').trim();
 
     var subtitleClass = course.comment ? 'text caption-small text-color-violet-copy' : 'text caption-small text-color-violet-copy not-active';
 
@@ -204,8 +170,8 @@
       '<div class="text"><span class="text-block-wrap-div">' + escapeHtml(course.courseStatus || 'Идет набор') + '</span></div>' +
       '</div>' +
       '<div class="div schedule-date-wrapper">' +
-      '<div class="text heading-style-h4 text-weight-bold"><span class="text-block-wrap-div">' + dayText(date) + '</span></div>' +
-      '<div class="text caption-small text-color-violet"><span class="text-block-wrap-div">' + monthDayText(date) + '</span></div>' +
+      '<div class="text heading-style-h4 text-weight-bold"><span class="text-block-wrap-div">' + escapeHtml(dayLabel) + '</span></div>' +
+      '<div class="text caption-small text-color-violet"><span class="text-block-wrap-div">' + escapeHtml(dateLabel) + '</span></div>' +
       '</div>' +
       '</div>' +
       '<div class="div schedule-item-info">' +
@@ -216,7 +182,7 @@
       '<div class="div schedule-info-tag-wrapper">' +
       '<div class="div inner-tag-wrapper">' +
       buildInfoTag('calendar-icon.svg', course.studyDays) +
-      buildHoursTag(course.hours) +
+      buildHoursTag(course) +
       '</div>' +
       buildInfoTag('document-verified-icon.svg', course.educationDocument) +
       '</div>' +
@@ -320,14 +286,10 @@
   }
 
   function renderCourses(courses) {
-    var published = courses.filter(function (course) {
-      return course.publish;
-    });
-
     var monthMap = new Map();
     var waitlist = [];
 
-    published.forEach(function (course) {
+    courses.forEach(function (course) {
       var parsedDate = parseDate(course.date);
       if (course.waitlist || !parsedDate) {
         waitlist.push(course);
@@ -347,7 +309,7 @@
       })
     );
 
-    tabsContainer.innerHTML = sortedMonths
+    setHtml(tabsContainer, sortedMonths
       .map(function (entry) {
         var monthIndex = entry[0];
         return (
@@ -356,9 +318,9 @@
           '</a>'
         );
       })
-      .join('');
+      .join(''));
 
-    monthsContainer.innerHTML = sortedMonths
+    setHtml(monthsContainer, sortedMonths
       .map(function (entry) {
         var monthIndex = entry[0];
         var cards = entry[1].map(buildDateCard).join('');
@@ -372,55 +334,53 @@
           '</div>'
         );
       })
-      .join('');
+      .join(''));
 
-    waitlistContainer.innerHTML = waitlist.map(buildWaitCard).join('');
+    setHtml(waitlistContainer, waitlist.map(buildWaitCard).join(''));
 
     if (!sortedMonths.length) {
-      monthsContainer.innerHTML = '<div class="text text-paragraph-medium"><span class="text-block-wrap-div">Курсы с датой пока не добавлены.</span></div>';
+      setHtml(monthsContainer, buildTextState('Курсы с датой пока не добавлены.'));
     }
 
     if (!waitlist.length) {
-      waitlistContainer.innerHTML = '<div class="text text-paragraph-medium"><span class="text-block-wrap-div">Лист ожидания пока пуст.</span></div>';
+      setHtml(waitlistContainer, buildTextState('Лист ожидания пока пуст.'));
     }
   }
 
   async function loadCourses() {
-    var endpoints = [
-      '/api/courses-feed',
-      '/api/tilda/courses'
-    ];
+    var response = await fetch('/api/courses-feed', {
+      headers: { Accept: 'application/json' }
+    });
 
-    var lastError = null;
-
-    for (var i = 0; i < endpoints.length; i += 1) {
-      try {
-        var response = await fetch(endpoints[i], { headers: { Accept: 'application/json' } });
-        if (!response.ok) {
-          throw new Error('HTTP ' + response.status);
-        }
-
-        var payload = await response.json();
-        var items = Array.isArray(payload.data) ? payload.data : [];
-        return items.map(toCourse);
-      } catch (error) {
-        lastError = error;
-      }
+    if (!response.ok) {
+      throw new Error('HTTP ' + response.status);
     }
 
-    throw lastError || new Error('Failed to load courses');
+    var payload = await response.json();
+    var items = Array.isArray(payload.data) ? payload.data : [];
+    return items.map(toCourse);
+  }
+
+  function renderLoadingState() {
+    setHtml(monthsContainer, buildTextState('Загружаем курсы...'));
+  }
+
+  function renderErrorState() {
+    setHtml(monthsContainer, buildTextState('Не удалось загрузить курсы из БД.'));
+    setHtml(waitlistContainer, '');
+    setHtml(tabsContainer, '');
   }
 
   async function init() {
-    monthsContainer.innerHTML = '<div class="text text-paragraph-medium"><span class="text-block-wrap-div">Загружаем курсы...</span></div>';
+    if (!hasScheduleContainers()) return;
+
+    renderLoadingState();
 
     try {
       var courses = await loadCourses();
       renderCourses(courses);
     } catch (error) {
-      monthsContainer.innerHTML = '<div class="text text-paragraph-medium"><span class="text-block-wrap-div">Не удалось загрузить курсы из БД.</span></div>';
-      waitlistContainer.innerHTML = '';
-      tabsContainer.innerHTML = '';
+      renderErrorState();
       console.error(error);
     }
   }

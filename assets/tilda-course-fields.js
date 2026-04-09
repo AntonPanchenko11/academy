@@ -316,13 +316,18 @@
     });
   }
 
-  function renderCourse(root, course, request) {
+  function renderCourse(root, course, request, options) {
+    var silent = Boolean(options && options.silent);
+
     if (!course) {
       clearCourse(root);
+      root.__academyTildaCourseCache = null;
       root.setAttribute('data-course-state', 'not-found');
-      root.dispatchEvent(new CustomEvent('academy:tilda:course-not-found', {
-        detail: { course: null, request: request || null }
-      }));
+      if (!silent) {
+        root.dispatchEvent(new CustomEvent('academy:tilda:course-not-found', {
+          detail: { course: null, request: request || null }
+        }));
+      }
       return;
     }
 
@@ -333,28 +338,43 @@
       applyNodeValue(node, resolveFieldValue(course, fieldPath));
     });
 
+    root.__academyTildaCourseCache = {
+      course: course,
+      requestUrl: request && request.url ? request.url : ''
+    };
     root.setAttribute('data-course-state', 'success');
-    root.dispatchEvent(new CustomEvent('academy:tilda:course-data', {
-      detail: { course: course, request: request || null }
-    }));
+    if (!silent) {
+      root.dispatchEvent(new CustomEvent('academy:tilda:course-data', {
+        detail: { course: course, request: request || null }
+      }));
+    }
   }
 
   function fetchCourse(requestUrl) {
     if (!REQUEST_CACHE.has(requestUrl)) {
-      REQUEST_CACHE.set(requestUrl, fetch(requestUrl, {
+      var requestPromise = fetch(requestUrl, {
         headers: { Accept: 'application/json' },
         cache: 'no-store',
       }).then(function (response) {
         return response.json().catch(function () {
           return null;
         }).then(function (payload) {
+          if (!response.ok) {
+            REQUEST_CACHE.delete(requestUrl);
+          }
+
           return {
             ok: response.ok,
             status: response.status,
             payload: payload,
           };
         });
-      }));
+      }).catch(function (error) {
+        REQUEST_CACHE.delete(requestUrl);
+        throw error;
+      });
+
+      REQUEST_CACHE.set(requestUrl, requestPromise);
     }
 
     return REQUEST_CACHE.get(requestUrl);
@@ -376,6 +396,17 @@
 
     if (root.getAttribute('data-course-state') === 'success'
       && root.getAttribute('data-course-request-url') === request.url) {
+      var cachedCourse = root.__academyTildaCourseCache && root.__academyTildaCourseCache.course
+        ? root.__academyTildaCourseCache.course
+        : null;
+      if (cachedCourse) {
+        renderCourse(root, cachedCourse, request, { silent: true });
+      }
+      return;
+    }
+
+    if (root.getAttribute('data-course-state') === 'not-found'
+      && root.getAttribute('data-course-request-url') === request.url) {
       return;
     }
 
@@ -389,6 +420,11 @@
       var response = await fetchCourse(request.url);
       var payload = response ? response.payload : null;
       var course = payload && payload.data ? payload.data : null;
+
+      if (response && response.status === 404) {
+        renderCourse(root, null, request);
+        return;
+      }
 
       if (!response || !response.ok) {
         var message = payload && payload.error
@@ -406,6 +442,19 @@
       }));
       console.error('Failed to load Tilda course fields', error);
     }
+  }
+
+  function findClosestRoot(node) {
+    var current = node;
+
+    while (current && current.nodeType === 1) {
+      if (current.matches && current.matches(ROOT_SELECTOR)) {
+        return current;
+      }
+      current = current.parentElement;
+    }
+
+    return null;
   }
 
   function init(context) {
@@ -431,6 +480,10 @@
             loadCourse(node);
             return;
           }
+          var closestRoot = findClosestRoot(node);
+          if (closestRoot) {
+            loadCourse(closestRoot);
+          }
           if (node.querySelectorAll) {
             init(node);
           }
@@ -444,24 +497,24 @@
     });
   }
 
+  function boot() {
+    init();
+    observe();
+  }
+
   if (typeof window.t_onReady === 'function') {
     window.t_onReady(function () {
-      init();
-      observe();
+      boot();
     });
   }
 
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', function () {
-      init();
-      observe();
+      boot();
     });
   } else {
-    init();
-    observe();
+    boot();
   }
 
-  window.setTimeout(init, 0);
   window.setTimeout(init, 600);
-  window.setTimeout(init, 1500);
 })();

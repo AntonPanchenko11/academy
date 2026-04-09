@@ -1,73 +1,19 @@
 'use strict';
 
 const { errors } = require('@strapi/utils');
+const {
+  normalizeAbsoluteUrl,
+  normalizePathname,
+  parseInteger,
+  parsePlainInteger,
+  toTrimmedString,
+} = require('./course-reference');
 
 const COURSE_UID = 'api::course.course';
 const { ValidationError } = errors;
 
-const toTrimmedString = (value, maxLen = 255) => {
-  if (value === undefined || value === null) return '';
-  if (typeof value === 'object') return '';
-
-  return String(value).replace(/\s+/g, ' ').trim().slice(0, maxLen);
-};
-
-const parseInteger = (value) => {
-  if (value === undefined || value === null || value === '') return null;
-
-  if (typeof value === 'number' && Number.isFinite(value)) {
-    return Math.round(value);
-  }
-
-  const digits = String(value).replace(/[^\d-]/g, '');
-  if (!digits) return null;
-
-  const parsed = Number.parseInt(digits, 10);
-  return Number.isFinite(parsed) ? parsed : null;
-};
-
-const parsePlainInteger = (value) => {
-  if (typeof value === 'number') {
-    return parseInteger(value);
-  }
-
-  const raw = toTrimmedString(value, 255);
-  if (!raw || !/^-?\d[\d\s]*$/.test(raw)) return null;
-
-  return parseInteger(raw);
-};
-
-const normalizePathname = (value) => {
-  const text = toTrimmedString(value, 1000);
-  if (!text) return '';
-
-  const withoutHost = text.replace(/^https?:\/\/[^/]+/i, '');
-  const beforeHash = withoutHost.split('#')[0];
-  const beforeQuery = beforeHash.split('?')[0];
-  const path = beforeQuery.startsWith('/') ? beforeQuery : `/${beforeQuery}`;
-
-  return path
-    .replace(/\/{2,}/g, '/')
-    .replace(/\/+$/, '') || '/';
-};
-
-const normalizeAbsoluteUrl = (value) => {
-  const text = toTrimmedString(value, 1000);
-  if (!text) return '';
-
-  try {
-    const parsed = new URL(text);
-    parsed.hash = '';
-    parsed.search = '';
-    parsed.pathname = normalizePathname(parsed.pathname);
-    return parsed.toString().replace(/\/+$/, '').toLowerCase();
-  } catch (error) {
-    return '';
-  }
-};
-
 const normalizeCourseLinkIdentity = (value) => {
-  const normalizedUrl = normalizeAbsoluteUrl(value);
+  const normalizedUrl = normalizeAbsoluteUrl(value).toLowerCase();
   if (normalizedUrl) return `url:${normalizedUrl}`;
 
   const normalizedPath = normalizePathname(value).toLowerCase();
@@ -88,6 +34,63 @@ const buildCourseUniquenessKey = (course = {}) => {
   if (title && date) return `title:${title}::${date}::${waitlist}`;
 
   return '';
+};
+
+const extractCourseUniquenessIdentity = (course = {}) => {
+  return {
+    linkKey: normalizeCourseLinkIdentity(course.courseLink),
+    date: toTrimmedString(course.date, 32),
+    title: toTrimmedString(course.title, 255).toLowerCase(),
+    waitlist: course.waitlist === true,
+  };
+};
+
+const buildCourseWaitlistWhere = (waitlist) => {
+  if (waitlist === true) {
+    return { waitlist: true };
+  }
+
+  return {
+    $or: [
+      { waitlist: false },
+      { waitlist: { $null: true } },
+    ],
+  };
+};
+
+const buildDuplicateCourseWhere = (course = {}) => {
+  const identity = extractCourseUniquenessIdentity(course);
+  const waitlistWhere = buildCourseWaitlistWhere(identity.waitlist);
+
+  if (identity.linkKey && identity.date) {
+    return {
+      $and: [
+        waitlistWhere,
+        { date: identity.date },
+      ],
+    };
+  }
+
+  if (identity.linkKey && identity.title) {
+    return {
+      $and: [
+        waitlistWhere,
+        { title: { $eqi: identity.title } },
+      ],
+    };
+  }
+
+  if (identity.title && identity.date) {
+    return {
+      $and: [
+        waitlistWhere,
+        { date: identity.date },
+        { title: { $eqi: identity.title } },
+      ],
+    };
+  }
+
+  return null;
 };
 
 const loadEntityByWhere = async (strapi, uid, where, populate = undefined) => {
@@ -175,7 +178,12 @@ const assertCourseIsUnique = async (strapi, data, where = null) => {
   }
 
   const currentCourseId = parseInteger(existingCourse && existingCourse.id);
+  const duplicateCourseWhere = buildDuplicateCourseWhere(candidate);
+  if (!duplicateCourseWhere) return;
+
   const courses = await strapi.db.query(COURSE_UID).findMany({
+    where: duplicateCourseWhere,
+    select: ['id', 'title', 'date', 'waitlist', 'courseLink'],
     orderBy: [{ id: 'asc' }],
   });
 

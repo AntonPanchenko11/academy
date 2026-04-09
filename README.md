@@ -1,189 +1,230 @@
 # Academy Schedule App
 
-Фронт + Strapi backend, запускаются в одном Docker-образе или через отдельный Webstudio runtime на VPS.
+Единый источник правды по проекту находится в этом `README.md`.
 
-## Структура
-- `index.html`, `assets/`, `frontend-db.js` — фронт расписания.
-- `backend/strapi-app` — Strapi приложение.
-- `Dockerfile.fullstack` — единый образ: Strapi + фронт.
-- `docker-compose.prod.yml` — запуск `postgres + app`.
-- `docker-compose.webstudio-vps.yml` — запуск `postgres + strapi + webstudio + caddy`.
+Если информация из других markdown-файлов конфликтует с этим документом, правильной считается информация отсюда.
 
-## Как собирается Docker
-- stage `deps` в [Dockerfile.fullstack](/Users/antonpancenko/Documents/academy/Dockerfile.fullstack) ставит npm-зависимости Strapi;
-- stage `build` копирует backend и статический frontend в `public/`, затем выполняет `npm run build`;
-- stage `runtime` собирает чистый production-образ и копирует только то, что нужно для запуска: `config/`, `database/`, `public/`, `src/`, `build/`, `node_modules/`, `package*.json`.
+## Что это за проект
 
-Такой runtime-слой не тащит лишние локальные файлы и не включает служебный мусор из рабочей директории.
+Проект обслуживает 3 рабочие поверхности:
 
-## Модель Course
-Сущность `Course` находится в:
-- `backend/strapi-app/src/api/course/content-types/course/schema.json`
+1. Страница расписания "Расписание обучения и мероприятий в Академии".
+2. Страницы на Tilda, которые получают данные отдельного курса.
+3. Админка Strapi, через которую администратор управляет курсами, скидками и запланированными изменениями цен.
 
-Поля:
-- `title` — название курса
-- `slug` — стабильный slug для Tilda и API
-- `publish` — публикация на витрине
-- `basePrice` — базовая цена курса в рублях
-- `comment` — комментарий
-- `date` — дата
-- `waitlist` — лист ожидания
-- `courseStatus` — статус курса
-- `studyDays` — дни обучения
-- `hours` — часы
-- `educationDocument` — документ об образовании
-- `courseLink` — ссылка на страницу курса
+Текущая целевая архитектура:
 
-## Цены
+- `backend/strapi-app` — единственный backend, CMS и API-источник данных.
+- `index.html` + `frontend-db.js` + `assets/` — встроенная страница расписания, которую отдает сам Strapi.
+- `/api/tilda/*` + `/assets/tilda-course-fields.js` — публичный API и helper для Tilda.
+- `/admin` — обязательная operational surface для контент-администратора.
 
-Во фронтовых интеграциях и публичных feed'ах используется только итоговое поле `price`.
+Отдельный runtime через `webstudio` больше не является основным сценарием и считается legacy.
 
-## Production / self-hosting
+## Что уже реализовано
 
-### 1) Требования
-- Linux сервер
-- Docker + Docker Compose plugin
+- `Strapi` зафиксирован как единственный backend.
+- Bootstrap Strapi разрезан на отдельные server/bootstrap-модули; `src/index.js` сведен к orchestration-слою.
+- Public DTO курса унифицирован для страницы расписания и Tilda API.
+- Legacy aliases `priceIncreases` и `nextPriceIncrease` удалены из публичного DTO.
+- `frontend-db.js` упрощен до UI-слоя `DTO -> render`.
+- `assets/tilda-course-fields.js` стабилизирован: понятные состояния, retry после временных ошибок, предсказуемые события и упрощенный lifecycle.
+- Применение `Course Price Change` переведено на транзакционный батч-сценарий.
+- Runtime maintenance убран из обычного boot-пути.
+- Regression-набор переведен на явный SQLite seed fixture.
+- Локальный quality gate и GitHub Actions CI синхронизированы через `npm run test:ci`.
+- Канонический production path зафиксирован через `docker-compose.selectel.yml` и `deploy-selectel.sh`.
 
-### 2) Подготовка env
-```bash
-cd /path/to/academy
-cp .env.prod.example .env.prod
-./deploy/scripts/generate-secrets.sh
-```
+## Основные функции проекта
 
-В `.env.prod` заполните:
-- `PUBLIC_URL`, `ADMIN_URL`, `CORS_ORIGIN`
-- `POSTGRES_PASSWORD`
-- Strapi-секреты из вывода `generate-secrets.sh`
+### 1. Страница расписания
 
-### 3) Запуск
-```bash
-docker compose --env-file .env.prod -f docker-compose.prod.yml up -d --build
-```
+Встроенная страница расписания:
 
-### 3.1) Ограничение памяти на сервере
-В `.env.prod` можно управлять ресурсами без правки compose-файлов:
-- `NODE_MAX_OLD_SPACE_SIZE=384` — ограничивает heap процесса Node/Strapi;
-- `STRAPI_MEM_LIMIT=768m` — верхняя граница памяти контейнера Strapi;
-- `POSTGRES_MEM_LIMIT=512m` — верхняя граница памяти контейнера PostgreSQL;
-- `DATABASE_POOL_MIN=0`, `DATABASE_POOL_MAX=4` — уменьшенный пул подключений к БД;
-- `DOCKER_LOG_MAX_SIZE=10m`, `DOCKER_LOG_MAX_FILE=3` — ротация логов, чтобы не разрастался диск.
+- загружает данные только из `GET /api/courses-feed`;
+- не пересчитывает цены, скидки и derived date fields на клиенте;
+- делит курсы на обычные и `waitlist`;
+- группирует курсы по месяцам;
+- показывает predictable loading / empty / error states.
 
-Для маленького VPS это обычно достаточно, чтобы приложение не раздувало RAM и не накапливало старые docker-логи.
+Файлы:
 
-### 4) Проверка
-```bash
-docker compose --env-file .env.prod -f docker-compose.prod.yml ps
-docker compose --env-file .env.prod -f docker-compose.prod.yml logs -f strapi
-```
+- `index.html`
+- `frontend-db.js`
+- `assets/`
 
-## Production / Selectel VPS
+### 2. Tilda-интеграция
 
-Этот режим нужен для обычного remote deployment на VPS, когда frontend проекта остаётся встроенным в Strapi через `Dockerfile.fullstack`, а наружу публикуются только `80/443` через Caddy.
+Проект поддерживает только публичное чтение `Course` для Tilda-страниц.
 
-Файлы решения:
-- [docker-compose.selectel.yml](/Users/antonpancenko/Documents/academy/docker-compose.selectel.yml)
-- [deploy/caddy/Caddyfile](/Users/antonpancenko/Documents/academy/deploy/caddy/Caddyfile)
-- [deploy/scripts/deploy-selectel.sh](/Users/antonpancenko/Documents/academy/deploy/scripts/deploy-selectel.sh)
-- [deploy/SELECTEL_VPS.md](/Users/antonpancenko/Documents/academy/deploy/SELECTEL_VPS.md)
-- [deploy/SELECTEL_CHECKLIST.md](/Users/antonpancenko/Documents/academy/deploy/SELECTEL_CHECKLIST.md)
+Есть:
 
-Ключевая логика маршрутизации:
-- `80/443` принимает `caddy`
-- весь домен проксируется в `strapi`
-- `strapi` отдает frontend, `/admin`, `/api/*`, `/uploads/*`, `/assets/*`
+- `GET /api/tilda/health`
+- `GET /api/tilda/courses`
+- `GET /api/tilda/courses/:identifier`
+- `GET /api/tilda/courses/resolve?path=/course-page`
+- `/assets/tilda-course-fields.js`
 
-Быстрый запуск:
-```bash
-cp .env.prod.example .env.prod
-./deploy/scripts/generate-secrets.sh
-./deploy/scripts/deploy-selectel.sh .env.prod
-```
+Helper:
 
-## Production / VPS через Webstudio CLI
+- сам определяет `apiBase`;
+- находит курс по `id`, `documentId`, `slug`, `url`, `path` или `title`;
+- подставляет поля курса в DOM;
+- выставляет состояние загрузки на root-элемент;
+- dispatch'ит события для интегратора.
 
-Этот режим нужен, когда основной frontend собирается через Webstudio CLI, а backend проекта продолжает обслуживать API, админку, uploads и Tilda course-assets.
+### 3. Админка Strapi
 
-Файлы решения:
-- [docker-compose.webstudio-vps.yml](/Users/antonpancenko/Documents/academy/docker-compose.webstudio-vps.yml)
-- [deploy/caddy/Caddyfile.webstudio](/Users/antonpancenko/Documents/academy/deploy/caddy/Caddyfile.webstudio)
-- [deploy/scripts/deploy-webstudio-vps.sh](/Users/antonpancenko/Documents/academy/deploy/scripts/deploy-webstudio-vps.sh)
-- [deploy/WEBSTUDIO_VPS.md](/Users/antonpancenko/Documents/academy/deploy/WEBSTUDIO_VPS.md)
-- [deploy/SELECTEL_CHECKLIST.md](/Users/antonpancenko/Documents/academy/deploy/SELECTEL_CHECKLIST.md)
+Через `/admin` администратор должен стабильно уметь:
 
-Ключевая логика маршрутизации:
-- `/api/*`, `/admin/*`, `/uploads/*`, `/assets/*` -> `strapi`
-- остальные frontend route'ы -> `webstudio`
+- создавать, редактировать и удалять `Course`;
+- создавать, редактировать и удалять `Discount`;
+- создавать, редактировать и удалять `Course Price Change`.
 
-Быстрый запуск:
-```bash
-webstudio build --template docker
-./deploy/scripts/deploy-webstudio-vps.sh .env.prod
-```
+Это обязательный рабочий сценарий проекта, который не должен ломаться при рефакторингах.
 
-## Маршруты
-- Фронт: `${PUBLIC_URL}`
-- Админка Strapi: `${ADMIN_URL}`
-- API: `${PUBLIC_URL}/api`
-- Liveness: `GET ${PUBLIC_URL}/api/health/live`
-- Readiness: `GET ${PUBLIC_URL}/api/health/ready`
-- Публичный feed для фронта: `${PUBLIC_URL}/api/courses-feed`
-- Проверка Tilda course API: `GET ${PUBLIC_URL}/api/tilda/health`
-- Список курсов для Tilda: `GET ${PUBLIC_URL}/api/tilda/courses`
-- Один курс для Tilda: `GET ${PUBLIC_URL}/api/tilda/courses/{slug|id|documentId}`
-- Резолв курса по URL/path страницы: `GET ${PUBLIC_URL}/api/tilda/courses/resolve?path=/act`
+## Сущности
 
-## Tilda: course fields
+### Course
 
-Подробное описание интеграции: [deploy/TILDA_INTEGRATION.md](/Users/antonpancenko/Documents/academy/deploy/TILDA_INTEGRATION.md)
+Основные поля:
 
-Что поддерживается:
-- подстановка полей курса в Tilda через `/assets/tilda-course-fields.js`
+- `title`
+- `slug`
+- `publish`
+- `basePrice`
+- `comment`
+- `date`
+- `waitlist`
+- `courseStatus`
+- `studyDays`
+- `hours`
+- `educationDocument`
+- `courseLink`
 
-Пример T123-блока:
+### Discount
 
-```html
-<div
-  class="js-tilda-course-fields"
-  data-api-base="https://your-domain.com"
-  data-course-slug="act"
-  data-course-fields-extra="price"
->
-  <h1 data-course-field="title"></h1>
-  <div data-course-field="price"></div>
-  <div data-course-field="dateLabel" data-course-hide-empty="true"></div>
-  <div data-course-field="studyDays" data-course-hide-empty="true"></div>
-  <a
-    data-course-field="courseLink"
-    data-course-attr="href"
-    href="#"
-  >
-    Перейти к курсу
-  </a>
-</div>
-<script src="https://your-domain.com/assets/tilda-course-fields.js"></script>
-```
+Основные поля:
 
-`data-api-base` можно не указывать, если helper подключается напрямую с backend-домена:
-- `<script src="https://your-domain.com/assets/tilda-course-fields.js"></script>`
-- тогда `apiBase` будет автоматически взят из `src` скрипта
+- `title`
+- `percent`
+- `active`
+- `courses`
+- `comment`
 
-Можно задавать идентификатор курса один раз на всю Tilda-страницу:
-- на `body`, `html` или любой общий контейнер через `data-course-slug`, `data-course-id`, `data-course-document-id`, `data-course-url`, `data-course-path`
-- или через `window.ACADEMY_TILDA_COURSE = { apiBase, slug|id|documentId|url|path }`
+### Course Price Change
 
-Если страница Tilda не совпадает по URL с `courseLink`, можно задать:
-- `data-course-slug="act"`
-- `data-course-id="12"`
-- `data-course-document-id="abc123"`
-- `data-course-url="https://modern-psy.ru/act"`
-- `data-course-path="/act"`
+Основные поля:
 
-Для запроса полей, которые не нужно вставлять напрямую в DOM:
-- `data-course-fields-extra="price"`
-- или `data-course-request-field="price"` на скрытом узле
+- `course`
+- `effectiveAt`
+- `targetBasePrice`
+- `name`
+- `comment`
 
-Поддерживаемые public fields:
+## Доменные правила цен и скидок
+
+В проекте зафиксированы такие инварианты:
+
+- `Course` не должен дублироваться по канонической комбинации ссылки, даты/названия и `waitlist`.
+- Для одного курса не допускаются два `Course Price Change` на один и тот же `effectiveAt`.
+- Последовательность `Course Price Change` для курса должна быть строго возрастающей по `targetBasePrice`.
+- Новый `Course Price Change` должен быть больше предыдущей цены и меньше следующей уже запланированной цены.
+- `Course Price Change` можно создать в прошлом не более чем на 24 часа назад.
+- Просроченные `Course Price Change` применяются батчем и атомарно.
+- `Discount.percent` должен быть целым числом от 1 до 100.
+- На публичную цену влияет только активная скидка.
+
+Практическая оговорка:
+
+- из-за текущей Strapi-модели связи гарантия уникальности `(course, effectiveAt)` обеспечивается lifecycle-валидацией и integrity regression, а не переносимым cross-DB schema constraint.
+
+## Public API
+
+### Health
+
+- `GET /api/health/live`
+- `GET /api/health/ready`
+- `GET /api/tilda/health`
+
+### Feed для страницы расписания
+
+- `GET /api/courses-feed`
+
+Возвращает опубликованные курсы в публичном DTO.
+
+### Tilda API
+
+- `GET /api/tilda/courses`
+- `GET /api/tilda/courses/{slug|id|documentId}`
+- `GET /api/tilda/courses/resolve?path=/act`
+
+Поддерживаемые query-параметры:
+
+- `fields=title,price,dateLabel`
+- `waitlist=true|false`
+- `search=...`
+- `includeUnpublished=true`
+
+## Public Course DTO
+
+Публичный API проекта опирается на единый сериализованный DTO курса.
+
+Базовые поля DTO:
+
+- `id`
+- `documentId`
+- `slug`
+- `title`
+- `comment`
+- `publish`
+- `waitlist`
+- `courseStatus`
+- `date`
+- `day`
+- `month`
+- `monthLabel`
+- `weekdayShort`
+- `dateLabel`
+- `studyDays`
+- `hours`
+- `hoursLabel`
+- `basePrice`
+- `discountPercent`
+- `price`
+- `activeDiscount`
+- `priceChanges`
+- `nextPriceChange`
+- `educationDocument`
+- `courseLink`
+- `coursePath`
+
+Правило проекта:
+
+- вычисляемые поля курса формируются на backend;
+- клиенты не должны повторно реализовывать бизнес-логику цены, скидки и derived date fields.
+
+### Минимальный набор для страницы расписания
+
+- `title`
+- `comment`
+- `publish`
+- `waitlist`
+- `courseStatus`
+- `date`
+- `day`
+- `dateLabel`
+- `studyDays`
+- `hoursLabel`
+- `price`
+- `educationDocument`
+- `courseLink`
+
+### Минимальный набор для Tilda helper
+
+- `id`
+- `documentId`
+- `slug`
 - `title`
 - `comment`
 - `courseStatus`
@@ -200,4 +241,417 @@ webstudio build --template docker
 - `educationDocument`
 - `courseLink`
 - `coursePath`
+- `nextPriceChange`
+
+Пример:
+
+```json
+{
+  "ok": true,
+  "data": {
+    "title": "Актерское мастерство",
+    "price": 15000,
+    "dateLabel": "Мая, пн"
+  }
+}
+```
+
+## Как оформить блок в Tilda
+
+Проектный helper работает только с `Course`.
+
+Базовый HTML-блок:
+
+```html
+<div
+  class="js-tilda-course-fields"
+  data-api-base="https://your-domain.com"
+  data-course-slug="act"
+  data-course-fields-extra="price,nextPriceChange"
+>
+  <h1 data-course-field="title"></h1>
+  <div data-course-field="price"></div>
+  <div data-course-field="dateLabel" data-course-hide-empty="true"></div>
+  <div data-course-field="studyDays" data-course-hide-empty="true"></div>
+  <div data-course-field="hoursLabel" data-course-hide-empty="true"></div>
+  <a data-course-field="courseLink" data-course-attr="href" href="#">
+    Перейти к курсу
+  </a>
+</div>
+<script src="https://your-domain.com/assets/tilda-course-fields.js"></script>
+```
+
+Что произойдет:
+
+- helper загрузится с backend-домена;
+- запросит курс по `slug`;
+- соберет `fields` из нужных DOM-узлов;
+- подставит значения в размеченные элементы.
+
+### Способы идентификации курса
+
+Можно задать один основной идентификатор:
+
+- `data-course-id="12"`
+- `data-course-document-id="abc123"`
+- `data-course-slug="act"`
+- `data-course-url="https://site.ru/act"`
+- `data-course-path="/act"`
+- `data-course-title="ACT"`
+
+Приоритет:
+
+1. `data-course-id`
+2. `data-course-document-id`
+3. `data-course-slug`
+4. `data-course-url`
+5. `data-course-path`
+6. `data-course-title`
+
+Практическое правило:
+
+- для production-страниц лучше задавать явный `data-course-slug`.
+
+### Поддерживаемые root-атрибуты helper
+
+- `data-api-base`
+- `data-course-id`
+- `data-course-document-id`
+- `data-course-slug`
+- `data-course-url`
+- `data-course-path`
+- `data-course-title`
+- `data-course-fields-extra`
+
+### Поддерживаемые атрибуты на field-узлах
+
+- `data-course-field`
+- `data-course-attr`
+- `data-course-default`
+- `data-course-hide-empty`
+- `data-course-request-field`
+
+### Если не хочешь явно задавать slug
+
+Если URL Tilda-страницы совпадает с `courseLink`, helper может сам вызвать:
+
+- `GET /api/tilda/courses/resolve?path=${window.location.pathname}`
+
+Но это надежно только если URL страницы и `courseLink` действительно совпадают.
+
+### Состояния helper
+
+На root helper выставляет:
+
+- `data-course-state="idle"`
+- `data-course-state="loading"`
+- `data-course-state="success"`
+- `data-course-state="not-found"`
+- `data-course-state="error"`
+
+### События helper
+
+- `academy:tilda:course-loading`
+- `academy:tilda:course-data`
+- `academy:tilda:course-not-found`
+- `academy:tilda:course-error`
+
+Во всех событиях `detail.request` содержит итоговый запрос helper'а.
+
+В `academy:tilda:course-data` дополнительно приходит `detail.course`.
+
+## Репозиторий и структура
+
+- `backend/strapi-app` — Strapi приложение.
+- `index.html`, `frontend-db.js`, `assets/` — встроенная страница расписания.
+- `Dockerfile.fullstack` — единый runtime.
+- `docker-compose.selectel.yml` — канонический production deploy.
+- `docker-compose.prod.yml` — secondary self-hosting сценарий.
+- `deploy/` — shell-скрипты и исторические deploy-артефакты.
+- `webstudio/` — legacy placeholder.
+- `backend/nest-bff`, `backend/strapi-content-types` — не участвуют в текущем runtime.
+
+## Как собирается Docker
+
+- stage `deps` в `Dockerfile.fullstack` ставит npm-зависимости Strapi;
+- stage `build` копирует backend и статический frontend в `public/`, затем выполняет `npm run build`;
+- stage `runtime` собирает production-образ и копирует только то, что нужно для запуска.
+
+## Канонический локальный запуск
+
+```bash
+cd backend/strapi-app
+cp .env.example .env
+npm ci
+npm run dev
+```
+
+Что дает этот режим:
+
+- Strapi backend и admin на одном локальном runtime;
+- встроенную страницу расписания из `public/`;
+- публичные `/api/*`;
+- Tilda helper на `/assets/tilda-course-fields.js`.
+
+## Quality gate
+
+Основная команда локальной проверки:
+
+```bash
+cd backend/strapi-app
+npm run build
+npm run test:ci
+```
+
+Regression-набор использует явный SQLite seed fixture:
+
+- `backend/strapi-app/scripts/fixtures/base-seed.db`
+
+## Maintenance
+
+Maintenance не является частью обычного startup.
+
+Явные команды:
+
+- `npm run maintenance:bootstrap`
+- `npm run maintenance:migrate-course-base-price`
+- `npm run maintenance:sync-content-manager-config`
+
+## Обязательные env для runtime и CI
+
+Минимальный ожидаемый набор:
+
+- `HOST`
+- `PORT`
+- `APP_KEYS`
+- `API_TOKEN_SALT`
+- `ADMIN_JWT_SECRET`
+- `TRANSFER_TOKEN_SALT`
+- `JWT_SECRET`
+- `ENCRYPTION_KEY`
+
+Для SQLite/local script flow:
+
+- `DATABASE_CLIENT=sqlite`
+- `DATABASE_FILENAME`
+
+Для Postgres/runtime:
+
+- `DATABASE_CLIENT=postgres`
+- `DATABASE_HOST`
+- `DATABASE_PORT`
+- `DATABASE_NAME`
+- `DATABASE_USERNAME`
+- `DATABASE_PASSWORD`
+- `DATABASE_SSL`
+
+Для admin session config:
+
+- `ADMIN_ACCESS_TOKEN_LIFESPAN`
+- `ADMIN_MAX_REFRESH_TOKEN_LIFESPAN`
+- `ADMIN_IDLE_REFRESH_TOKEN_LIFESPAN`
+- `ADMIN_MAX_SESSION_LIFESPAN`
+- `ADMIN_IDLE_SESSION_LIFESPAN`
+
+## Канонический production deploy
+
+Основной production flow:
+
+1. Подготовить `.env.prod`
+2. Сгенерировать секреты
+3. Запустить deploy script
+
+Команды:
+
+```bash
+cp .env.prod.example .env.prod
+./deploy/scripts/generate-secrets.sh
+./deploy/scripts/deploy-selectel.sh .env.prod
+```
+
+В этом режиме:
+
+- frontend расписания встроен в Strapi;
+- наружу публикуются только `80/443` через `caddy`;
+- deploy ждет readiness по `/api/health/ready`;
+- по умолчанию запускается smoke-check.
+
+### Что должно быть в `.env.prod`
+
+Минимум:
+
+- `PUBLIC_URL`
+- `ADMIN_URL`
+- `CORS_ORIGIN`
+- `POSTGRES_DB`
+- `POSTGRES_USER`
+- `POSTGRES_PASSWORD`
+- `DOMAIN`
+- `LETSENCRYPT_EMAIL`
+- все `STRAPI_*` секреты
+
+Пример:
+
+```dotenv
+PUBLIC_URL=https://academy.example.com
+ADMIN_URL=https://academy.example.com/admin
+CORS_ORIGIN=https://academy.example.com
+POSTGRES_DB=academy
+POSTGRES_USER=strapi
+POSTGRES_PASSWORD=strong_password
+DOMAIN=academy.example.com
+LETSENCRYPT_EMAIL=ops@academy.example.com
+```
+
+### Post-deploy smoke-check
+
+```bash
+./deploy/scripts/smoke-check.sh https://your-domain.com
+```
+
+Минимально проверить:
+
+- `/`
+- `/admin`
+- `/api/health/live`
+- `/api/health/ready`
+- `/api/courses-feed`
+- `/api/tilda/health`
+- `/assets/tilda-course-fields.js`
+
+## Контент-операции в админке
+
+### Создать курс
+
+Минимум заполнить:
+
+- `title`
 - `slug`
+- `courseLink`
+- `basePrice`
+- `publish`
+
+После сохранения проверить:
+
+- `GET /api/courses-feed`
+- `GET /api/tilda/courses/{slug}`
+
+### Назначить скидку
+
+Нужно указать:
+
+- `title`
+- `percent`
+- `active`
+- связанные `courses`
+
+После сохранения проверить итоговую цену курса в feed и Tilda API.
+
+### Запланировать изменение цены
+
+Нужно указать:
+
+- `course`
+- `effectiveAt`
+- `targetBasePrice`
+
+После сохранения убедиться, что изменение появилось в `priceChanges` / `nextPriceChange`.
+
+## Developer flow
+
+Локальный запуск:
+
+```bash
+cd backend/strapi-app
+cp .env.example .env
+npm ci
+npm run dev
+```
+
+Локальная проверка перед merge/deploy:
+
+```bash
+cd backend/strapi-app
+npm run build
+npm run test:ci
+```
+
+Минимальные ручные проверки:
+
+- `/`
+- `/admin`
+- `GET /api/courses-feed`
+- `GET /api/tilda/health`
+
+## Rollback
+
+Если deploy неудачный:
+
+1. Посмотреть состояние контейнеров:
+
+```bash
+docker compose --env-file .env.prod -f docker-compose.selectel.yml ps
+docker compose --env-file .env.prod -f docker-compose.selectel.yml logs -f strapi
+docker compose --env-file .env.prod -f docker-compose.selectel.yml logs -f caddy
+```
+
+2. Найти предыдущий рабочий commit:
+
+```bash
+git log --oneline -n 10
+```
+
+3. Переключить сервер на этот commit:
+
+```bash
+git checkout <last_good_commit>
+```
+
+4. Повторно задеплоить:
+
+```bash
+./deploy/scripts/deploy-selectel.sh .env.prod
+```
+
+5. Повторить smoke-check.
+
+## Production hygiene и полная очистка БД
+
+Если на production стоит очень старая версия и данные в БД не нужны:
+
+```bash
+cd /path/to/academy
+git fetch --all --prune
+git checkout main
+git reset --hard origin/main
+git clean -fdx -e .env.prod
+docker compose --env-file .env.prod -f docker-compose.selectel.yml down --remove-orphans
+docker volume rm academy_pg-data
+docker volume rm academy_strapi-uploads   # только если не нужны медиа
+docker image prune -af
+docker builder prune -af
+./deploy/scripts/deploy-selectel.sh .env.prod
+```
+
+Важно:
+
+- `academy_pg-data` нужно удалить обязательно, если нужна полностью пустая БД;
+- `academy_strapi-uploads` удаляй только если медиа тоже не нужны;
+- `caddy-data` и `caddy-config` удалять не нужно.
+
+После полной очистки БД:
+
+- открыть `/admin`;
+- создать первого администратора Strapi;
+- заново завести `Course`, `Discount`, `Course Price Change`, если они нужны.
+
+## Secondary и legacy сценарии
+
+### Secondary self-hosting
+
+- `docker-compose.prod.yml` — вторичный standalone path без reverse proxy.
+
+### Legacy Webstudio
+
+- `webstudio/` и `docker-compose.webstudio-vps.yml` сохранены только для старых окружений.
+- Для новых окружений использовать их не нужно.

@@ -3,6 +3,7 @@ set -eu
 
 ENV_FILE="${1:-.env.prod}"
 COMPOSE_FILE="docker-compose.selectel.yml"
+SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 
 if [ ! -f "$ENV_FILE" ]; then
   printf 'Missing env file: %s\n' "$ENV_FILE" >&2
@@ -38,4 +39,31 @@ require_var STRAPI_ENCRYPTION_KEY
 require_var DOMAIN
 require_var LETSENCRYPT_EMAIL
 
+DEPLOY_READY_URL="${DEPLOY_READY_URL:-${PUBLIC_URL%/}/api/health/ready}"
+DEPLOY_WAIT_READY_SECONDS="${DEPLOY_WAIT_READY_SECONDS:-180}"
+DEPLOY_RUN_SMOKE_CHECK="${DEPLOY_RUN_SMOKE_CHECK:-true}"
+
+wait_for_ready() {
+  elapsed=0
+
+  while [ "$elapsed" -lt "$DEPLOY_WAIT_READY_SECONDS" ]; do
+    if curl -fsS --max-time 10 "$DEPLOY_READY_URL" >/dev/null 2>&1; then
+      printf 'Ready check passed: %s\n' "$DEPLOY_READY_URL"
+      return 0
+    fi
+
+    sleep 5
+    elapsed=$((elapsed + 5))
+  done
+
+  printf 'Ready check timed out after %ss: %s\n' "$DEPLOY_WAIT_READY_SECONDS" "$DEPLOY_READY_URL" >&2
+  return 1
+}
+
 docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" up -d --build
+
+wait_for_ready
+
+if [ "$DEPLOY_RUN_SMOKE_CHECK" = "true" ]; then
+  "$SCRIPT_DIR/smoke-check.sh" "$PUBLIC_URL"
+fi

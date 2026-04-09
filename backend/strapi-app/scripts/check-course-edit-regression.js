@@ -2,45 +2,20 @@
 
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
-const os = require('node:os');
-const path = require('node:path');
 const Database = require('better-sqlite3');
 const { createStrapi } = require('@strapi/strapi');
 
 const { serializeCourse } = require('../src/utils/tilda-course');
-
-const APP_DIR = path.resolve(__dirname, '..');
-const ENV_PATH = path.join(APP_DIR, '.env');
-const SOURCE_DB_PATH = path.join(APP_DIR, '.tmp', 'data.db');
+const { syncContentManagerConfig } = require('../src/utils/content-manager-config');
+const { applyDueCoursePriceChanges } = require('../src/utils/course-price-increase');
+const {
+  APP_DIR,
+  createTempDatabaseCopy,
+  loadEnvFile,
+} = require('./lib/strapi-script-helpers');
 const COURSE_CONFIG_KEY = 'plugin_content_manager_configuration_content_types::api::course.course';
 const COURSE_PRICE_CHANGE_UID = 'api::course-price-change.course-price-change';
 const COURSE_UID = 'api::course.course';
-
-const loadEnvFile = (filePath) => {
-  const lines = fs.readFileSync(filePath, 'utf8').split(/\r?\n/);
-
-  for (const line of lines) {
-    const trimmedLine = line.trim();
-    if (!trimmedLine || trimmedLine.startsWith('#')) continue;
-
-    const separatorIndex = trimmedLine.indexOf('=');
-    if (separatorIndex === -1) continue;
-
-    const key = trimmedLine.slice(0, separatorIndex).trim();
-    const value = trimmedLine.slice(separatorIndex + 1);
-
-    if (!(key in process.env)) {
-      process.env[key] = value;
-    }
-  }
-};
-
-const createTempDatabaseCopy = () => {
-  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'academy-course-edit-'));
-  const tempDbPath = path.join(tempDir, 'data.db');
-  fs.copyFileSync(SOURCE_DB_PATH, tempDbPath);
-  return { tempDir, tempDbPath };
-};
 
 const seedLegacyCourseConfig = (dbPath) => {
   const db = new Database(dbPath);
@@ -163,9 +138,9 @@ const loadStoredCourse = async (strapi, courseId) => {
 };
 
 const main = async () => {
-  loadEnvFile(ENV_PATH);
+  loadEnvFile();
 
-  const { tempDir, tempDbPath } = createTempDatabaseCopy();
+  const { tempDir, tempDbPath } = createTempDatabaseCopy('academy-course-edit-');
   seedLegacyCourseConfig(tempDbPath);
 
   process.env.DATABASE_FILENAME = tempDbPath;
@@ -181,6 +156,7 @@ const main = async () => {
 
   try {
     await strapi.load();
+    await syncContentManagerConfig(strapi);
 
     const syncedCourseConfig = await getCourseConfig(strapi);
     const syncedEditFields = flattenEditLayoutFields(
@@ -282,8 +258,15 @@ const main = async () => {
     assert.equal(serializedWithFutureChange.basePrice, 1200);
     assert.equal(serializedWithFutureChange.priceChanges.length, 1);
     assert.equal(serializedWithFutureChange.nextPriceChange.targetBasePrice, 2100);
-    assert.deepEqual(serializedWithFutureChange.priceIncreases, serializedWithFutureChange.priceChanges);
-    assert.deepEqual(serializedWithFutureChange.nextPriceIncrease, serializedWithFutureChange.nextPriceChange);
+
+    await priceChangeDocuments.create({
+      data: {
+        course: { id: seedCourse.id },
+        effectiveAt: new Date(Date.now() - (2 * 60 * 1000)).toISOString(),
+        targetBasePrice: 1500,
+        comment: 'older due by regression',
+      },
+    });
 
     await priceChangeDocuments.create({
       data: {
@@ -323,6 +306,45 @@ const main = async () => {
     assert.equal(serializedAfterApply.nextPriceChange.targetBasePrice, 2100);
     assert.equal(serializedAfterApply.price, 1700);
 
+    const multiApplyCourse = await createRegressionCourse(strapi);
+    await priceChangeDocuments.create({
+      data: {
+        course: { id: multiApplyCourse.id },
+        effectiveAt: new Date(Date.now() - (3 * 60 * 1000)).toISOString(),
+        targetBasePrice: 1300,
+      },
+    });
+    await priceChangeDocuments.create({
+      data: {
+        course: { id: multiApplyCourse.id },
+        effectiveAt: new Date(Date.now() - (2 * 60 * 1000)).toISOString(),
+        targetBasePrice: 1600,
+      },
+    });
+
+    const multiApplyResult = await waitFor(async () => {
+      const storedCourse = await loadStoredCourse(strapi, multiApplyCourse.id);
+      if (!storedCourse) return null;
+      return storedCourse.basePrice === 1600 ? storedCourse : null;
+    });
+    assert.ok(multiApplyResult, 'Expected multiple due price changes for one course to be applied in one runtime cycle');
+
+    const multiApplyRemainingChanges = await strapi.db.query(COURSE_PRICE_CHANGE_UID).findMany({
+      where: {
+        course: {
+          id: multiApplyCourse.id,
+        },
+      },
+      orderBy: [{ effectiveAt: 'asc' }, { id: 'asc' }],
+    });
+    assert.equal(multiApplyRemainingChanges.length, 0);
+
+    const repeatedApplyResult = await applyDueCoursePriceChanges(strapi);
+    assert.deepEqual(repeatedApplyResult, {
+      appliedChanges: 0,
+      updatedCourses: 0,
+    });
+
     const deleteCascadeCourse = await createRegressionCourse(strapi);
     const deleteCascadePriceChange = await priceChangeDocuments.create({
       data: {
@@ -344,6 +366,7 @@ const main = async () => {
     );
 
     await priceChangeDocuments.delete({ documentId: updatedFutureChange.documentId });
+    await documents.delete({ documentId: multiApplyCourse.documentId });
     await documents.delete({ documentId: seedCourse.documentId });
 
     console.log('course edit regression check passed');
