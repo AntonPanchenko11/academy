@@ -5,6 +5,7 @@ const {
   normalizeBoolean,
   parseInteger,
   resolveCourseIds,
+  resolveCourseRelationIds,
   toTrimmedString,
 } = require('./course-reference');
 
@@ -89,7 +90,9 @@ const prepareDiscountData = async (strapi, data, where = null) => {
   const nextCoursesValue = hasOwn(data, 'courses')
     ? data.courses
     : (existingDiscount && existingDiscount.courses);
-  const courseIds = await resolveCourseIds(strapi, nextCoursesValue);
+  const courseIds = hasOwn(data, 'courses')
+    ? await resolveCourseRelationIds(strapi, nextCoursesValue, existingDiscount && existingDiscount.courses)
+    : await resolveCourseIds(strapi, nextCoursesValue);
 
   if (!title) {
     throw new ValidationError('Укажите название скидки.');

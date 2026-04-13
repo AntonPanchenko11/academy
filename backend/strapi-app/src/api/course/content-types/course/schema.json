@@ -64,6 +64,12 @@
         ],
         [
           {
+            "name": "imageUrl",
+            "size": 12
+          }
+        ],
+        [
+          {
             "name": "comment",
             "size": 12
           }
@@ -179,6 +185,14 @@
           "label": "Ссылка на курс"
         }
       },
+      "imageUrl": {
+        "edit": {
+          "label": "Ссылка на картинку курса"
+        },
+        "list": {
+          "label": "Ссылка на картинку курса"
+        }
+      },
       "priceChanges": {
         "edit": {
           "label": "Запланированные изменения цены",
@@ -252,6 +266,9 @@
     "courseLink": {
       "type": "string",
       "required": true
+    },
+    "imageUrl": {
+      "type": "text"
     },
     "discount": {
       "type": "relation",

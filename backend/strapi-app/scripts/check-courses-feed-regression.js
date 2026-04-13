@@ -21,6 +21,7 @@ const createCourse = async (documents, suffix, params = {}) => {
       basePrice: params.basePrice === undefined ? 1000 : params.basePrice,
       educationDocument: params.educationDocument || 'Сертификат',
       courseLink: params.courseLink || `https://example.com/${params.slug || `schedule-course-${suffix}`}`,
+      imageUrl: params.imageUrl || null,
       slug: params.slug,
       comment: params.comment || null,
     },
@@ -93,6 +94,7 @@ const main = async () => {
       title: `Schedule Published ${suffix}`,
       slug: `schedule-published-${suffix}`,
       courseLink: `https://example.com/schedule-published-${suffix}`,
+      imageUrl: `https://static.tildacdn.com/schedule-published-${suffix}.jpg`,
       basePrice: 4100,
       date: '2026-07-12',
     });
@@ -149,6 +151,7 @@ const main = async () => {
         'hours',
         'hoursLabel',
         'id',
+        'imageUrl',
         'month',
         'monthLabel',
         'nextPriceChange',
@@ -162,6 +165,7 @@ const main = async () => {
         'weekdayShort',
       ]
     );
+    assert.equal(publishedCourse.imageUrl, `https://static.tildacdn.com/schedule-published-${suffix}.jpg`);
     assert.equal(publishedCourse.price, 4100);
     assert.equal(publishedCourse.publish, true);
 

@@ -66,22 +66,26 @@ const main = async () => {
         basePrice: 1000,
         educationDocument: 'Сертификат',
         courseLink: `https://example.com/admin-crud-course-${suffix}`,
+        imageUrl: `https://static.tildacdn.com/admin-crud-course-${suffix}.jpg`,
       },
     });
 
     assert.equal(course.basePrice, 1000);
     assert.equal(course.title, `Admin CRUD Course ${suffix}`);
+    assert.equal(course.imageUrl, `https://static.tildacdn.com/admin-crud-course-${suffix}.jpg`);
 
     const updatedCourse = await courseDocuments.update({
       documentId: course.documentId,
       data: {
         comment: 'updated from admin regression',
         basePrice: 1200,
+        imageUrl: `https://static.tildacdn.com/admin-crud-course-${suffix}-updated.jpg`,
       },
     });
 
     assert.equal(updatedCourse.comment, 'updated from admin regression');
     assert.equal(updatedCourse.basePrice, 1200);
+    assert.equal(updatedCourse.imageUrl, `https://static.tildacdn.com/admin-crud-course-${suffix}-updated.jpg`);
 
     await assert.rejects(
       () => courseDocuments.create({
@@ -130,6 +134,24 @@ const main = async () => {
 
     assert.equal(priceChange.course.id, course.id);
     assert.equal(priceChange.targetBasePrice, 1500);
+
+    const renamedPriceChange = await priceChangeDocuments.update({
+      documentId: priceChange.documentId,
+      data: {
+        name: `Renamed Admin CRUD Price Change ${suffix}`,
+        course: {
+          connect: [],
+          disconnect: [],
+        },
+      },
+      populate: {
+        course: true,
+      },
+    });
+
+    assert.equal(renamedPriceChange.name, `Renamed Admin CRUD Price Change ${suffix}`);
+    assert.equal(renamedPriceChange.course.id, course.id);
+    assert.equal(renamedPriceChange.targetBasePrice, 1500);
 
     const updatedPriceChange = await priceChangeDocuments.update({
       documentId: priceChange.documentId,

@@ -3,6 +3,7 @@
 const CORE_STORE_TABLE = 'strapi_core_store_settings';
 const COURSE_UID = 'api::course.course';
 const COURSE_KEY = `plugin_content_manager_configuration_content_types::${COURSE_UID}`;
+const COURSE_IMAGE_FIELD = 'imageUrl';
 const COURSE_PRICE_CHANGES_FIELD = 'priceChanges';
 const LEGACY_COURSE_FIELDS = new Set(['priceIncreases', 'scheduledIncreaseIds', 'scheduledPriceIncreases']);
 
@@ -27,7 +28,10 @@ const normalizeCourseEditLayout = (rows) => {
     .map((row) => row.filter((item) => item.name !== COURSE_PRICE_CHANGES_FIELD))
     .filter((row) => row.length);
 
-  return [...rowsWithoutPriceChanges, [{ name: COURSE_PRICE_CHANGES_FIELD, size: 12 }]];
+  const hasImageUrl = normalizedRows.some((row) => row.some((item) => item.name === COURSE_IMAGE_FIELD));
+  const imageUrlRow = hasImageUrl ? [] : [[{ name: COURSE_IMAGE_FIELD, size: 12 }]];
+
+  return [...rowsWithoutPriceChanges, ...imageUrlRow, [{ name: COURSE_PRICE_CHANGES_FIELD, size: 12 }]];
 };
 
 const normalizeCourseListLayout = (fields) => {
@@ -74,6 +78,25 @@ const syncCourseConfig = async (strapi) => {
     },
     metadatas: {
       ...normalizeCourseMetadatas(current && current.metadatas),
+      [COURSE_IMAGE_FIELD]: {
+        ...(current && current.metadatas && current.metadatas[COURSE_IMAGE_FIELD]
+          ? current.metadatas[COURSE_IMAGE_FIELD]
+          : {}),
+        edit: {
+          ...(current && current.metadatas && current.metadatas[COURSE_IMAGE_FIELD]
+            && current.metadatas[COURSE_IMAGE_FIELD].edit
+            ? current.metadatas[COURSE_IMAGE_FIELD].edit
+            : {}),
+          label: 'Ссылка на картинку курса',
+        },
+        list: {
+          ...(current && current.metadatas && current.metadatas[COURSE_IMAGE_FIELD]
+            && current.metadatas[COURSE_IMAGE_FIELD].list
+            ? current.metadatas[COURSE_IMAGE_FIELD].list
+            : {}),
+          label: 'Ссылка на картинку курса',
+        },
+      },
       [COURSE_PRICE_CHANGES_FIELD]: {
         ...(current && current.metadatas && current.metadatas[COURSE_PRICE_CHANGES_FIELD]
           ? current.metadatas[COURSE_PRICE_CHANGES_FIELD]

@@ -44,6 +44,8 @@ const parsePlainInteger = (value) => {
   return parseInteger(raw);
 };
 
+const hasOwn = (value, key) => Object.prototype.hasOwnProperty.call(value || {}, key);
+
 const safeDecodeURIComponent = (value) => {
   const text = toTrimmedString(value, 2000);
   if (!text) return '';
@@ -176,6 +178,61 @@ const resolveCourseIds = async (strapi, value) => {
   return Array.from(new Set(resolvedIds));
 };
 
+const resolveCourseRelationIds = async (strapi, value, existingValue = []) => {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    return resolveCourseIds(strapi, value);
+  }
+
+  if (hasOwn(value, 'set')) {
+    return resolveCourseIds(strapi, value.set);
+  }
+
+  if (hasOwn(value, 'connect') || hasOwn(value, 'disconnect')) {
+    const resolvedIds = new Set(await resolveCourseIds(strapi, existingValue));
+
+    for (const id of await resolveCourseIds(strapi, value.disconnect || [])) {
+      resolvedIds.delete(id);
+    }
+
+    for (const id of await resolveCourseIds(strapi, value.connect || [])) {
+      resolvedIds.add(id);
+    }
+
+    return Array.from(resolvedIds);
+  }
+
+  return resolveCourseIds(strapi, value);
+};
+
+const resolveCourseRelationId = async (strapi, value, existingValue = null) => {
+  if (value && typeof value === 'object' && !Array.isArray(value)) {
+    if (hasOwn(value, 'set')) {
+      const setIds = await resolveCourseIds(strapi, value.set);
+      return setIds.length ? setIds[0] : null;
+    }
+
+    if (hasOwn(value, 'connect') || hasOwn(value, 'disconnect')) {
+      const connectedIds = await resolveCourseIds(strapi, value.connect || []);
+      if (connectedIds.length) {
+        return connectedIds[connectedIds.length - 1];
+      }
+
+      const disconnectedIds = new Set(await resolveCourseIds(strapi, value.disconnect || []));
+      const existingSource = Array.isArray(existingValue)
+        ? existingValue
+        : existingValue
+          ? [existingValue]
+          : [];
+      const existingIds = await resolveCourseIds(strapi, existingSource);
+      const remainingId = existingIds.find((id) => !disconnectedIds.has(id));
+      return Number.isFinite(remainingId) ? remainingId : null;
+    }
+  }
+
+  const ids = await resolveCourseIds(strapi, value);
+  return ids.length ? ids[0] : null;
+};
+
 module.exports = {
   COURSE_UID,
   extractCourseRef,
@@ -187,6 +244,8 @@ module.exports = {
   parseInteger,
   parsePlainInteger,
   resolveCourseIds,
+  resolveCourseRelationId,
+  resolveCourseRelationIds,
   safeDecodeURIComponent,
   toTrimmedString,
 };

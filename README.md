@@ -101,6 +101,7 @@ Helper:
 - `hours`
 - `educationDocument`
 - `courseLink`
+- `imageUrl`
 
 ### Discount
 
@@ -197,6 +198,7 @@ Helper:
 - `nextPriceChange`
 - `educationDocument`
 - `courseLink`
+- `imageUrl`
 - `coursePath`
 
 Правило проекта:
@@ -219,6 +221,7 @@ Helper:
 - `price`
 - `educationDocument`
 - `courseLink`
+- `imageUrl`
 
 ### Минимальный набор для Tilda helper
 
@@ -240,6 +243,7 @@ Helper:
 - `price`
 - `educationDocument`
 - `courseLink`
+- `imageUrl`
 - `coursePath`
 - `nextPriceChange`
 
@@ -274,6 +278,12 @@ Helper:
   <div data-course-field="dateLabel" data-course-hide-empty="true"></div>
   <div data-course-field="studyDays" data-course-hide-empty="true"></div>
   <div data-course-field="hoursLabel" data-course-hide-empty="true"></div>
+  <img
+    data-course-field="imageUrl"
+    data-course-attr="src"
+    data-course-hide-empty="true"
+    alt=""
+  >
   <a data-course-field="courseLink" data-course-attr="href" href="#">
     Перейти к курсу
   </a>
@@ -528,6 +538,7 @@ LETSENCRYPT_EMAIL=ops@academy.example.com
 - `title`
 - `slug`
 - `courseLink`
+- `imageUrl`
 - `basePrice`
 - `publish`
 

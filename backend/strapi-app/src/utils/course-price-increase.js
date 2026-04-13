@@ -2,9 +2,9 @@
 
 const { errors } = require('@strapi/utils');
 const {
-  extractCourseRef,
   loadCourseByRef,
   parseInteger,
+  resolveCourseRelationId,
   toTrimmedString,
 } = require('./course-reference');
 
@@ -345,8 +345,10 @@ const assertCoursePriceChangeRaisesPrice = async (
 
 const prepareCoursePriceChangeData = async (strapi, data, where = null, now = new Date()) => {
   const existingChange = await loadCoursePriceChangeByWhere(strapi, where);
-  const courseRef = hasOwn(data, 'course') ? data.course : (existingChange && existingChange.course);
-  const course = await loadCourseByRef(strapi, extractCourseRef(courseRef));
+  const courseIdFromRelation = hasOwn(data, 'course')
+    ? await resolveCourseRelationId(strapi, data.course, existingChange && existingChange.course)
+    : await resolveCourseRelationId(strapi, existingChange && existingChange.course);
+  const course = await loadCourseByRef(strapi, { id: courseIdFromRelation });
   const courseId = parseInteger(course && course.id);
 
   if (!Number.isFinite(courseId)) {

@@ -99,6 +99,33 @@ const main = async () => {
     assert.equal(serializedCourseAWithDiscountA.discountPercent, 15);
     assert.equal(serializedCourseAWithDiscountA.price, 850);
 
+    const renamedDiscountA = await discountDocuments.update({
+      documentId: discountA.documentId,
+      data: {
+        title: `Renamed Discount A ${suffix}`,
+        courses: {
+          connect: [],
+          disconnect: [],
+        },
+      },
+      populate: {
+        courses: true,
+      },
+    });
+
+    assert.equal(renamedDiscountA.title, `Renamed Discount A ${suffix}`);
+    assert.deepEqual(
+      renamedDiscountA.courses.map((course) => course.id).sort((left, right) => left - right),
+      [courseA.id, courseB.id]
+    );
+    assert.deepEqual(
+      await listDiscountLinks(strapi),
+      [
+        { course_id: courseA.id, discount_id: discountA.id },
+        { course_id: courseB.id, discount_id: discountA.id },
+      ]
+    );
+
     const updatedDiscountA = await discountDocuments.update({
       documentId: discountA.documentId,
       data: {
