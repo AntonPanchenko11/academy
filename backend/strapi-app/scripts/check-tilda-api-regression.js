@@ -26,7 +26,8 @@ const createCourse = async (documents, suffix, params = {}) => {
       basePrice: params.basePrice === undefined ? 1000 : params.basePrice,
       educationDocument: params.educationDocument || 'Сертификат',
       courseLink: params.courseLink || `https://example.com/${params.slug || `tilda-course-${suffix}`}`,
-      imageUrl: params.imageUrl || null,
+      catalogImg: params.catalogImg || null,
+      heroImg: params.heroImg || null,
       slug: params.slug,
       comment: params.comment || null,
     },
@@ -114,7 +115,8 @@ const main = async () => {
       title: `Tilda Published ${suffix}`,
       slug: `tilda-published-${suffix}`,
       courseLink: `https://example.com/tilda-published-${suffix}`,
-      imageUrl: `https://static.tildacdn.com/tilda-published-${suffix}.jpg`,
+      catalogImg: `https://static.tildacdn.com/tilda-published-${suffix}.jpg`,
+      heroImg: `https://static.tildacdn.com/tilda-published-${suffix}-source.jpg`,
       comment: 'published comment',
       basePrice: 1400,
     });
@@ -173,13 +175,14 @@ const main = async () => {
 
     const singleBySlugCtx = await runRequest(middleware, {
       path: `/api/tilda/courses/${encodeURIComponent(`tilda-published-${suffix}`)}`,
-      query: { fields: 'title,price,imageUrl,coursePath' },
+      query: { fields: 'title,price,catalogImg,heroImg,coursePath' },
     });
     assert.equal(singleBySlugCtx.body.ok, true);
     assert.deepEqual(singleBySlugCtx.body.data, {
       title: `Tilda Published ${suffix}`,
       price: 1400,
-      imageUrl: `https://static.tildacdn.com/tilda-published-${suffix}.jpg`,
+      catalogImg: `https://static.tildacdn.com/tilda-published-${suffix}.jpg`,
+      heroImg: `https://static.tildacdn.com/tilda-published-${suffix}-source.jpg`,
       coursePath: `/tilda-published-${suffix}`,
     });
 

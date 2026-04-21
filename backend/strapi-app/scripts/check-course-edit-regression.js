@@ -168,8 +168,12 @@ const main = async () => {
       'Expected priceChanges to be present in course edit layout'
     );
     assert.ok(
-      syncedEditFields.includes('imageUrl'),
-      'Expected imageUrl to be present in course edit layout'
+      syncedEditFields.includes('catalogImg'),
+      'Expected catalogImg to be present in course edit layout'
+    );
+    assert.ok(
+      syncedEditFields.includes('heroImg'),
+      'Expected heroImg to be present in course edit layout'
     );
     assert.ok(
       !syncedEditFields.includes('scheduledPriceIncreases'),
@@ -188,10 +192,16 @@ const main = async () => {
       'Expected priceChanges metadata to be present in course content-manager config'
     );
     assert.equal(
-      syncedCourseConfig.metadatas && syncedCourseConfig.metadatas.imageUrl
-        && syncedCourseConfig.metadatas.imageUrl.edit
-        && syncedCourseConfig.metadatas.imageUrl.edit.label,
-      'Ссылка на картинку курса'
+      syncedCourseConfig.metadatas && syncedCourseConfig.metadatas.catalogImg
+        && syncedCourseConfig.metadatas.catalogImg.edit
+        && syncedCourseConfig.metadatas.catalogImg.edit.label,
+      'Ссылка на картинку каталога'
+    );
+    assert.equal(
+      syncedCourseConfig.metadatas && syncedCourseConfig.metadatas.heroImg
+        && syncedCourseConfig.metadatas.heroImg.edit
+        && syncedCourseConfig.metadatas.heroImg.edit.label,
+      'Ссылка на hero-картинку'
     );
 
     const seedCourse = await createRegressionCourse(strapi);

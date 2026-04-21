@@ -1,6 +1,6 @@
 'use strict';
 
-const { migrateCourseBasePrice } = require('../src/utils/course');
+const { migrateCourseBasePrice, migrateCourseImageFields } = require('../src/utils/course');
 const { syncContentManagerConfig } = require('../src/utils/content-manager-config');
 const {
   ENV_PATH,
@@ -13,11 +13,13 @@ const main = async () => {
   const strapi = await loadStrapiForScript();
 
   try {
-    const migration = await migrateCourseBasePrice(strapi);
+    const courseBasePriceMigration = await migrateCourseBasePrice(strapi);
+    const courseImageFieldsMigration = await migrateCourseImageFields(strapi);
     const configSync = await syncContentManagerConfig(strapi);
 
     console.log(JSON.stringify({
-      migration,
+      courseBasePriceMigration,
+      courseImageFieldsMigration,
       configSync,
     }, null, 2));
   } finally {

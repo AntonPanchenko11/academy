@@ -101,7 +101,8 @@ Helper:
 - `hours`
 - `educationDocument`
 - `courseLink`
-- `imageUrl`
+- `catalogImg`
+- `heroImg`
 
 ### Discount
 
@@ -198,7 +199,8 @@ Helper:
 - `nextPriceChange`
 - `educationDocument`
 - `courseLink`
-- `imageUrl`
+- `catalogImg`
+- `heroImg`
 - `coursePath`
 
 Правило проекта:
@@ -221,7 +223,8 @@ Helper:
 - `price`
 - `educationDocument`
 - `courseLink`
-- `imageUrl`
+- `catalogImg`
+- `heroImg`
 
 ### Минимальный набор для Tilda helper
 
@@ -243,7 +246,8 @@ Helper:
 - `price`
 - `educationDocument`
 - `courseLink`
-- `imageUrl`
+- `catalogImg`
+- `heroImg`
 - `coursePath`
 - `nextPriceChange`
 
@@ -279,7 +283,7 @@ Helper:
   <div data-course-field="studyDays" data-course-hide-empty="true"></div>
   <div data-course-field="hoursLabel" data-course-hide-empty="true"></div>
   <img
-    data-course-field="imageUrl"
+    data-course-field="catalogImg"
     data-course-attr="src"
     data-course-hide-empty="true"
     alt=""
@@ -425,7 +429,35 @@ Maintenance не является частью обычного startup.
 
 - `npm run maintenance:bootstrap`
 - `npm run maintenance:migrate-course-base-price`
+- `npm run maintenance:migrate-course-image-fields`
 - `npm run maintenance:sync-content-manager-config`
+
+### Правило для миграций БД
+
+Для этого проекта миграция БД должна быть простой и явной.
+
+- Если задача сводится к добавлению нового nullable-поля или обновлению Strapi schema без переноса старых данных, отдельная migration обычно не нужна: достаточно обновить schema, DTO и регрессии.
+- Migration нужна только когда требуется backfill, перенос данных, cleanup legacy-полей или исправление уже существующих записей.
+- Migration должна быть идемпотентной: повторный запуск не должен портить данные и должен возвращать `skipped` или корректный итог.
+- Логику migration держать в `src/utils/*`, а запуск делать отдельным script в `scripts/`.
+- Перед изменением данных нужно проверить применимость шага: client, наличие таблицы/колонки, формат старых данных.
+- Изменения должны быть точечными: не смешивать в одной migration schema change, data backfill и несвязанный cleanup.
+- Опасные или необратимые действия вроде `DROP COLUMN`, массового `DELETE` или переименования с потерей данных не делать без отдельного явного запроса.
+- Результат migration должен быть машинно-читаемым и коротким, как в существующих maintenance scripts: `{ skipped, reason }` или `{ skipped: false, updatedRows }`.
+
+Канонический flow:
+
+1. Сначала изменить Strapi schema и runtime-код.
+2. Если нужны изменения существующих данных, добавить идемпотентную функцию migration по образцу `migrateCourseBasePrice`.
+3. Под migration добавить отдельный script запуска в `backend/strapi-app/scripts/`.
+4. Добавить regression, который проверяет состояние до и после migration.
+5. Запускать migration только явной maintenance-командой, а не в обычном startup.
+
+Для наших типовых задач агент должен предпочитать минимальный безопасный путь:
+
+- новое необязательное поле: без migration;
+- новое поле с обязательным backfill: migration;
+- удаление legacy-поля: сначала перестать его использовать, потом отдельной задачей cleanup.
 
 ## Обязательные env для runtime и CI
 
@@ -538,7 +570,8 @@ LETSENCRYPT_EMAIL=ops@academy.example.com
 - `title`
 - `slug`
 - `courseLink`
-- `imageUrl`
+- `catalogImg`
+- `heroImg`
 - `basePrice`
 - `publish`
 

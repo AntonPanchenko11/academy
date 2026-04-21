@@ -3,7 +3,16 @@
 const CORE_STORE_TABLE = 'strapi_core_store_settings';
 const COURSE_UID = 'api::course.course';
 const COURSE_KEY = `plugin_content_manager_configuration_content_types::${COURSE_UID}`;
-const COURSE_IMAGE_FIELD = 'imageUrl';
+const COURSE_IMAGE_FIELDS = [
+  {
+    name: 'catalogImg',
+    label: 'Ссылка на картинку каталога',
+  },
+  {
+    name: 'heroImg',
+    label: 'Ссылка на hero-картинку',
+  },
+];
 const COURSE_PRICE_CHANGES_FIELD = 'priceChanges';
 const LEGACY_COURSE_FIELDS = new Set(['priceIncreases', 'scheduledIncreaseIds', 'scheduledPriceIncreases']);
 
@@ -28,10 +37,11 @@ const normalizeCourseEditLayout = (rows) => {
     .map((row) => row.filter((item) => item.name !== COURSE_PRICE_CHANGES_FIELD))
     .filter((row) => row.length);
 
-  const hasImageUrl = normalizedRows.some((row) => row.some((item) => item.name === COURSE_IMAGE_FIELD));
-  const imageUrlRow = hasImageUrl ? [] : [[{ name: COURSE_IMAGE_FIELD, size: 12 }]];
+  const imageRows = COURSE_IMAGE_FIELDS
+    .filter((field) => !normalizedRows.some((row) => row.some((item) => item.name === field.name)))
+    .map((field) => [{ name: field.name, size: 12 }]);
 
-  return [...rowsWithoutPriceChanges, ...imageUrlRow, [{ name: COURSE_PRICE_CHANGES_FIELD, size: 12 }]];
+  return [...rowsWithoutPriceChanges, ...imageRows, [{ name: COURSE_PRICE_CHANGES_FIELD, size: 12 }]];
 };
 
 const normalizeCourseListLayout = (fields) => {
@@ -69,6 +79,28 @@ const syncCourseConfig = async (strapi) => {
   if (!row) return { skipped: true, reason: 'missing-course-config' };
 
   const current = parseJson(row.value, {});
+  const imageFieldMetadatas = COURSE_IMAGE_FIELDS.reduce((acc, field) => {
+    acc[field.name] = {
+      ...(current && current.metadatas && current.metadatas[field.name]
+        ? current.metadatas[field.name]
+        : {}),
+      edit: {
+        ...(current && current.metadatas && current.metadatas[field.name]
+          && current.metadatas[field.name].edit
+          ? current.metadatas[field.name].edit
+          : {}),
+        label: field.label,
+      },
+      list: {
+        ...(current && current.metadatas && current.metadatas[field.name]
+          && current.metadatas[field.name].list
+          ? current.metadatas[field.name].list
+          : {}),
+        label: field.label,
+      },
+    };
+    return acc;
+  }, {});
   const next = {
     ...current,
     layouts: {
@@ -78,25 +110,7 @@ const syncCourseConfig = async (strapi) => {
     },
     metadatas: {
       ...normalizeCourseMetadatas(current && current.metadatas),
-      [COURSE_IMAGE_FIELD]: {
-        ...(current && current.metadatas && current.metadatas[COURSE_IMAGE_FIELD]
-          ? current.metadatas[COURSE_IMAGE_FIELD]
-          : {}),
-        edit: {
-          ...(current && current.metadatas && current.metadatas[COURSE_IMAGE_FIELD]
-            && current.metadatas[COURSE_IMAGE_FIELD].edit
-            ? current.metadatas[COURSE_IMAGE_FIELD].edit
-            : {}),
-          label: 'Ссылка на картинку курса',
-        },
-        list: {
-          ...(current && current.metadatas && current.metadatas[COURSE_IMAGE_FIELD]
-            && current.metadatas[COURSE_IMAGE_FIELD].list
-            ? current.metadatas[COURSE_IMAGE_FIELD].list
-            : {}),
-          label: 'Ссылка на картинку курса',
-        },
-      },
+      ...imageFieldMetadatas,
       [COURSE_PRICE_CHANGES_FIELD]: {
         ...(current && current.metadatas && current.metadatas[COURSE_PRICE_CHANGES_FIELD]
           ? current.metadatas[COURSE_PRICE_CHANGES_FIELD]

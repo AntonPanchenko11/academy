@@ -111,7 +111,8 @@ const PUBLIC_COURSE_FIELDS = [
   'nextPriceChange',
   'educationDocument',
   'courseLink',
-  'imageUrl',
+  'catalogImg',
+  'heroImg',
   'coursePath',
 ];
 
@@ -254,7 +255,8 @@ const serializeCourse = (course) => {
     nextPriceChange,
     educationDocument: toTrimmedString(course && course.educationDocument, 120),
     courseLink: toTrimmedString(course && course.courseLink, 1000),
-    imageUrl: toTrimmedString(course && course.imageUrl, 1000),
+    catalogImg: toTrimmedString(course && course.catalogImg, 1000),
+    heroImg: toTrimmedString(course && course.heroImg, 1000),
     coursePath,
   };
 };

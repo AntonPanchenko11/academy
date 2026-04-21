@@ -64,7 +64,13 @@
         ],
         [
           {
-            "name": "imageUrl",
+            "name": "catalogImg",
+            "size": 12
+          }
+        ],
+        [
+          {
+            "name": "heroImg",
             "size": 12
           }
         ],
@@ -185,12 +191,20 @@
           "label": "Ссылка на курс"
         }
       },
-      "imageUrl": {
+      "catalogImg": {
         "edit": {
-          "label": "Ссылка на картинку курса"
+          "label": "Ссылка на картинку каталога"
         },
         "list": {
-          "label": "Ссылка на картинку курса"
+          "label": "Ссылка на картинку каталога"
+        }
+      },
+      "heroImg": {
+        "edit": {
+          "label": "Ссылка на hero-картинку"
+        },
+        "list": {
+          "label": "Ссылка на hero-картинку"
         }
       },
       "priceChanges": {
@@ -267,7 +281,10 @@
       "type": "string",
       "required": true
     },
-    "imageUrl": {
+    "catalogImg": {
+      "type": "text"
+    },
+    "heroImg": {
       "type": "text"
     },
     "discount": {

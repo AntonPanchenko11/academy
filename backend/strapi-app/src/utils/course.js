@@ -268,11 +268,88 @@ const migrateCourseBasePrice = async (strapi) => {
   };
 };
 
+const safeHasColumn = async (strapi, tableName, columnName) => {
+  try {
+    return await strapi.db.connection.schema.hasColumn(tableName, columnName);
+  } catch (error) {
+    return false;
+  }
+};
+
+const migrateCourseImageFields = async (strapi) => {
+  const hasCatalogImgColumn = await safeHasColumn(strapi, 'courses', 'catalog_img');
+  const hasHeroImgColumn = await safeHasColumn(strapi, 'courses', 'hero_img');
+  const hasLegacyImageUrlColumn = await safeHasColumn(strapi, 'courses', 'image_url');
+  const hasLegacyTildaImageUrlColumn = await safeHasColumn(strapi, 'courses', 'tilda_image_url');
+
+  if (!hasCatalogImgColumn && !hasHeroImgColumn) {
+    return { skipped: true, reason: 'missing-target-columns' };
+  }
+
+  if (!hasLegacyImageUrlColumn && !hasLegacyTildaImageUrlColumn) {
+    return { skipped: true, reason: 'missing-legacy-columns' };
+  }
+
+  const selectedColumns = ['id'];
+  if (hasCatalogImgColumn) selectedColumns.push('catalog_img');
+  if (hasHeroImgColumn) selectedColumns.push('hero_img');
+  if (hasLegacyImageUrlColumn) selectedColumns.push('image_url');
+  if (hasLegacyTildaImageUrlColumn) selectedColumns.push('tilda_image_url');
+
+  const courses = await strapi.db.connection('courses')
+    .select(selectedColumns)
+    .orderBy([{ column: 'id', order: 'asc' }]);
+
+  let updatedCourses = 0;
+  let updatedCatalogImg = 0;
+  let updatedHeroImg = 0;
+
+  for (const course of courses) {
+    const nextData = {};
+
+    if (hasCatalogImgColumn && hasLegacyImageUrlColumn) {
+      const currentCatalogImg = toTrimmedString(course && course.catalog_img, 1000);
+      const legacyImageUrl = toTrimmedString(course && course.image_url, 1000);
+
+      if (!currentCatalogImg && legacyImageUrl) {
+        nextData.catalog_img = legacyImageUrl;
+        updatedCatalogImg += 1;
+      }
+    }
+
+    if (hasHeroImgColumn && hasLegacyTildaImageUrlColumn) {
+      const currentHeroImg = toTrimmedString(course && course.hero_img, 1000);
+      const legacyTildaImageUrl = toTrimmedString(course && course.tilda_image_url, 1000);
+
+      if (!currentHeroImg && legacyTildaImageUrl) {
+        nextData.hero_img = legacyTildaImageUrl;
+        updatedHeroImg += 1;
+      }
+    }
+
+    if (!Object.keys(nextData).length) continue;
+
+    await strapi.db.connection('courses')
+      .where({ id: course.id })
+      .update(nextData);
+
+    updatedCourses += 1;
+  }
+
+  return {
+    skipped: false,
+    updatedCourses,
+    updatedCatalogImg,
+    updatedHeroImg,
+  };
+};
+
 module.exports = {
   COURSE_UID,
   assertCourseIsUnique,
   hasCoursePricingChanges,
   hasCourseUniquenessChanges,
   migrateCourseBasePrice,
+  migrateCourseImageFields,
   prepareCourseData,
 };

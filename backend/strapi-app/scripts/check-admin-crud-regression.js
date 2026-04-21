@@ -66,26 +66,30 @@ const main = async () => {
         basePrice: 1000,
         educationDocument: 'Сертификат',
         courseLink: `https://example.com/admin-crud-course-${suffix}`,
-        imageUrl: `https://static.tildacdn.com/admin-crud-course-${suffix}.jpg`,
+        catalogImg: `https://static.tildacdn.com/admin-crud-course-${suffix}.jpg`,
+        heroImg: `https://static.tildacdn.com/admin-crud-course-${suffix}-tilda.jpg`,
       },
     });
 
     assert.equal(course.basePrice, 1000);
     assert.equal(course.title, `Admin CRUD Course ${suffix}`);
-    assert.equal(course.imageUrl, `https://static.tildacdn.com/admin-crud-course-${suffix}.jpg`);
+    assert.equal(course.catalogImg, `https://static.tildacdn.com/admin-crud-course-${suffix}.jpg`);
+    assert.equal(course.heroImg, `https://static.tildacdn.com/admin-crud-course-${suffix}-tilda.jpg`);
 
     const updatedCourse = await courseDocuments.update({
       documentId: course.documentId,
       data: {
         comment: 'updated from admin regression',
         basePrice: 1200,
-        imageUrl: `https://static.tildacdn.com/admin-crud-course-${suffix}-updated.jpg`,
+        catalogImg: `https://static.tildacdn.com/admin-crud-course-${suffix}-updated.jpg`,
+        heroImg: `https://static.tildacdn.com/admin-crud-course-${suffix}-updated-tilda.jpg`,
       },
     });
 
     assert.equal(updatedCourse.comment, 'updated from admin regression');
     assert.equal(updatedCourse.basePrice, 1200);
-    assert.equal(updatedCourse.imageUrl, `https://static.tildacdn.com/admin-crud-course-${suffix}-updated.jpg`);
+    assert.equal(updatedCourse.catalogImg, `https://static.tildacdn.com/admin-crud-course-${suffix}-updated.jpg`);
+    assert.equal(updatedCourse.heroImg, `https://static.tildacdn.com/admin-crud-course-${suffix}-updated-tilda.jpg`);
 
     await assert.rejects(
       () => courseDocuments.create({
