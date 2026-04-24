@@ -412,8 +412,42 @@ const resolveSingleCourse = (courses, query = {}, identifier = '') => {
   return matchedCourse ? pickCourseFields(matchedCourse, requestedFields) : null;
 };
 
+const resolveCourseByMatcher = (courses, query = {}, rawValue = '', matcher = null) => {
+  const includeUnpublished = normalizeBooleanQuery(query.includeUnpublished) === true;
+  const requestedFields = normalizeRequestedFields(query.fields);
+
+  if (!rawValue || typeof matcher !== 'function') {
+    return null;
+  }
+
+  const matchedCourse = courses.find((course) => {
+    if (!includeUnpublished && !course.publish) return false;
+    return matcher(course, rawValue);
+  });
+
+  return matchedCourse ? pickCourseFields(matchedCourse, requestedFields) : null;
+};
+
+const resolveCourseBySlug = (courses, query = {}, slug = '') => {
+  const normalizedSlug = toTrimmedString(slug || query.slug, 255).toLowerCase();
+
+  return resolveCourseByMatcher(courses, query, normalizedSlug, (course, targetSlug) => {
+    return toTrimmedString(course.slug, 255).toLowerCase() === targetSlug;
+  });
+};
+
+const resolveCourseByPath = (courses, query = {}, coursePath = '') => {
+  const normalizedPath = normalizePathname(coursePath || query.path).toLowerCase();
+
+  return resolveCourseByMatcher(courses, query, normalizedPath, (course, targetPath) => {
+    return normalizePathname(course.coursePath).toLowerCase() === targetPath;
+  });
+};
+
 module.exports = {
   filterCourses,
+  resolveCourseByPath,
+  resolveCourseBySlug,
   resolveSingleCourse,
   serializeCourse,
 };

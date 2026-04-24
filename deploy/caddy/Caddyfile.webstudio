@@ -5,7 +5,7 @@
 {$DOMAIN:localhost} {
   encode zstd gzip
 
-  @strapi path /admin* /api* /uploads* /assets* /content-manager* /content-type-builder* /users-permissions* /upload* /i18n* /graphql* /documentation* /_health*
+  @strapi path /admin* /api* /uploads* /assets* /robots.txt /sitemap.xml /content-manager* /content-type-builder* /users-permissions* /upload* /i18n* /graphql* /documentation* /_health*
   handle @strapi {
     reverse_proxy strapi:1337
   }

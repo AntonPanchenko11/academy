@@ -4,36 +4,43 @@
 
 Если информация из других markdown-файлов конфликтует с этим документом, правильной считается информация отсюда.
 
+Планируемые расширения и будущие этапы развития проекта фиксируются в [ROADMAP.md](/Users/antonpancenko/Documents/academy/ROADMAP.md). Для текущего реализованного состояния приоритет остается у этого `README.md`.
+
 ## Что это за проект
 
-Проект обслуживает 3 рабочие поверхности:
+Проект обслуживает 4 рабочие поверхности:
 
 1. Страница расписания "Расписание обучения и мероприятий в Академии".
 2. Страницы на Tilda, которые получают данные отдельного курса.
-3. Админка Strapi, через которую администратор управляет курсами, скидками и запланированными изменениями цен.
+3. Страницы на Webstudio, опубликованные как отдельный frontend-контейнер на том же домене.
+4. Админка Strapi, через которую администратор управляет курсами, скидками и запланированными изменениями цен.
 
 Текущая целевая архитектура:
 
 - `backend/strapi-app` — единственный backend, CMS и API-источник данных.
 - `index.html` + `frontend-db.js` + `assets/` — встроенная страница расписания, которую отдает сам Strapi.
 - `/api/tilda/*` + `/assets/tilda-course-fields.js` — публичный API и helper для Tilda.
+- `webstudio/` + `docker-compose.webstudio-vps.yml` + `deploy/caddy/Caddyfile.webstudio` — поддерживаемый deploy path для Webstudio-страниц, опубликованных отдельным контейнером за reverse proxy.
 - `/admin` — обязательная operational surface для контент-администратора.
-
-Отдельный runtime через `webstudio` больше не является основным сценарием и считается legacy.
 
 ## Что уже реализовано
 
 - `Strapi` зафиксирован как единственный backend.
 - Bootstrap Strapi разрезан на отдельные server/bootstrap-модули; `src/index.js` сведен к orchestration-слою.
 - Public DTO курса унифицирован для страницы расписания и Tilda API.
+- Добавлен отдельный public namespace `/api/public/*` для `Webstudio`.
 - Legacy aliases `priceIncreases` и `nextPriceIncrease` удалены из публичного DTO.
 - `frontend-db.js` упрощен до UI-слоя `DTO -> render`.
 - `assets/tilda-course-fields.js` стабилизирован: понятные состояния, retry после временных ошибок, предсказуемые события и упрощенный lifecycle.
+- `assets/webstudio-course-fields.js` добавлен как единый helper для сценариев "один курс" и "список курсов" в `Webstudio`.
 - Применение `Course Price Change` переведено на транзакционный батч-сценарий.
 - Runtime maintenance убран из обычного boot-пути.
+- Для `Webstudio`-контура добавлены `robots.txt`, `sitemap.xml`, same-origin routing и smoke-check.
+- Для course pages в `Webstudio` добавлен единый SEO metadata source `/api/public/seo/*`.
 - Regression-набор переведен на явный SQLite seed fixture.
 - Локальный quality gate и GitHub Actions CI синхронизированы через `npm run test:ci`.
 - Канонический production path зафиксирован через `docker-compose.selectel.yml` и `deploy-selectel.sh`.
+- Поддерживаемый deployment path для `Webstudio` зафиксирован через `docker-compose.webstudio-vps.yml` и `deploy-webstudio-vps.sh`.
 
 ## Основные функции проекта
 
@@ -73,7 +80,42 @@ Helper:
 - выставляет состояние загрузки на root-элемент;
 - dispatch'ит события для интегратора.
 
-### 3. Админка Strapi
+### 3. Webstudio-интеграция
+
+Проект поддерживает отдельный публичный frontend-контур для страниц, экспортированных из `Webstudio`.
+
+Есть:
+
+- `GET /api/public/courses`
+- `GET /api/public/courses/:slug`
+- `GET /api/public/courses/resolve?path=/course-page`
+- `GET /api/public/seo/courses/:slug`
+- `GET /api/public/seo/courses/resolve?path=/course-page`
+- `GET /robots.txt`
+- `GET /sitemap.xml`
+- `/assets/webstudio-course-fields.js`
+
+Helper:
+
+- работает через same-origin запросы к `/api/public/*`;
+- поддерживает сценарии "один курс" и "список курсов";
+- использует декларативные `data-*` атрибуты;
+- выставляет predictable loading / empty / error states;
+- dispatch'ит события для интегратора.
+
+SEO:
+
+- `Strapi` отдает единый metadata payload через `/api/public/seo/*`;
+- `Webstudio` должен использовать этот payload во время сборки страницы или server-side render, а не как поздний client-side patch для основного SEO-контента.
+
+Файлы:
+
+- `assets/webstudio-course-fields.js`
+- `deploy/caddy/Caddyfile.webstudio`
+- `docker-compose.webstudio-vps.yml`
+- `deploy/scripts/deploy-webstudio-vps.sh`
+
+### 4. Админка Strapi
 
 Через `/admin` администратор должен стабильно уметь:
 
@@ -148,6 +190,8 @@ Helper:
 - `GET /api/health/live`
 - `GET /api/health/ready`
 - `GET /api/tilda/health`
+- `GET /robots.txt`
+- `GET /sitemap.xml`
 
 ### Feed для страницы расписания
 
@@ -167,6 +211,29 @@ Helper:
 - `waitlist=true|false`
 - `search=...`
 - `includeUnpublished=true`
+
+### Webstudio Public API
+
+- `GET /api/public/courses`
+- `GET /api/public/courses/{slug}`
+- `GET /api/public/courses/resolve?path=/act`
+- `GET /api/public/seo/courses/{slug}`
+- `GET /api/public/seo/courses/resolve?path=/act`
+
+Поддерживаемые query-параметры:
+
+- `fields=title,price,dateLabel`
+- `waitlist=true|false`
+- `search=...`
+- `q=...`
+
+SEO payload для course pages возвращает:
+
+- `title`
+- `description`
+- `canonicalUrl`
+- `robots`
+- `openGraph`
 
 ## Public Course DTO
 
@@ -374,6 +441,127 @@ Helper:
 
 В `academy:tilda:course-data` дополнительно приходит `detail.course`.
 
+## Детали Webstudio
+
+Проект поддерживает отдельный публичный frontend-контур для страниц, экспортированных из `Webstudio` и собранных в Docker-образ.
+
+На текущем этапе зафиксированы такие правила:
+
+- `Strapi` остается единственным backend и единственным источником данных;
+- `Webstudio` публикуется отдельным контейнером;
+- внешний домен обслуживается через reverse proxy;
+- запросы со страниц `Webstudio` должны идти по same-origin маршрутам вида `/api/...`;
+- маршруты `/api/*`, `/admin/*`, `/uploads/*`, `/assets/*` проксируются в `strapi`;
+- остальные публичные маршруты проксируются в `webstudio`.
+
+Практическая оговорка:
+
+- в репозитории хранится минимальный fallback release для smoke-check и проверки routing-контура;
+- для боевого deploy его нужно заменить export из `Webstudio` или задать `WEBSTUDIO_IMAGE`.
+
+Публичный API для этого контура:
+
+- `GET /api/public/courses`
+- `GET /api/public/courses/{slug}`
+- `GET /api/public/courses/resolve?path=/course-page`
+- `/assets/webstudio-course-fields.js`
+
+Контракт Webstudio namespace намеренно строже Tilda API:
+
+- список поддерживает `fields`, `search`, `q`, `waitlist`;
+- одиночный курс по path-параметру ищется только по `slug`;
+- resolve-эндпоинт ищет только по `path`;
+- `includeUnpublished` в этом namespace не поддерживается.
+
+Helper для Webstudio:
+
+- один asset обслуживает сценарии "один курс" и "список курсов";
+- helper работает через same-origin запросы к `/api/public/*`;
+- на root-элементах выставляет predictable loading / empty / error states;
+- dispatch'ит события для интегратора.
+
+### Пример одного курса в Webstudio
+
+```html
+<div
+  class="js-webstudio-course-fields"
+  data-course-slug="act"
+  data-course-fields-extra="price,dateLabel,courseLink"
+>
+  <h1 data-course-field="title"></h1>
+  <div data-course-field="price"></div>
+  <div data-course-field="dateLabel" data-course-hide-empty="true"></div>
+  <a data-course-field="courseLink" data-course-attr="href" href="#">
+    Перейти к курсу
+  </a>
+</div>
+<script src="https://your-domain.com/assets/webstudio-course-fields.js"></script>
+```
+
+### Пример списка курсов в Webstudio
+
+```html
+<div
+  class="js-webstudio-course-list"
+  data-filter-waitlist="false"
+  data-course-search="актер"
+  data-course-fields-extra="title,dateLabel,courseLink"
+>
+  <div data-course-list-template hidden>
+    <h2 data-course-field="title"></h2>
+    <div data-course-field="dateLabel" data-course-hide-empty="true"></div>
+    <a data-course-field="courseLink" data-course-attr="href" href="#">
+      Подробнее
+    </a>
+  </div>
+
+  <div data-course-list-items></div>
+</div>
+<script src="https://your-domain.com/assets/webstudio-course-fields.js"></script>
+```
+
+### Состояния и события Webstudio helper
+
+Для одного курса:
+
+- `data-course-state="idle|loading|success|not-found|error"`
+- `academy:webstudio:course-loading`
+- `academy:webstudio:course-data`
+- `academy:webstudio:course-not-found`
+- `academy:webstudio:course-error`
+
+Для списка курсов:
+
+- `data-course-list-state="idle|loading|success|empty|error"`
+- `academy:webstudio:courses-loading`
+- `academy:webstudio:courses-data`
+- `academy:webstudio:courses-empty`
+- `academy:webstudio:courses-error`
+
+### SEO для Webstudio-страниц
+
+В Webstudio-сценарии SEO-артефакты сайта отдаются через `Strapi`:
+
+- `/robots.txt`
+- `/sitemap.xml`
+- `/api/public/seo/courses/{slug}`
+- `/api/public/seo/courses/resolve?path=/course-page`
+
+`robots.txt` указывает на sitemap текущего `PUBLIC_URL`.
+
+`sitemap.xml` собирается из:
+
+- корня сайта `/`
+- путей из `SEO_STATIC_PATHS`
+- `coursePath` всех опубликованных курсов
+
+Практическое правило:
+
+- `SEO_STATIC_PATHS` должен содержать только canonical публичные маршруты сайта;
+- страницы курсов должны иметь стабильный canonical path, совпадающий с `coursePath`;
+- `title`, `description`, `canonical` и `Open Graph` для course pages должны строиться из payload `/api/public/seo/*`;
+- основной контент SEO-важных страниц должен быть доступен в HTML, а не только после поздней client-side подгрузки.
+
 ## Репозиторий и структура
 
 - `backend/strapi-app` — Strapi приложение.
@@ -381,8 +569,9 @@ Helper:
 - `Dockerfile.fullstack` — единый runtime.
 - `docker-compose.selectel.yml` — канонический production deploy.
 - `docker-compose.prod.yml` — secondary self-hosting сценарий.
-- `deploy/` — shell-скрипты и исторические deploy-артефакты.
-- `webstudio/` — legacy placeholder.
+- `docker-compose.webstudio-vps.yml` — поддерживаемый deploy path для Strapi + Webstudio + Caddy.
+- `deploy/` — shell-скрипты и deploy-артефакты, включая Webstudio reverse-proxy path.
+- `webstudio/` — директория для frontend release из `Webstudio`; в репозитории хранится минимальный fallback release.
 - `backend/nest-bff`, `backend/strapi-content-types` — не участвуют в текущем runtime.
 
 ## Как собирается Docker
@@ -557,9 +746,43 @@ LETSENCRYPT_EMAIL=ops@academy.example.com
 - `/admin`
 - `/api/health/live`
 - `/api/health/ready`
+- `/robots.txt`
+- `/sitemap.xml`
 - `/api/courses-feed`
+- `/api/public/courses`
 - `/api/tilda/health`
 - `/assets/tilda-course-fields.js`
+- `/assets/webstudio-course-fields.js`
+
+### Webstudio production deploy
+
+Для сценария, где публичные страницы отдает контейнер `Webstudio`, использовать:
+
+```bash
+./deploy/scripts/deploy-webstudio-vps.sh .env.prod
+```
+
+Скрипт:
+
+- проверяет обязательные env для `Strapi`, `Postgres` и `Caddy`;
+- использует `WEBSTUDIO_IMAGE`, если он задан, иначе ожидает release в `webstudio/` с production `Dockerfile`;
+- ждет readiness по `/api/health/ready`;
+- по умолчанию запускает `smoke-check`.
+
+Поддерживаемые deploy env:
+
+- `DEPLOY_READY_URL`
+- `DEPLOY_WAIT_READY_SECONDS`
+- `DEPLOY_RUN_SMOKE_CHECK`
+- `WEBSTUDIO_IMAGE`
+- `SMOKE_WEBSTUDIO_COURSE_SLUG`
+
+`smoke-check` для Webstudio-сценария дополнительно пытается проверить:
+
+- `GET /api/public/courses/{slug}`
+- `GET /api/public/seo/courses/{slug}`
+
+Slug можно передать явно через `SMOKE_WEBSTUDIO_COURSE_SLUG`, иначе используется auto-discovery первого опубликованного курса из `/api/public/courses?fields=slug`.
 
 ## Контент-операции в админке
 
@@ -689,13 +912,15 @@ docker builder prune -af
 - создать первого администратора Strapi;
 - заново завести `Course`, `Discount`, `Course Price Change`, если они нужны.
 
-## Secondary и legacy сценарии
+## Secondary и дополнительные сценарии
 
 ### Secondary self-hosting
 
 - `docker-compose.prod.yml` — вторичный standalone path без reverse proxy.
 
-### Legacy Webstudio
+### Webstudio reverse-proxy deploy
 
-- `webstudio/` и `docker-compose.webstudio-vps.yml` сохранены только для старых окружений.
-- Для новых окружений использовать их не нужно.
+- `docker-compose.webstudio-vps.yml` — поддерживаемый deployment path для сценария, где публичные страницы отдает `Webstudio`, а `Strapi` остается backend и admin-контуром.
+- `deploy/caddy/Caddyfile.webstudio` маршрутизирует `/api/*`, `/admin/*`, `/uploads/*`, `/assets/*` в `strapi`, а остальные публичные маршруты — в `webstudio`.
+- `deploy/scripts/deploy-webstudio-vps.sh` поднимает этот контур через `docker compose`.
+- Перед deploy в `webstudio/` должен находиться экспорт `Webstudio` с production `Dockerfile`.

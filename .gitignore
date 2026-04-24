@@ -4,3 +4,7 @@ local/
 webstudio/*
 !webstudio/README.md
 !webstudio/.gitkeep
+!webstudio/Dockerfile
+!webstudio/default.conf
+!webstudio/site/
+!webstudio/site/index.html
