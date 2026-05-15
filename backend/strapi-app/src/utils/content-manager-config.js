@@ -13,6 +13,16 @@ const COURSE_IMAGE_FIELDS = [
     label: 'Ссылка на hero-картинку',
   },
 ];
+const COURSE_TEXT_FIELDS = [
+  {
+    name: 'rate',
+    label: 'Тариф',
+  },
+  {
+    name: 'flow',
+    label: 'Поток',
+  },
+];
 const COURSE_PRICE_CHANGES_FIELD = 'priceChanges';
 const LEGACY_COURSE_FIELDS = new Set(['priceIncreases', 'scheduledIncreaseIds', 'scheduledPriceIncreases']);
 
@@ -41,7 +51,41 @@ const normalizeCourseEditLayout = (rows) => {
     .filter((field) => !normalizedRows.some((row) => row.some((item) => item.name === field.name)))
     .map((field) => [{ name: field.name, size: 12 }]);
 
-  return [...rowsWithoutPriceChanges, ...imageRows, [{ name: COURSE_PRICE_CHANGES_FIELD, size: 12 }]];
+  const textFieldsToInsert = COURSE_TEXT_FIELDS
+    .filter((field) => !normalizedRows.some((row) => row.some((item) => item.name === field.name)));
+  const rowsWithTextFields = [];
+
+  rowsWithoutPriceChanges.forEach((row) => {
+    const basePriceIndex = row.findIndex((item) => item.name === 'basePrice');
+    if (basePriceIndex === -1 || textFieldsToInsert.length === 0) {
+      rowsWithTextFields.push(row);
+      return;
+    }
+
+    const beforeBasePrice = row.slice(0, basePriceIndex);
+    const afterBasePrice = row.slice(basePriceIndex + 1);
+    if (beforeBasePrice.length > 0) {
+      rowsWithTextFields.push(beforeBasePrice);
+    }
+
+    rowsWithTextFields.push([
+      { ...row[basePriceIndex], size: 4 },
+      ...textFieldsToInsert.map((field) => ({ name: field.name, size: 4 })),
+    ]);
+    textFieldsToInsert.length = 0;
+
+    if (afterBasePrice.length > 0) {
+      rowsWithTextFields.push(afterBasePrice.map((item) => (
+        item.name === 'courseLink' ? { ...item, size: 12 } : item
+      )));
+    }
+  });
+
+  if (textFieldsToInsert.length > 0) {
+    rowsWithTextFields.push(textFieldsToInsert.map((field) => ({ name: field.name, size: 4 })));
+  }
+
+  return [...rowsWithTextFields, ...imageRows, [{ name: COURSE_PRICE_CHANGES_FIELD, size: 12 }]];
 };
 
 const normalizeCourseListLayout = (fields) => {
@@ -79,7 +123,8 @@ const syncCourseConfig = async (strapi) => {
   if (!row) return { skipped: true, reason: 'missing-course-config' };
 
   const current = parseJson(row.value, {});
-  const imageFieldMetadatas = COURSE_IMAGE_FIELDS.reduce((acc, field) => {
+  const configurableFields = [...COURSE_IMAGE_FIELDS, ...COURSE_TEXT_FIELDS];
+  const fieldMetadatas = configurableFields.reduce((acc, field) => {
     acc[field.name] = {
       ...(current && current.metadatas && current.metadatas[field.name]
         ? current.metadatas[field.name]
@@ -110,7 +155,7 @@ const syncCourseConfig = async (strapi) => {
     },
     metadatas: {
       ...normalizeCourseMetadatas(current && current.metadatas),
-      ...imageFieldMetadatas,
+      ...fieldMetadatas,
       [COURSE_PRICE_CHANGES_FIELD]: {
         ...(current && current.metadatas && current.metadatas[COURSE_PRICE_CHANGES_FIELD]
           ? current.metadatas[COURSE_PRICE_CHANGES_FIELD]

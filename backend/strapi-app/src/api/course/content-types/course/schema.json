@@ -58,8 +58,18 @@
             "size": 4
           },
           {
+            "name": "rate",
+            "size": 4
+          },
+          {
+            "name": "flow",
+            "size": 4
+          }
+        ],
+        [
+          {
             "name": "courseLink",
-            "size": 8
+            "size": 12
           }
         ],
         [
@@ -175,6 +185,22 @@
           "label": "Базовая цена"
         }
       },
+      "rate": {
+        "edit": {
+          "label": "Тариф"
+        },
+        "list": {
+          "label": "Тариф"
+        }
+      },
+      "flow": {
+        "edit": {
+          "label": "Поток"
+        },
+        "list": {
+          "label": "Поток"
+        }
+      },
       "educationDocument": {
         "edit": {
           "label": "Документ об образовании"
@@ -268,6 +294,12 @@
     "basePrice": {
       "type": "integer",
       "min": 0
+    },
+    "rate": {
+      "type": "string"
+    },
+    "flow": {
+      "type": "string"
     },
     "educationDocument": {
       "type": "enumeration",

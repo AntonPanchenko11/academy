@@ -176,6 +176,14 @@ const main = async () => {
       'Expected heroImg to be present in course edit layout'
     );
     assert.ok(
+      syncedEditFields.includes('rate'),
+      'Expected rate to be present in course edit layout'
+    );
+    assert.ok(
+      syncedEditFields.includes('flow'),
+      'Expected flow to be present in course edit layout'
+    );
+    assert.ok(
       !syncedEditFields.includes('scheduledPriceIncreases'),
       'Expected scheduledPriceIncreases to be removed from course edit layout'
     );
@@ -202,6 +210,18 @@ const main = async () => {
         && syncedCourseConfig.metadatas.heroImg.edit
         && syncedCourseConfig.metadatas.heroImg.edit.label,
       'Ссылка на hero-картинку'
+    );
+    assert.equal(
+      syncedCourseConfig.metadatas && syncedCourseConfig.metadatas.rate
+        && syncedCourseConfig.metadatas.rate.edit
+        && syncedCourseConfig.metadatas.rate.edit.label,
+      'Тариф'
+    );
+    assert.equal(
+      syncedCourseConfig.metadatas && syncedCourseConfig.metadatas.flow
+        && syncedCourseConfig.metadatas.flow.edit
+        && syncedCourseConfig.metadatas.flow.edit.label,
+      'Поток'
     );
 
     const seedCourse = await createRegressionCourse(strapi);

@@ -64,6 +64,8 @@ const main = async () => {
         studyDays: 'сб-вс',
         hours: 32,
         basePrice: 1000,
+        rate: 'admin-rate',
+        flow: 'admin-flow',
         educationDocument: 'Сертификат',
         courseLink: `https://example.com/admin-crud-course-${suffix}`,
         catalogImg: `https://static.tildacdn.com/admin-crud-course-${suffix}.jpg`,
@@ -73,6 +75,8 @@ const main = async () => {
 
     assert.equal(course.basePrice, 1000);
     assert.equal(course.title, `Admin CRUD Course ${suffix}`);
+    assert.equal(course.rate, 'admin-rate');
+    assert.equal(course.flow, 'admin-flow');
     assert.equal(course.catalogImg, `https://static.tildacdn.com/admin-crud-course-${suffix}.jpg`);
     assert.equal(course.heroImg, `https://static.tildacdn.com/admin-crud-course-${suffix}-tilda.jpg`);
 
@@ -81,6 +85,8 @@ const main = async () => {
       data: {
         comment: 'updated from admin regression',
         basePrice: 1200,
+        rate: 'admin-rate-updated',
+        flow: 'admin-flow-updated',
         catalogImg: `https://static.tildacdn.com/admin-crud-course-${suffix}-updated.jpg`,
         heroImg: `https://static.tildacdn.com/admin-crud-course-${suffix}-updated-tilda.jpg`,
       },
@@ -88,6 +94,8 @@ const main = async () => {
 
     assert.equal(updatedCourse.comment, 'updated from admin regression');
     assert.equal(updatedCourse.basePrice, 1200);
+    assert.equal(updatedCourse.rate, 'admin-rate-updated');
+    assert.equal(updatedCourse.flow, 'admin-flow-updated');
     assert.equal(updatedCourse.catalogImg, `https://static.tildacdn.com/admin-crud-course-${suffix}-updated.jpg`);
     assert.equal(updatedCourse.heroImg, `https://static.tildacdn.com/admin-crud-course-${suffix}-updated-tilda.jpg`);
 
