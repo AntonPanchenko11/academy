@@ -137,6 +137,13 @@ const main = async () => {
   assert.equal(passthrough.ctx.status, 404);
   assert.equal(passthrough.ctx.body, undefined);
 
+  const removedPublicApi = await runRequest(healthyMiddleware, {
+    path: ['', 'api', 'public', 'courses'].join('/'),
+  });
+  assert.equal(removedPublicApi.nextCalled, true);
+  assert.equal(removedPublicApi.ctx.status, 404);
+  assert.equal(removedPublicApi.ctx.body, undefined);
+
   console.log('public health regression check passed');
 };
 

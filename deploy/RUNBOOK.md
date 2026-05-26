@@ -6,22 +6,20 @@
 
 ## Основные production paths
 
+- Production-директория проекта на сервере: `/opt/academy`
 - Канонический `Strapi` deploy path: [docker-compose.selectel.yml](/Users/antonpancenko/Documents/academy/docker-compose.selectel.yml) и [deploy/scripts/deploy-selectel.sh](/Users/antonpancenko/Documents/academy/deploy/scripts/deploy-selectel.sh)
-- `Webstudio` reverse-proxy path: [docker-compose.webstudio-vps.yml](/Users/antonpancenko/Documents/academy/docker-compose.webstudio-vps.yml) и [deploy/scripts/deploy-webstudio-vps.sh](/Users/antonpancenko/Documents/academy/deploy/scripts/deploy-webstudio-vps.sh)
 
-## Webstudio Runbook
+## Production Runbook
 
-Пошаговый сценарий публикации `Webstudio`-контейнера и проверки после deploy описан в [deploy/WEBSTUDIO_VPS.md](/Users/antonpancenko/Documents/academy/deploy/WEBSTUDIO_VPS.md).
+Короткий flow для текущей архитектуры:
 
-Короткий flow:
-
-1. Подготовить `.env.prod`
-2. Подготовить frontend-источник:
-   локальный Docker-ready export в [webstudio/](/Users/antonpancenko/Documents/academy/webstudio) или `WEBSTUDIO_IMAGE`
+1. Подготовить `.env.prod`.
+2. Проверить, что `PUBLIC_URL`, `ADMIN_URL`, `DOMAIN` и `CORS_ORIGIN` соответствуют production-доменам.
 3. Запустить:
 
 ```bash
-./deploy/scripts/deploy-webstudio-vps.sh .env.prod
+cd /opt/academy
+./deploy/scripts/deploy-selectel.sh .env.prod
 ```
 
 4. Проверить:
@@ -33,10 +31,36 @@
 5. При необходимости посмотреть контейнеры и логи:
 
 ```bash
-docker compose --env-file .env.prod -f docker-compose.webstudio-vps.yml ps
-docker compose --env-file .env.prod -f docker-compose.webstudio-vps.yml logs -f strapi
-docker compose --env-file .env.prod -f docker-compose.webstudio-vps.yml logs -f webstudio
-docker compose --env-file .env.prod -f docker-compose.webstudio-vps.yml logs -f caddy
+docker compose --env-file .env.prod -f docker-compose.selectel.yml ps
+docker compose --env-file .env.prod -f docker-compose.selectel.yml logs -f strapi
+docker compose --env-file .env.prod -f docker-compose.selectel.yml logs -f caddy
 ```
 
-6. При неудачном релизе вернуть предыдущий рабочий `backend + webstudio export` и повторить deploy
+6. При неудачном релизе вернуть предыдущий рабочий backend commit и повторить deploy.
+
+## Docker Cleanup
+
+Production Postgres volume:
+
+- `academy_pg-data`
+- mount path: `/var/lib/postgresql/data`
+
+При обычном deploy и Docker cleanup этот volume не удалять.
+
+Безопасная чистка:
+
+```bash
+cd /opt/academy
+docker compose --env-file .env.prod -f docker-compose.selectel.yml up -d --build --remove-orphans
+docker container prune
+docker image prune -a
+docker network prune
+docker builder prune
+```
+
+Не запускать для production-БД:
+
+- `docker compose down -v`
+- `docker volume prune`
+- `docker system prune --volumes`
+- `docker volume rm academy_pg-data`

@@ -17,4 +17,3 @@ backend/strapi-app/.tmp
 backend/strapi-app/.cache
 backend/strapi-app/build
 backend/strapi-app/node_modules
-webstudio

@@ -65,10 +65,10 @@ const main = async () => {
     checkDatabaseHealth: async () => ({ ready: true }),
   });
 
-  const publicListCtx = await runRequest(middleware, {
-    path: '/api/public/courses',
+  const tildaListCtx = await runRequest(middleware, {
+    path: '/api/tilda/courses',
   });
-  assert.equal(publicListCtx.status, 500);
+  assert.equal(tildaListCtx.status, 500);
 
   const feedCtx = await runRequest(middleware, {
     path: '/api/courses-feed',
@@ -80,7 +80,7 @@ const main = async () => {
   });
   assert.equal(sitemapCtx.status, 500);
 
-  assert.ok(logEntries.includes('[public-api:webstudio] Failed to load course list'));
+  assert.ok(logEntries.includes('[public-api:tilda] Failed to load course list'));
   assert.ok(logEntries.includes('[public-api:schedule] Failed to load courses-feed'));
   assert.ok(logEntries.includes('[public-api:seo] Failed to build sitemap.xml'));
 

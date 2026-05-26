@@ -6,38 +6,6 @@ const isReadMethod = (method) => method === 'GET' || method === 'HEAD';
 
 const matchesExactPath = (ctx, path) => ctx.path === path || ctx.path === `${path}/`;
 
-const pickDefined = (entries) => {
-  return entries.reduce((acc, [key, value]) => {
-    if (value !== undefined) {
-      acc[key] = value;
-    }
-    return acc;
-  }, {});
-};
-
-const createAllowedQueryBuilder = (allowedKeys = []) => {
-  return (query = {}) => {
-    return pickDefined(
-      allowedKeys.map((key) => [key, query[key]])
-    );
-  };
-};
-
-const createIdentifierQueryBuilder = (allowedKeys = [], identifierKey = '') => {
-  return (query = {}, identifier) => {
-    const entries = allowedKeys.map((key) => [key, query[key]]);
-    const identifierValue = identifier === undefined || identifier === null || identifier === ''
-      ? query[identifierKey]
-      : identifier;
-
-    if (identifierKey) {
-      entries.push([identifierKey, identifierValue]);
-    }
-
-    return pickDefined(entries);
-  };
-};
-
 const logPublicApiError = (strapi, namespace, action, error) => {
   if (!strapi || !strapi.log || typeof strapi.log.error !== 'function') return;
 
@@ -158,9 +126,7 @@ const createCourseNamespaceHandlers = ({
 };
 
 module.exports = {
-  createAllowedQueryBuilder,
   createCourseNamespaceHandlers,
-  createIdentifierQueryBuilder,
   isReadMethod,
   logPublicApiError,
   matchesExactPath,
