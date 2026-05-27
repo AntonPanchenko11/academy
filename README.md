@@ -552,6 +552,7 @@ cp .env.prod.example .env.prod
 
 - frontend расписания встроен в Strapi;
 - наружу публикуются только `80/443` через `caddy`;
+- `www.{DOMAIN}` редиректит на основной `DOMAIN` с сохранением пути;
 - deploy ждет readiness по `/api/health/ready`;
 - по умолчанию запускается smoke-check.
 
@@ -581,6 +582,8 @@ POSTGRES_PASSWORD=strong_password
 DOMAIN=dbmpa.ru
 LETSENCRYPT_EMAIL=ops@dbmpa.ru
 ```
+
+Если используется `www`, DNS-запись `www` должна указывать на тот же сервер. Caddy автоматически получает сертификат и редиректит `https://www.{DOMAIN}/...` на `https://{DOMAIN}/...`.
 
 ### Post-deploy smoke-check
 

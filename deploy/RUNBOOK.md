@@ -15,6 +15,7 @@
 
 1. Подготовить `.env.prod`.
 2. Проверить, что `PUBLIC_URL`, `ADMIN_URL`, `DOMAIN` и `CORS_ORIGIN` соответствуют production-доменам.
+   Если нужен `www`, DNS-запись `www` должна указывать на тот же сервер; Caddy редиректит `www.{DOMAIN}` на основной `DOMAIN`.
 3. Запустить:
 
 ```bash

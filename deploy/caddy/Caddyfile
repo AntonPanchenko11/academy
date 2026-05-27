@@ -7,3 +7,7 @@
 
   reverse_proxy strapi:1337
 }
+
+www.{$DOMAIN:localhost} {
+  redir https://{$DOMAIN:localhost}{uri} permanent
+}
