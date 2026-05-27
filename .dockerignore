@@ -10,6 +10,7 @@ npm-debug.log
 extracted-courses.json
 source-schedule.html
 local/
+backups/
 
 # keep strapi secrets out of build context
 backend/strapi-app/.env

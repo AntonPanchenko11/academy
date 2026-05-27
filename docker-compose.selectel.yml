@@ -32,6 +32,28 @@ services:
       retries: 5
     logging: *default-logging
 
+  postgres-backup:
+    build:
+      context: .
+      dockerfile: deploy/backup/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      TZ: Europe/Moscow
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_BACKUP_DIR: /backups/postgres
+      POSTGRES_BACKUP_RETENTION_COUNT: ${POSTGRES_BACKUP_RETENTION_COUNT:-5}
+      POSTGRES_BACKUP_TIMEZONE: Europe/Moscow
+    volumes:
+      - ./backups/postgres:/backups/postgres
+    logging: *default-logging
+
   strapi:
     build:
       context: .

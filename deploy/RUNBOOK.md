@@ -39,6 +39,47 @@ docker compose --env-file .env.prod -f docker-compose.selectel.yml logs -f caddy
 
 6. При неудачном релизе вернуть предыдущий рабочий backend commit и повторить deploy.
 
+## PostgreSQL Backups
+
+Production compose запускает отдельный сервис `postgres-backup`.
+
+Что он делает:
+
+- каждый день в `03:00` по московскому времени запускает `pg_dump -Fc`;
+- сохраняет дампы в `/opt/academy/backups/postgres`;
+- хранит только последние `5` дампов, старые удаляет автоматически.
+
+Проверить сервис:
+
+```bash
+cd /opt/academy
+docker compose --env-file .env.prod -f docker-compose.selectel.yml ps postgres-backup
+docker compose --env-file .env.prod -f docker-compose.selectel.yml logs postgres-backup
+```
+
+Запустить бэкап вручную:
+
+```bash
+cd /opt/academy
+docker compose --env-file .env.prod -f docker-compose.selectel.yml exec postgres-backup /usr/local/bin/backup-postgres.sh
+```
+
+Посмотреть файлы:
+
+```bash
+ls -lh /opt/academy/backups/postgres
+```
+
+Формат файла: `<POSTGRES_DB>-YYYYMMDD-HHMMSS.dump`.
+
+Восстановление из дампа выполнять только после отдельной проверки плана восстановления. Минимальная команда для восстановления в уже созданную БД:
+
+```bash
+docker compose --env-file .env.prod -f docker-compose.selectel.yml exec -T postgres \
+  sh -c 'pg_restore -U "$POSTGRES_USER" -d "$POSTGRES_DB" --clean --if-exists' \
+  < /opt/academy/backups/postgres/<backup-file>.dump
+```
+
 ## Docker Cleanup
 
 Production Postgres volume:

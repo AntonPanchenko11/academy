@@ -1,0 +1,4 @@
+SHELL=/bin/sh
+TZ=Europe/Moscow
+
+0 3 * * * /usr/local/bin/backup-postgres.sh >> /proc/1/fd/1 2>> /proc/1/fd/2
