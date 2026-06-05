@@ -15,6 +15,8 @@ const DEFAULT_CODE_TTL_SECONDS = 600;
 const DEFAULT_CODE_COOLDOWN_SECONDS = 60;
 const DEFAULT_MAX_ATTEMPTS = 5;
 const DEFAULT_DUPLICATE_WINDOW_SECONDS = 15 * 60;
+const DEFAULT_IP_RATE_LIMIT_WINDOW_SECONDS = 60;
+const DEFAULT_IP_RATE_LIMIT_MAX = 8;
 
 const parseIntegerEnv = (name, fallback) => {
   const parsed = Number.parseInt(process.env[name], 10);
@@ -39,11 +41,22 @@ const getConfig = () => {
     codeCooldownSeconds: parseIntegerEnv('TILDA_LEAD_CODE_COOLDOWN_SECONDS', DEFAULT_CODE_COOLDOWN_SECONDS),
     maxAttempts: parseIntegerEnv('TILDA_LEAD_CODE_MAX_ATTEMPTS', DEFAULT_MAX_ATTEMPTS),
     duplicateWindowSeconds: parseIntegerEnv('TILDA_LEAD_DUPLICATE_WINDOW_SECONDS', DEFAULT_DUPLICATE_WINDOW_SECONDS),
+    ipRateLimitWindowSeconds: parseIntegerEnv('TILDA_LEAD_IP_RATE_LIMIT_WINDOW_SECONDS', DEFAULT_IP_RATE_LIMIT_WINDOW_SECONDS),
+    ipRateLimitMax: parseIntegerEnv('TILDA_LEAD_IP_RATE_LIMIT_MAX', DEFAULT_IP_RATE_LIMIT_MAX),
+    allowedOrigins: parseListEnv(process.env.TILDA_LEADS_ALLOWED_ORIGINS || process.env.CORS_ORIGIN),
     hashSecret: toTrimmedString(process.env.TILDA_LEAD_CODE_SECRET, 1000)
       || appKeys
       || toTrimmedString(process.env.JWT_SECRET, 1000)
       || 'academy-tilda-leads',
   };
+};
+
+const parseListEnv = (value) => {
+  return String(value || '')
+    .split(',')
+    .map((item) => toTrimmedString(item, 500).replace(/\/+$/, ''))
+    .filter(Boolean)
+    .filter((item) => item !== '*');
 };
 
 const getHeader = (ctx, name) => {
@@ -79,6 +92,37 @@ const getRequestToken = (ctx, payload) => {
 const isAuthorized = (ctx, payload, config) => {
   if (!config.tildaToken) return true;
   return getRequestToken(ctx, payload) === config.tildaToken;
+};
+
+const getRequestOrigin = (ctx) => {
+  const raw = getHeader(ctx, 'Origin') || getHeader(ctx, 'Referer');
+  if (!raw) return '';
+
+  try {
+    return new URL(raw).origin.replace(/\/+$/, '');
+  } catch (error) {
+    return '';
+  }
+};
+
+const isAllowedOrigin = (ctx, config) => {
+  if (!config.allowedOrigins.length) return true;
+  const origin = getRequestOrigin(ctx);
+  if (!origin) return false;
+  return config.allowedOrigins.includes(origin);
+};
+
+const isSpamTrapFilled = (payload) => {
+  return Boolean(toTrimmedString(payload && (payload.website || payload.companyWebsite || payload._website), 255));
+};
+
+const getClientIp = (ctx) => {
+  const forwarded = getHeader(ctx, 'X-Forwarded-For').split(',')[0];
+  return toTrimmedString(forwarded || (ctx && ctx.ip) || (ctx && ctx.request && ctx.request.ip), 80);
+};
+
+const getUserAgent = (ctx) => {
+  return toTrimmedString(getHeader(ctx, 'User-Agent'), 500);
 };
 
 const normalizeEmail = (value) => {
@@ -128,6 +172,7 @@ const normalizeLeadPayload = (payload = {}) => {
     name: pickFirst(payload, ['name', 'Name', 'firstName', 'fio', 'ФИО', 'Имя'], 255),
     phone: normalizePhone(pickFirst(payload, ['phone', 'Phone', 'tel', 'Телефон'], 80)),
     email: normalizeEmail(pickFirst(payload, ['email', 'Email', 'mail', 'Почта'], 320)),
+    comment: pickFirst(payload, ['comment', 'message', 'question', 'Комментарий', 'Вопрос'], 2000),
     courseSlug: pickFirst(payload, ['courseSlug', 'course', 'slug', 'Курс'], 255),
     courseTitle: pickFirst(payload, ['courseTitle', 'courseName'], 255),
     formId: pickFirst(payload, ['formId', 'formid', 'form_id', 'tildaFormId'], 255),
@@ -289,6 +334,7 @@ const buildIncomingLeadText = ({ lead, route }) => {
     lead.name ? `Имя: ${lead.name}` : '',
     `Телефон: ${lead.phone}`,
     lead.email ? `Email: ${lead.email}` : '',
+    lead.comment ? `Комментарий: ${lead.comment}` : '',
     lead.courseTitle || lead.courseSlug ? `Курс: ${lead.courseTitle || lead.courseSlug}` : '',
     lead.leadType ? `Тип заявки: ${lead.leadType}` : '',
     lead.formId ? `Форма: ${lead.formId}` : '',
@@ -340,6 +386,24 @@ const findRecentVerification = async ({ strapi, phone, config }) => {
   });
 
   return Array.isArray(rows) && rows.length ? rows[0] : null;
+};
+
+const countRecentVerificationsByIp = async ({ strapi, requestIp, config }) => {
+  if (!requestIp) return 0;
+
+  const query = maybeQuery(strapi, VERIFICATION_UID);
+  if (!query || typeof query.findMany !== 'function') return 0;
+
+  const cutoff = new Date(Date.now() - (config.ipRateLimitWindowSeconds * 1000)).toISOString();
+  const rows = await query.findMany({
+    where: {
+      requestIp,
+      createdAt: { $gte: cutoff },
+    },
+    limit: config.ipRateLimitMax + 1,
+  });
+
+  return Array.isArray(rows) ? rows.length : 0;
 };
 
 const findDuplicateLead = async ({ strapi, lead, config }) => {
@@ -509,6 +573,18 @@ const createTildaLeadGateway = ({ strapi, loadSerializedCourses, fetchImpl } = {
         return;
       }
 
+      if (!isAllowedOrigin(ctx, config)) {
+        respondJson(ctx, 403, { ok: false, error: 'Forbidden origin.' });
+        return;
+      }
+
+      if (isSpamTrapFilled(payload)) {
+        respondJson(ctx, 204, null);
+        return;
+      }
+
+      const requestIp = getClientIp(ctx);
+      const userAgent = getUserAgent(ctx);
       const phone = normalizePhone(pickFirst(payload, ['phone', 'Phone', 'tel', 'Телефон'], 80));
       const channel = normalizeChannel(payload.channel || payload.verificationChannel);
       const vkRecipient = pickFirst(payload, ['vkRecipient', 'vkId', 'vk'], 80);
@@ -520,6 +596,16 @@ const createTildaLeadGateway = ({ strapi, loadSerializedCourses, fetchImpl } = {
 
       if (!channel) {
         respondJson(ctx, 422, { ok: false, error: 'Verification channel is required.' });
+        return;
+      }
+
+      const recentByIp = await countRecentVerificationsByIp({ strapi, requestIp, config });
+      if (recentByIp >= config.ipRateLimitMax) {
+        respondJson(ctx, 429, {
+          ok: false,
+          error: 'Too many verification requests.',
+          retryAfterSeconds: config.ipRateLimitWindowSeconds,
+        });
         return;
       }
 
@@ -550,6 +636,8 @@ const createTildaLeadGateway = ({ strapi, loadSerializedCourses, fetchImpl } = {
           codeHash: hashValue(code, config.hashSecret),
           expiresAt,
           attempts: 0,
+          requestIp,
+          userAgent,
         },
       });
 
@@ -595,6 +683,18 @@ const createTildaLeadGateway = ({ strapi, loadSerializedCourses, fetchImpl } = {
         return;
       }
 
+      if (!isAllowedOrigin(ctx, config)) {
+        respondJson(ctx, 403, { ok: false, error: 'Forbidden origin.' });
+        return;
+      }
+
+      if (isSpamTrapFilled(payload)) {
+        respondJson(ctx, 204, null);
+        return;
+      }
+
+      const requestIp = getClientIp(ctx);
+      const userAgent = getUserAgent(ctx);
       const code = normalizeCode(payload.verificationCode || payload.code || payload.otp, config.codeLength);
       const verificationId = payload.verificationId;
       let lead = normalizeLeadPayload(payload);
@@ -657,6 +757,8 @@ const createTildaLeadGateway = ({ strapi, loadSerializedCourses, fetchImpl } = {
           sigmaDestination: route.sigmaIncomingTo,
           sigmaRequest,
           rawPayload: sanitizeRawPayload(payload),
+          requestIp,
+          userAgent,
         },
       });
 

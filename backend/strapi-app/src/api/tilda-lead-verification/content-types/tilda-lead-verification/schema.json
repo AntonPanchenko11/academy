@@ -110,6 +110,12 @@
     },
     "lastError": {
       "type": "text"
+    },
+    "requestIp": {
+      "type": "string"
+    },
+    "userAgent": {
+      "type": "string"
     }
   }
 }

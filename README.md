@@ -429,6 +429,9 @@ Renderer `/courses/{slug}` не создает системный hero по ум
 ```env
 TILDA_LEADS_TOKEN=replace_me_public_form_token
 TILDA_LEAD_CODE_SECRET=replace_me_code_hash_secret
+TILDA_LEADS_ALLOWED_ORIGINS=https://modernpsy.academy,https://modern-psy.ru
+TILDA_LEAD_IP_RATE_LIMIT_WINDOW_SECONDS=60
+TILDA_LEAD_IP_RATE_LIMIT_MAX=8
 SIGMA_API_BASE_URL=https://user.sigmasms.ru/api
 SIGMA_API_TOKEN=replace_me_sigma_static_token
 SIGMA_INCOMING_TO=ModernPsy
@@ -436,6 +439,15 @@ SIGMA_CODE_SENDER=Academy
 ```
 
 `SIGMA_API_TOKEN` нельзя вставлять в Tilda или frontend-код. Он должен быть только в окружении backend. `TILDA_LEADS_TOKEN` используется helper'ом в HTML, поэтому это публичный токен формы, а не секрет уровня SIGMA.
+
+Защита формы:
+
+- SIGMA API token хранится только на backend;
+- backend принимает запросы только с разрешенных `Origin/Referer`, если задан `TILDA_LEADS_ALLOWED_ORIGINS`;
+- код подтверждения хранится только в виде hash;
+- повторная отправка кода ограничена по телефону и IP;
+- honeypot-поле `website` silently blocks bot submissions;
+- финальная заявка уходит в SIGMA только после успешной проверки кода.
 
 Маршрутизацию можно настроить в Strapi через `Маршрут лида`: правило выбирается по `routeKey`, `courseSlug`, `leadType` и `formId`, а затем задает `sigmaIncomingTo`. Если подходящего правила нет, используется `SIGMA_INCOMING_TO`.
 

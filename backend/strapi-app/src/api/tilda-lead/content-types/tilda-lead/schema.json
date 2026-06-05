@@ -154,6 +154,9 @@
     "email": {
       "type": "email"
     },
+    "comment": {
+      "type": "text"
+    },
     "courseSlug": {
       "type": "string"
     },
@@ -207,6 +210,12 @@
     },
     "lastError": {
       "type": "text"
+    },
+    "requestIp": {
+      "type": "string"
+    },
+    "userAgent": {
+      "type": "string"
     }
   }
 }

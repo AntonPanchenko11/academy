@@ -134,6 +134,10 @@
   }
 
   function validateBase(root, form) {
+    if (form.reportValidity && !form.reportValidity()) {
+      return null;
+    }
+
     var phone = normalizePhone(getFieldValue(form, ['phone', 'Phone', 'tel']));
     if (!phone) {
       setStatus(root, 'Введите корректный телефон.', 'error');
