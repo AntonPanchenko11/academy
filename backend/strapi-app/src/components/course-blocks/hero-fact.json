@@ -1,0 +1,16 @@
+{
+  "collectionName": "components_course_blocks_hero_facts",
+  "info": {
+    "displayName": "Hero fact",
+    "description": "Факт для hero-блока курса"
+  },
+  "attributes": {
+    "label": {
+      "type": "string",
+      "required": true
+    },
+    "value": {
+      "type": "string"
+    }
+  }
+}

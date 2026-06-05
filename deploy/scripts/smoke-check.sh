@@ -45,5 +45,6 @@ check_get "Tilda health" "/api/tilda/health"
 check_get "Courses feed" "/api/courses-feed"
 check_get "Tilda courses" "/api/tilda/courses"
 check_get "Tilda helper asset" "/assets/tilda-course-fields.js"
+check_get "Tilda lead gateway asset" "/assets/tilda-lead-gateway.js"
 
 printf 'Smoke check passed for %s\n' "$BASE_URL"

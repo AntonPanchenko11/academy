@@ -1,0 +1,212 @@
+{
+  "kind": "collectionType",
+  "collectionName": "tilda_leads",
+  "info": {
+    "singularName": "tilda-lead",
+    "pluralName": "tilda-leads",
+    "displayName": "Tilda лид",
+    "description": "Заявка, принятая из HTML-формы Tilda и переданная в SIGMA Messaging"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "config": {
+    "layouts": {
+      "list": [
+        "id",
+        "status",
+        "name",
+        "phone",
+        "courseSlug",
+        "leadType",
+        "sigmaIncomingId",
+        "createdAt"
+      ],
+      "edit": [
+        [
+          {
+            "name": "status",
+            "size": 3
+          },
+          {
+            "name": "leadType",
+            "size": 3
+          },
+          {
+            "name": "routeKey",
+            "size": 3
+          },
+          {
+            "name": "sigmaIncomingId",
+            "size": 3
+          }
+        ],
+        [
+          {
+            "name": "name",
+            "size": 4
+          },
+          {
+            "name": "phone",
+            "size": 4
+          },
+          {
+            "name": "email",
+            "size": 4
+          }
+        ],
+        [
+          {
+            "name": "courseSlug",
+            "size": 4
+          },
+          {
+            "name": "courseTitle",
+            "size": 4
+          },
+          {
+            "name": "formId",
+            "size": 4
+          }
+        ],
+        [
+          {
+            "name": "pageUrl",
+            "size": 12
+          }
+        ],
+        [
+          {
+            "name": "utmSource",
+            "size": 3
+          },
+          {
+            "name": "utmMedium",
+            "size": 3
+          },
+          {
+            "name": "utmCampaign",
+            "size": 3
+          },
+          {
+            "name": "utmContent",
+            "size": 3
+          }
+        ],
+        [
+          {
+            "name": "utmTerm",
+            "size": 4
+          },
+          {
+            "name": "idempotencyKey",
+            "size": 8
+          }
+        ],
+        [
+          {
+            "name": "lastError",
+            "size": 12
+          }
+        ],
+        [
+          {
+            "name": "sigmaRequest",
+            "size": 6
+          },
+          {
+            "name": "sigmaResponse",
+            "size": 6
+          }
+        ],
+        [
+          {
+            "name": "rawPayload",
+            "size": 12
+          }
+        ]
+      ]
+    }
+  },
+  "attributes": {
+    "source": {
+      "type": "string",
+      "default": "tilda"
+    },
+    "status": {
+      "type": "enumeration",
+      "enum": [
+        "received",
+        "sent",
+        "failed",
+        "duplicate"
+      ],
+      "default": "received",
+      "required": true
+    },
+    "name": {
+      "type": "string"
+    },
+    "phone": {
+      "type": "string",
+      "required": true
+    },
+    "email": {
+      "type": "email"
+    },
+    "courseSlug": {
+      "type": "string"
+    },
+    "courseTitle": {
+      "type": "string"
+    },
+    "formId": {
+      "type": "string"
+    },
+    "pageUrl": {
+      "type": "string"
+    },
+    "utmSource": {
+      "type": "string"
+    },
+    "utmMedium": {
+      "type": "string"
+    },
+    "utmCampaign": {
+      "type": "string"
+    },
+    "utmContent": {
+      "type": "string"
+    },
+    "utmTerm": {
+      "type": "string"
+    },
+    "leadType": {
+      "type": "string"
+    },
+    "routeKey": {
+      "type": "string"
+    },
+    "sigmaDestination": {
+      "type": "string"
+    },
+    "sigmaIncomingId": {
+      "type": "string"
+    },
+    "idempotencyKey": {
+      "type": "string"
+    },
+    "rawPayload": {
+      "type": "json"
+    },
+    "sigmaRequest": {
+      "type": "json"
+    },
+    "sigmaResponse": {
+      "type": "json"
+    },
+    "lastError": {
+      "type": "text"
+    }
+  }
+}

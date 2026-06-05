@@ -92,6 +92,12 @@
         ],
         [
           {
+            "name": "contentBlocks",
+            "size": 12
+          }
+        ],
+        [
+          {
             "name": "priceChanges",
             "size": 12
           }
@@ -244,6 +250,16 @@
           "searchable": false,
           "sortable": false
         }
+      },
+      "contentBlocks": {
+        "edit": {
+          "label": "Контентные блоки страницы курса"
+        },
+        "list": {
+          "label": "Контентные блоки страницы курса",
+          "searchable": false,
+          "sortable": false
+        }
       }
     }
   },
@@ -318,6 +334,17 @@
     },
     "heroImg": {
       "type": "text"
+    },
+    "contentBlocks": {
+      "type": "dynamiczone",
+      "components": [
+        "course-blocks.hero",
+        "course-blocks.text-section",
+        "course-blocks.feature-list",
+        "course-blocks.faq",
+        "course-blocks.cta",
+        "course-blocks.image-section"
+      ]
     },
     "discount": {
       "type": "relation",

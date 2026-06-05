@@ -1,0 +1,35 @@
+{
+  "collectionName": "components_course_blocks_heroes",
+  "info": {
+    "displayName": "Hero курса",
+    "description": "Главный экран страницы курса"
+  },
+  "attributes": {
+    "title": {
+      "type": "string"
+    },
+    "subtitle": {
+      "type": "text"
+    },
+    "statusLabel": {
+      "type": "string"
+    },
+    "imageUrl": {
+      "type": "text"
+    },
+    "primaryButtonLabel": {
+      "type": "string"
+    },
+    "primaryButtonUrl": {
+      "type": "string"
+    },
+    "priceLabel": {
+      "type": "string"
+    },
+    "facts": {
+      "type": "component",
+      "repeatable": true,
+      "component": "course-blocks.hero-fact"
+    }
+  }
+}

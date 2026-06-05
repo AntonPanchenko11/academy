@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="format-detection" content="telephone=no">
+  <title>Курс Академии</title>
+
+  <link rel="stylesheet" href="/assets/course-page.css" type="text/css">
+</head>
+<body>
+  <main class="course-page" data-course-page>
+    <header class="course-topbar">
+      <a class="course-logo" href="/timetable" aria-label="Расписание Академии">Академия</a>
+      <a class="course-back-link" href="/timetable">Расписание</a>
+    </header>
+
+    <section class="course-state course-state-loading" data-course-loading>
+      <div class="course-loader"></div>
+      <p>Загружаем курс</p>
+    </section>
+
+    <section class="course-state course-state-error" data-course-error hidden>
+      <h1>Курс не найден</h1>
+      <p data-course-error-message>Проверьте slug курса или вернитесь к расписанию.</p>
+      <a class="course-button" href="/timetable">К расписанию</a>
+    </section>
+
+    <article class="course-shell" data-course-content hidden>
+      <section class="course-blocks" data-course-blocks></section>
+    </article>
+  </main>
+
+  <script src="/assets/course-page.js"></script>
+</body>
+</html>

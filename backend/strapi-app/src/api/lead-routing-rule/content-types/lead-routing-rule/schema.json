@@ -1,0 +1,96 @@
+{
+  "kind": "collectionType",
+  "collectionName": "lead_routing_rules",
+  "info": {
+    "singularName": "lead-routing-rule",
+    "pluralName": "lead-routing-rules",
+    "displayName": "Маршрут лида",
+    "description": "Правило выбора получателя SIGMA для заявок из Tilda"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "config": {
+    "layouts": {
+      "list": [
+        "id",
+        "enabled",
+        "priority",
+        "routeKey",
+        "courseSlug",
+        "leadType",
+        "sigmaIncomingTo"
+      ],
+      "edit": [
+        [
+          {
+            "name": "enabled",
+            "size": 3
+          },
+          {
+            "name": "priority",
+            "size": 3
+          },
+          {
+            "name": "routeKey",
+            "size": 6
+          }
+        ],
+        [
+          {
+            "name": "courseSlug",
+            "size": 4
+          },
+          {
+            "name": "leadType",
+            "size": 4
+          },
+          {
+            "name": "formId",
+            "size": 4
+          }
+        ],
+        [
+          {
+            "name": "sigmaIncomingTo",
+            "size": 6
+          },
+          {
+            "name": "sigmaTags",
+            "size": 6
+          }
+        ]
+      ]
+    }
+  },
+  "attributes": {
+    "enabled": {
+      "type": "boolean",
+      "default": true
+    },
+    "priority": {
+      "type": "integer",
+      "default": 100,
+      "min": 0
+    },
+    "routeKey": {
+      "type": "string"
+    },
+    "courseSlug": {
+      "type": "string"
+    },
+    "leadType": {
+      "type": "string"
+    },
+    "formId": {
+      "type": "string"
+    },
+    "sigmaIncomingTo": {
+      "type": "string",
+      "required": true
+    },
+    "sigmaTags": {
+      "type": "json"
+    }
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "collectionName": "components_course_blocks_image_sections",
+  "info": {
+    "displayName": "Изображение",
+    "description": "Изображение по URL с подписью"
+  },
+  "attributes": {
+    "title": {
+      "type": "string"
+    },
+    "imageUrl": {
+      "type": "text"
+    },
+    "caption": {
+      "type": "string"
+    }
+  }
+}

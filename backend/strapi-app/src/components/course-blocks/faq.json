@@ -1,0 +1,17 @@
+{
+  "collectionName": "components_course_blocks_faqs",
+  "info": {
+    "displayName": "FAQ",
+    "description": "Блок частых вопросов"
+  },
+  "attributes": {
+    "title": {
+      "type": "string"
+    },
+    "items": {
+      "type": "component",
+      "repeatable": true,
+      "component": "course-blocks.faq-item"
+    }
+  }
+}

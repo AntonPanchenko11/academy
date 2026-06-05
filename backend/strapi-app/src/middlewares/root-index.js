@@ -5,6 +5,7 @@ const path = require('path');
 
 module.exports = (_config, { strapi }) => {
   const indexPath = path.join(strapi.dirs.static.public, 'index.html');
+  const coursePagePath = path.join(strapi.dirs.static.public, 'course-page.html');
   const timetablePath = '/timetable';
   const serviceRoutes = [
     '/admin',
@@ -36,6 +37,22 @@ module.exports = (_config, { strapi }) => {
   };
 
   return async (ctx, next) => {
+    const isCoursePage = /^\/courses\/[^/]+\/?$/.test(ctx.path) || /^\/preview\/courses\/[^/]+\/?$/.test(ctx.path);
+
+    if ((ctx.method === 'GET' || ctx.method === 'HEAD') && isCoursePage) {
+      if (fs.existsSync(coursePagePath)) {
+        ctx.type = 'text/html; charset=utf-8';
+
+        if (ctx.method === 'HEAD') {
+          ctx.status = 200;
+          return;
+        }
+
+        ctx.body = fs.createReadStream(coursePagePath);
+        return;
+      }
+    }
+
     if ((ctx.method === 'GET' || ctx.method === 'HEAD') && ctx.path === timetablePath) {
       if (fs.existsSync(indexPath)) {
         ctx.type = 'text/html; charset=utf-8';

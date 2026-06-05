@@ -5,7 +5,10 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { createStrapi } = require('@strapi/strapi');
 
-const { serializeCourse } = require('../src/utils/tilda-course');
+const {
+  COURSE_CONTENT_BLOCKS_POPULATE,
+  serializeCourse,
+} = require('../src/utils/tilda-course');
 const {
   APP_DIR,
   createTempDatabaseCopy,
@@ -22,6 +25,7 @@ const loadStoredCourse = async (strapi, courseId) => {
     populate: {
       discount: true,
       priceChanges: true,
+      contentBlocks: COURSE_CONTENT_BLOCKS_POPULATE,
     },
   });
 };
@@ -70,6 +74,35 @@ const main = async () => {
         courseLink: `https://example.com/admin-crud-course-${suffix}`,
         catalogImg: `https://static.tildacdn.com/admin-crud-course-${suffix}.jpg`,
         heroImg: `https://static.tildacdn.com/admin-crud-course-${suffix}-tilda.jpg`,
+        contentBlocks: [
+          {
+            __component: 'course-blocks.hero',
+            title: `Hero Admin CRUD ${suffix}`,
+            subtitle: 'Главный экран из Dynamic Zone',
+            statusLabel: 'Редактируемый hero',
+            primaryButtonLabel: 'Подробнее',
+            primaryButtonUrl: `https://example.com/admin-crud-course-${suffix}`,
+            facts: [
+              {
+                label: 'Формат',
+                value: 'Очный',
+              },
+            ],
+          },
+          {
+            __component: 'course-blocks.feature-list',
+            title: 'Что получите',
+            items: [
+              {
+                label: 'Практика',
+                text: 'Разборы и упражнения.',
+              },
+            ],
+          },
+        ],
+      },
+      populate: {
+        contentBlocks: COURSE_CONTENT_BLOCKS_POPULATE,
       },
     });
 
@@ -79,6 +112,11 @@ const main = async () => {
     assert.equal(course.flow, 'admin-flow');
     assert.equal(course.catalogImg, `https://static.tildacdn.com/admin-crud-course-${suffix}.jpg`);
     assert.equal(course.heroImg, `https://static.tildacdn.com/admin-crud-course-${suffix}-tilda.jpg`);
+    assert.equal(course.contentBlocks.length, 2);
+    assert.equal(course.contentBlocks[0].__component, 'course-blocks.hero');
+    assert.equal(course.contentBlocks[0].facts[0].value, 'Очный');
+    assert.equal(course.contentBlocks[1].__component, 'course-blocks.feature-list');
+    assert.equal(course.contentBlocks[1].items[0].label, 'Практика');
 
     const updatedCourse = await courseDocuments.update({
       documentId: course.documentId,
@@ -89,6 +127,17 @@ const main = async () => {
         flow: 'admin-flow-updated',
         catalogImg: `https://static.tildacdn.com/admin-crud-course-${suffix}-updated.jpg`,
         heroImg: `https://static.tildacdn.com/admin-crud-course-${suffix}-updated-tilda.jpg`,
+        contentBlocks: [
+          {
+            __component: 'course-blocks.image-section',
+            title: 'Аудитория',
+            imageUrl: `https://static.tildacdn.com/admin-crud-course-${suffix}-room.jpg`,
+            caption: 'Очный формат',
+          },
+        ],
+      },
+      populate: {
+        contentBlocks: COURSE_CONTENT_BLOCKS_POPULATE,
       },
     });
 
@@ -98,6 +147,12 @@ const main = async () => {
     assert.equal(updatedCourse.flow, 'admin-flow-updated');
     assert.equal(updatedCourse.catalogImg, `https://static.tildacdn.com/admin-crud-course-${suffix}-updated.jpg`);
     assert.equal(updatedCourse.heroImg, `https://static.tildacdn.com/admin-crud-course-${suffix}-updated-tilda.jpg`);
+    assert.equal(updatedCourse.contentBlocks.length, 1);
+    assert.equal(updatedCourse.contentBlocks[0].__component, 'course-blocks.image-section');
+    assert.equal(
+      updatedCourse.contentBlocks[0].imageUrl,
+      `https://static.tildacdn.com/admin-crud-course-${suffix}-room.jpg`
+    );
 
     await assert.rejects(
       () => courseDocuments.create({

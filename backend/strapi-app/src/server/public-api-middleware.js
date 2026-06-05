@@ -11,6 +11,7 @@ const {
   logPublicApiError,
   matchesExactPath,
 } = require('./public-course-api');
+const { createTildaLeadGateway } = require('./tilda-leads-gateway');
 
 const createPublicApiMiddleware = ({ strapi, loadSerializedCourses, checkDatabaseHealth }) => {
   const tildaCourses = createCourseNamespaceHandlers({
@@ -20,6 +21,10 @@ const createPublicApiMiddleware = ({ strapi, loadSerializedCourses, checkDatabas
     resolveQueryBuilder: (query = {}) => query,
     singleQueryBuilder: (query = {}) => query,
     namespace: 'tilda',
+  });
+  const tildaLeadGateway = createTildaLeadGateway({
+    strapi,
+    loadSerializedCourses,
   });
 
   return async (ctx, next) => {
@@ -99,6 +104,16 @@ const createPublicApiMiddleware = ({ strapi, loadSerializedCourses, checkDatabas
 
     if (isReadMethod(ctx.method) && matchesExactPath(ctx, '/api/tilda/courses')) {
       await tildaCourses.respondList(ctx);
+      return;
+    }
+
+    if (ctx.method === 'POST' && matchesExactPath(ctx, '/api/tilda/lead-verification/start')) {
+      await tildaLeadGateway.respondStartVerification(ctx);
+      return;
+    }
+
+    if (ctx.method === 'POST' && matchesExactPath(ctx, '/api/tilda/leads')) {
+      await tildaLeadGateway.respondSubmitLead(ctx);
       return;
     }
 

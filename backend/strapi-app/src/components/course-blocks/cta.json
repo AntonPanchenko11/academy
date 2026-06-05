@@ -1,0 +1,21 @@
+{
+  "collectionName": "components_course_blocks_ctas",
+  "info": {
+    "displayName": "CTA",
+    "description": "Призыв к действию для страницы курса"
+  },
+  "attributes": {
+    "title": {
+      "type": "string"
+    },
+    "text": {
+      "type": "text"
+    },
+    "buttonLabel": {
+      "type": "string"
+    },
+    "buttonUrl": {
+      "type": "string"
+    }
+  }
+}

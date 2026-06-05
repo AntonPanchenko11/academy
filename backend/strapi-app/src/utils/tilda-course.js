@@ -115,8 +115,26 @@ const PUBLIC_COURSE_FIELDS = [
   'courseLink',
   'catalogImg',
   'heroImg',
+  'contentBlocks',
   'coursePath',
 ];
+
+const COURSE_CONTENT_BLOCKS_POPULATE = {
+  on: {
+    'course-blocks.hero': {
+      populate: ['facts'],
+    },
+    'course-blocks.text-section': {},
+    'course-blocks.feature-list': {
+      populate: ['items'],
+    },
+    'course-blocks.faq': {
+      populate: ['items'],
+    },
+    'course-blocks.cta': {},
+    'course-blocks.image-section': {},
+  },
+};
 
 const normalizeBooleanQuery = (value) => {
   const text = toTrimmedString(value, 20).toLowerCase();
@@ -219,6 +237,107 @@ const deriveCourseSlug = (course) => {
   return slugify(course && course.title);
 };
 
+const serializeId = (value) => {
+  return value === undefined || value === null ? null : value;
+};
+
+const serializeFeatureItem = (item) => {
+  return {
+    id: serializeId(item && item.id),
+    label: toTrimmedString(item && item.label, 255),
+    text: toTrimmedString(item && item.text, 2000),
+  };
+};
+
+const serializeFaqItem = (item) => {
+  return {
+    id: serializeId(item && item.id),
+    question: toTrimmedString(item && item.question, 500),
+    answer: toTrimmedString(item && item.answer, 5000),
+  };
+};
+
+const serializeHeroFact = (item) => {
+  return {
+    id: serializeId(item && item.id),
+    label: toTrimmedString(item && item.label, 255),
+    value: toTrimmedString(item && item.value, 500),
+  };
+};
+
+const serializeContentBlock = (block) => {
+  const component = toTrimmedString(block && block.__component, 120);
+  const base = {
+    id: serializeId(block && block.id),
+    __component: component,
+  };
+
+  if (component === 'course-blocks.hero') {
+    return {
+      ...base,
+      title: toTrimmedString(block && block.title, 500),
+      subtitle: toTrimmedString(block && block.subtitle, 2000),
+      statusLabel: toTrimmedString(block && block.statusLabel, 255),
+      imageUrl: toTrimmedString(block && block.imageUrl, 1000),
+      primaryButtonLabel: toTrimmedString(block && block.primaryButtonLabel, 255),
+      primaryButtonUrl: toTrimmedString(block && block.primaryButtonUrl, 1000),
+      priceLabel: toTrimmedString(block && block.priceLabel, 255),
+      facts: (Array.isArray(block && block.facts) ? block.facts : []).map(serializeHeroFact),
+    };
+  }
+
+  if (component === 'course-blocks.text-section') {
+    return {
+      ...base,
+      title: toTrimmedString(block && block.title, 500),
+      body: toTrimmedString(block && block.body, 10000),
+    };
+  }
+
+  if (component === 'course-blocks.feature-list') {
+    return {
+      ...base,
+      title: toTrimmedString(block && block.title, 500),
+      items: (Array.isArray(block && block.items) ? block.items : []).map(serializeFeatureItem),
+    };
+  }
+
+  if (component === 'course-blocks.faq') {
+    return {
+      ...base,
+      title: toTrimmedString(block && block.title, 500),
+      items: (Array.isArray(block && block.items) ? block.items : []).map(serializeFaqItem),
+    };
+  }
+
+  if (component === 'course-blocks.cta') {
+    return {
+      ...base,
+      title: toTrimmedString(block && block.title, 500),
+      text: toTrimmedString(block && block.text, 2000),
+      buttonLabel: toTrimmedString(block && block.buttonLabel, 255),
+      buttonUrl: toTrimmedString(block && block.buttonUrl, 1000),
+    };
+  }
+
+  if (component === 'course-blocks.image-section') {
+    return {
+      ...base,
+      title: toTrimmedString(block && block.title, 500),
+      imageUrl: toTrimmedString(block && block.imageUrl, 1000),
+      caption: toTrimmedString(block && block.caption, 500),
+    };
+  }
+
+  return base;
+};
+
+const serializeContentBlocks = (blocks) => {
+  return (Array.isArray(blocks) ? blocks : [])
+    .map(serializeContentBlock)
+    .filter((block) => block.__component);
+};
+
 const serializeCourse = (course) => {
   const dateParts = buildDateParts(course && course.date);
   const coursePath = extractPathFromCourseLink(course && course.courseLink);
@@ -261,6 +380,7 @@ const serializeCourse = (course) => {
     courseLink: toTrimmedString(course && course.courseLink, 1000),
     catalogImg: toTrimmedString(course && course.catalogImg, 1000),
     heroImg: toTrimmedString(course && course.heroImg, 1000),
+    contentBlocks: serializeContentBlocks(course && course.contentBlocks),
     coursePath,
   };
 };
@@ -419,6 +539,7 @@ const resolveSingleCourse = (courses, query = {}, identifier = '') => {
 };
 
 module.exports = {
+  COURSE_CONTENT_BLOCKS_POPULATE,
   filterCourses,
   resolveSingleCourse,
   serializeCourse,

@@ -9,13 +9,15 @@
 Проект обслуживает две публичные поверхности рендеринга и админку:
 
 1. Страница расписания "Расписание обучения и мероприятий в Академии".
-2. Страницы на Tilda, которые получают данные отдельного курса.
-3. Админка Strapi, через которую администратор управляет курсами, скидками и запланированными изменениями цен.
+2. Страница курса `/courses/{slug}` для предпросмотра `contentBlocks`.
+3. Страницы на Tilda, которые получают данные отдельного курса.
+4. Админка Strapi, через которую администратор управляет курсами, скидками и запланированными изменениями цен.
 
 Текущая целевая архитектура:
 
 - `backend/strapi-app` — единственный backend, CMS и API-источник данных.
 - `index.html` + `frontend-db.js` + `assets/` — встроенная страница расписания, которую отдает сам Strapi.
+- `course-page.html` + `/assets/course-page.*` — renderer страницы курса из `Course.contentBlocks`.
 - `/api/tilda/*` + `/assets/tilda-course-fields.js` — публичный API и helper для Tilda.
 - `/admin` — обязательная operational surface для контент-администратора.
 
@@ -46,7 +48,7 @@ Production-домены:
 Встроенная страница расписания:
 
 - доступна по маршруту `/timetable`;
-- остальные публичные page routes редиректятся на `/timetable`;
+- неизвестные публичные page routes редиректятся на `/timetable`;
 - загружает данные только из `GET /api/courses-feed`;
 - не пересчитывает цены, скидки и derived date fields на клиенте;
 - делит курсы на обычные и `waitlist`;
@@ -59,15 +61,31 @@ Production-домены:
 - `frontend-db.js`
 - `assets/`
 
-### 2. Tilda-интеграция
+### 2. Страница курса
 
-Проект поддерживает только публичное чтение `Course` для Tilda-страниц.
+Страница курса:
+
+- доступна по маршрутам `/courses/{slug}` и `/preview/courses/{slug}`;
+- загружает данные из `GET /api/tilda/courses/{slug}`;
+- запрашивает `contentBlocks` явно;
+- рендерит Dynamic Zone блоки по полю `__component`;
+- безопасно выводит CMS-текст через `textContent`, без вставки raw HTML.
+
+Файлы:
+
+- `course-page.html`
+- `assets/course-page.js`
+- `assets/course-page.css`
+
+### 3. Tilda-интеграция
+
+Проект поддерживает публичное чтение `Course` для Tilda-страниц и прием лидов из HTML-форм Tilda через SIGMA Messaging.
 
 Production-контракт:
 
 - Tilda-страницы опубликованы на `https://modern-psy.ru/`;
 - backend/API и helper загружаются с `https://dbmpa.ru/`;
-- каждая Tilda-страница должна задавать `data-course-slug`, по которому helper получает поля курса.
+- каждая Tilda-страница должна задавать `data-course-slug`, по которому helper получает поля курса и маршрутизирует лид.
 
 Есть:
 
@@ -75,7 +93,10 @@ Production-контракт:
 - `GET /api/tilda/courses`
 - `GET /api/tilda/courses/:identifier`
 - `GET /api/tilda/courses/resolve?path=/course-page`
+- `POST /api/tilda/lead-verification/start`
+- `POST /api/tilda/leads`
 - `/assets/tilda-course-fields.js`
+- `/assets/tilda-lead-gateway.js`
 
 Helper:
 
@@ -115,6 +136,7 @@ Helper:
 - `courseLink`
 - `catalogImg`
 - `heroImg`
+- `contentBlocks` — Dynamic Zone для контентных секций страницы курса
 
 ### Discount
 
@@ -169,6 +191,13 @@ Helper:
 
 Возвращает опубликованные курсы в публичном DTO.
 
+### Страница курса
+
+- `GET /courses/{slug}`
+- `GET /preview/courses/{slug}`
+
+Оба маршрута отдают `course-page.html`. Renderer берет `{slug}` из URL, запрашивает `GET /api/tilda/courses/{slug}?fields=title,comment,courseStatus,dateLabel,studyDays,hoursLabel,price,educationDocument,courseLink,heroImg,contentBlocks` и рисует блоки Dynamic Zone по `__component`.
+
 ### Tilda API
 
 - `GET /api/tilda/courses`
@@ -215,6 +244,7 @@ Helper:
 - `courseLink`
 - `catalogImg`
 - `heroImg`
+- `contentBlocks`
 - `coursePath`
 
 Правило проекта:
@@ -264,6 +294,7 @@ Helper:
 - `heroImg`
 - `coursePath`
 - `nextPriceChange`
+- `contentBlocks` — только если Tilda-странице нужны контентные блоки курса
 
 Пример:
 
@@ -277,6 +308,34 @@ Helper:
   }
 }
 ```
+
+### Dynamic Zone `contentBlocks`
+
+`Course.contentBlocks` хранит контентные секции страницы курса в порядке, выбранном редактором в Strapi.
+
+Доступные компоненты:
+
+- `course-blocks.text-section` — `title`, `body`
+- `course-blocks.hero` — `title`, `subtitle`, `statusLabel`, `imageUrl`, `primaryButtonLabel`, `primaryButtonUrl`, `priceLabel`, `facts[]` с `label`, `value`
+- `course-blocks.feature-list` — `title`, `items[]` с `label`, `text`
+- `course-blocks.faq` — `title`, `items[]` с `question`, `answer`
+- `course-blocks.cta` — `title`, `text`, `buttonLabel`, `buttonUrl`
+- `course-blocks.image-section` — `title`, `imageUrl`, `caption`
+
+Для Tilda/API поле нужно запрашивать явно:
+
+```http
+GET /api/tilda/courses/{slug}?fields=title,contentBlocks
+```
+
+Для визуального предпросмотра откройте:
+
+```http
+GET /courses/{slug}
+```
+
+Hero-блок тоже хранится в `contentBlocks`. Для существующих курсов его нужно один раз перенести из обычных полей курса maintenance-командой:
+Renderer `/courses/{slug}` не создает системный hero по умолчанию. Если нужен hero на странице, редактор должен добавить блок `Hero курса` в `contentBlocks`; если hero-блока нет, страница начнется со следующего блока.
 
 ## Как оформить блок в Tilda
 
@@ -315,6 +374,70 @@ Helper:
 - запросит курс по `slug`;
 - соберет `fields` из нужных DOM-узлов;
 - подставит значения в размеченные элементы.
+
+### Форма лида с проверочным кодом и SIGMA Messaging
+
+Для HTML-блоков Tilda есть отдельный gateway:
+
+- `POST /api/tilda/lead-verification/start` — отправить код пользователю;
+- `POST /api/tilda/leads` — проверить код, сохранить лид и передать его в SIGMA как входящее сообщение через `sendingsIncoming`;
+- `/assets/tilda-lead-gateway.js` — frontend-helper для формы.
+
+Поддерживаемые каналы кода:
+
+- `sms`
+- `telegram` — на SIGMA отправляется как `telegramcode`
+- `vk`
+- `flashcall`
+
+Пример HTML-блока:
+
+```html
+<div
+  class="js-academy-tilda-lead"
+  data-api-base="https://dbmpa.ru"
+  data-course-slug="act"
+  data-lead-type="course_request"
+  data-sigma-route="courses"
+  data-lead-token="PUBLIC_FORM_TOKEN"
+>
+  <form id="course-main-form">
+    <input name="name" placeholder="Имя">
+    <input name="phone" placeholder="Телефон" required>
+    <input name="email" placeholder="Email">
+
+    <label><input type="radio" name="verificationChannel" value="sms" checked> SMS</label>
+    <label><input type="radio" name="verificationChannel" value="telegram"> Telegram</label>
+    <label><input type="radio" name="verificationChannel" value="vk"> VK</label>
+    <label><input type="radio" name="verificationChannel" value="flashcall"> FlashCall</label>
+
+    <button type="button" data-lead-verification-start>Получить код</button>
+
+    <div data-lead-verification-code-wrap hidden>
+      <input name="verificationCode" inputmode="numeric" placeholder="Код">
+    </div>
+
+    <div data-lead-status></div>
+    <button type="submit">Отправить заявку</button>
+  </form>
+</div>
+<script src="https://dbmpa.ru/assets/tilda-lead-gateway.js"></script>
+```
+
+Обязательные production-переменные:
+
+```env
+TILDA_LEADS_TOKEN=replace_me_public_form_token
+TILDA_LEAD_CODE_SECRET=replace_me_code_hash_secret
+SIGMA_API_BASE_URL=https://user.sigmasms.ru/api
+SIGMA_API_TOKEN=replace_me_sigma_static_token
+SIGMA_INCOMING_TO=ModernPsy
+SIGMA_CODE_SENDER=Academy
+```
+
+`SIGMA_API_TOKEN` нельзя вставлять в Tilda или frontend-код. Он должен быть только в окружении backend. `TILDA_LEADS_TOKEN` используется helper'ом в HTML, поэтому это публичный токен формы, а не секрет уровня SIGMA.
+
+Маршрутизацию можно настроить в Strapi через `Маршрут лида`: правило выбирается по `routeKey`, `courseSlug`, `leadType` и `formId`, а затем задает `sigmaIncomingTo`. Если подходящего правила нет, используется `SIGMA_INCOMING_TO`.
 
 ### Способы идентификации курса
 

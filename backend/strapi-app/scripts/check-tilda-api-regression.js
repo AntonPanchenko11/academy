@@ -4,7 +4,10 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const { createStrapi } = require('@strapi/strapi');
 
-const { serializeCourse } = require('../src/utils/tilda-course');
+const {
+  COURSE_CONTENT_BLOCKS_POPULATE,
+  serializeCourse,
+} = require('../src/utils/tilda-course');
 const { createPublicApiMiddleware } = require('../src/server/public-api-middleware');
 const {
   APP_DIR,
@@ -30,6 +33,7 @@ const createCourse = async (documents, suffix, params = {}) => {
       heroImg: params.heroImg || null,
       slug: params.slug,
       comment: params.comment || null,
+      contentBlocks: Array.isArray(params.contentBlocks) ? params.contentBlocks : [],
     },
   });
 };
@@ -39,6 +43,7 @@ const loadSerializedCourses = async (strapi) => {
     populate: {
       discount: true,
       priceChanges: true,
+      contentBlocks: COURSE_CONTENT_BLOCKS_POPULATE,
     },
     orderBy: [{ date: 'asc' }, { title: 'asc' }],
   });
@@ -119,6 +124,39 @@ const main = async () => {
       heroImg: `https://static.tildacdn.com/tilda-published-${suffix}-source.jpg`,
       comment: 'published comment',
       basePrice: 1400,
+      contentBlocks: [
+        {
+          __component: 'course-blocks.hero',
+          title: 'Hero из Dynamic Zone',
+          subtitle: 'Редактируемый главный экран',
+          statusLabel: 'Новый поток',
+          imageUrl: `https://static.tildacdn.com/tilda-published-${suffix}-hero-dz.jpg`,
+          primaryButtonLabel: 'Оставить заявку',
+          primaryButtonUrl: `https://example.com/tilda-published-${suffix}`,
+          priceLabel: 'от 1400 ₽',
+          facts: [
+            {
+              label: 'Формат',
+              value: 'Онлайн',
+            },
+          ],
+        },
+        {
+          __component: 'course-blocks.text-section',
+          title: 'О курсе',
+          body: 'Описание курса для Tilda',
+        },
+        {
+          __component: 'course-blocks.faq',
+          title: 'FAQ',
+          items: [
+            {
+              question: 'Можно оплатить онлайн?',
+              answer: 'Да, можно.',
+            },
+          ],
+        },
+      ],
     });
 
     const waitlistCourse = await createCourse(courseDocuments, `${suffix}-wait`, {
@@ -185,6 +223,21 @@ const main = async () => {
       heroImg: `https://static.tildacdn.com/tilda-published-${suffix}-source.jpg`,
       coursePath: `/tilda-published-${suffix}`,
     });
+
+    const singleWithBlocksCtx = await runRequest(middleware, {
+      path: `/api/tilda/courses/${encodeURIComponent(`tilda-published-${suffix}`)}`,
+      query: { fields: 'title,contentBlocks' },
+    });
+    assert.equal(singleWithBlocksCtx.body.data.title, `Tilda Published ${suffix}`);
+    assert.equal(singleWithBlocksCtx.body.data.contentBlocks.length, 3);
+    assert.deepEqual(
+      singleWithBlocksCtx.body.data.contentBlocks.map((block) => block.__component),
+      ['course-blocks.hero', 'course-blocks.text-section', 'course-blocks.faq']
+    );
+    assert.equal(singleWithBlocksCtx.body.data.contentBlocks[0].title, 'Hero из Dynamic Zone');
+    assert.equal(singleWithBlocksCtx.body.data.contentBlocks[0].facts[0].label, 'Формат');
+    assert.equal(singleWithBlocksCtx.body.data.contentBlocks[1].title, 'О курсе');
+    assert.equal(singleWithBlocksCtx.body.data.contentBlocks[2].items[0].question, 'Можно оплатить онлайн?');
 
     const singleByDocumentIdCtx = await runRequest(middleware, {
       path: `/api/tilda/courses/${encodeURIComponent(publishedCourse.documentId)}`,

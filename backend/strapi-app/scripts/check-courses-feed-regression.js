@@ -4,7 +4,10 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 
 const { createPublicApiMiddleware } = require('../src/server/public-api-middleware');
-const { serializeCourse } = require('../src/utils/tilda-course');
+const {
+  COURSE_CONTENT_BLOCKS_POPULATE,
+  serializeCourse,
+} = require('../src/utils/tilda-course');
 const { createTempDatabaseCopy, loadEnvFile, loadStrapiForScript } = require('./lib/strapi-script-helpers');
 const COURSE_UID = 'api::course.course';
 
@@ -25,6 +28,7 @@ const createCourse = async (documents, suffix, params = {}) => {
       heroImg: params.heroImg || null,
       slug: params.slug,
       comment: params.comment || null,
+      contentBlocks: Array.isArray(params.contentBlocks) ? params.contentBlocks : [],
     },
   });
 };
@@ -34,6 +38,7 @@ const loadSerializedCourses = async (strapi) => {
     populate: {
       discount: true,
       priceChanges: true,
+      contentBlocks: COURSE_CONTENT_BLOCKS_POPULATE,
     },
     orderBy: [{ date: 'asc' }, { title: 'asc' }],
   });
@@ -99,6 +104,15 @@ const main = async () => {
       heroImg: `https://static.tildacdn.com/schedule-published-${suffix}-source.jpg`,
       basePrice: 4100,
       date: '2026-07-12',
+      contentBlocks: [
+        {
+          __component: 'course-blocks.cta',
+          title: 'Записаться на курс',
+          text: 'Оставьте заявку на странице курса.',
+          buttonLabel: 'Записаться',
+          buttonUrl: `https://example.com/schedule-published-${suffix}`,
+        },
+      ],
     });
 
     await createCourse(courseDocuments, `${suffix}-wait`, {
@@ -142,6 +156,7 @@ const main = async () => {
         'basePrice',
         'catalogImg',
         'comment',
+        'contentBlocks',
         'courseLink',
         'coursePath',
         'courseStatus',
@@ -172,6 +187,9 @@ const main = async () => {
     );
     assert.equal(publishedCourse.catalogImg, `https://static.tildacdn.com/schedule-published-${suffix}.jpg`);
     assert.equal(publishedCourse.heroImg, `https://static.tildacdn.com/schedule-published-${suffix}-source.jpg`);
+    assert.equal(publishedCourse.contentBlocks.length, 1);
+    assert.equal(publishedCourse.contentBlocks[0].__component, 'course-blocks.cta');
+    assert.equal(publishedCourse.contentBlocks[0].buttonLabel, 'Записаться');
     assert.equal(publishedCourse.price, 4100);
     assert.equal(publishedCourse.publish, true);
 

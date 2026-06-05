@@ -11,6 +11,7 @@ COPY backend/strapi-app ./
 
 # Frontend is bundled into Strapi public directory, so one container serves both.
 COPY index.html ./public/index.html
+COPY course-page.html ./public/course-page.html
 COPY frontend-db.js ./public/frontend-db.js
 COPY assets ./public/assets
 

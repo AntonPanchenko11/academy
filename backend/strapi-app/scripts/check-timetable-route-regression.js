@@ -47,9 +47,11 @@ const main = async () => {
   const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'academy-timetable-route-'));
   const publicDir = path.join(tempDir, 'public');
   const indexPath = path.join(publicDir, 'index.html');
+  const coursePagePath = path.join(publicDir, 'course-page.html');
 
   fs.mkdirSync(publicDir, { recursive: true });
   fs.writeFileSync(indexPath, '<h1>Расписание обучения и мероприятий в Академии</h1>');
+  fs.writeFileSync(coursePagePath, '<h1>Страница курса</h1>');
 
   try {
     const middleware = createRootIndexMiddleware({}, {
@@ -106,9 +108,24 @@ const main = async () => {
       requestPath: '/courses/acting',
     });
     assert.equal(nestedPageGet.nextCalled, false);
-    assert.equal(nestedPageGet.ctx.status, 302);
-    assert.equal(nestedPageGet.ctx.redirectUrl, '/timetable');
-    assert.equal(nestedPageGet.ctx.body, undefined);
+    assert.equal(nestedPageGet.ctx.type, 'text/html; charset=utf-8');
+    assert.equal(await readStream(nestedPageGet.ctx.body), '<h1>Страница курса</h1>');
+
+    const previewCourseGet = await runRequest(middleware, {
+      requestPath: '/preview/courses/acting',
+    });
+    assert.equal(previewCourseGet.nextCalled, false);
+    assert.equal(previewCourseGet.ctx.type, 'text/html; charset=utf-8');
+    assert.equal(await readStream(previewCourseGet.ctx.body), '<h1>Страница курса</h1>');
+
+    const courseHead = await runRequest(middleware, {
+      method: 'HEAD',
+      requestPath: '/courses/acting',
+    });
+    assert.equal(courseHead.nextCalled, false);
+    assert.equal(courseHead.ctx.status, 200);
+    assert.equal(courseHead.ctx.type, 'text/html; charset=utf-8');
+    assert.equal(courseHead.ctx.body, undefined);
 
     const adminGet = await runRequest(middleware, {
       requestPath: '/admin',

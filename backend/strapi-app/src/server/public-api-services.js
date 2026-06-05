@@ -1,6 +1,9 @@
 'use strict';
 
-const { serializeCourse } = require('../utils/tilda-course');
+const {
+  COURSE_CONTENT_BLOCKS_POPULATE,
+  serializeCourse,
+} = require('../utils/tilda-course');
 const { COURSE_PRICE_CHANGES_FIELD } = require('../utils/course-price-increase');
 const {
   normalizeAbsoluteUrl,
@@ -13,6 +16,7 @@ const loadSerializedCourses = async (strapi) => {
     populate: {
       discount: true,
       [COURSE_PRICE_CHANGES_FIELD]: true,
+      contentBlocks: COURSE_CONTENT_BLOCKS_POPULATE,
     },
     orderBy: [{ date: 'asc' }, { title: 'asc' }],
   });

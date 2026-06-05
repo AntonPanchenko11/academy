@@ -1,0 +1,115 @@
+{
+  "kind": "collectionType",
+  "collectionName": "tilda_lead_verifications",
+  "info": {
+    "singularName": "tilda-lead-verification",
+    "pluralName": "tilda-lead-verifications",
+    "displayName": "Tilda проверка лида",
+    "description": "Кодовая проверка контакта перед отправкой заявки из Tilda"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "config": {
+    "layouts": {
+      "list": [
+        "id",
+        "status",
+        "channel",
+        "phone",
+        "expiresAt",
+        "attempts",
+        "createdAt"
+      ],
+      "edit": [
+        [
+          {
+            "name": "status",
+            "size": 3
+          },
+          {
+            "name": "channel",
+            "size": 3
+          },
+          {
+            "name": "attempts",
+            "size": 3
+          },
+          {
+            "name": "sigmaSendingId",
+            "size": 3
+          }
+        ],
+        [
+          {
+            "name": "phone",
+            "size": 6
+          },
+          {
+            "name": "expiresAt",
+            "size": 6
+          }
+        ],
+        [
+          {
+            "name": "codeHash",
+            "size": 12
+          }
+        ],
+        [
+          {
+            "name": "lastError",
+            "size": 12
+          }
+        ]
+      ]
+    }
+  },
+  "attributes": {
+    "phone": {
+      "type": "string",
+      "required": true
+    },
+    "channel": {
+      "type": "enumeration",
+      "enum": [
+        "sms",
+        "telegram",
+        "vk",
+        "flashcall"
+      ],
+      "required": true
+    },
+    "status": {
+      "type": "enumeration",
+      "enum": [
+        "pending",
+        "sent",
+        "confirmed",
+        "failed",
+        "expired"
+      ],
+      "default": "pending",
+      "required": true
+    },
+    "codeHash": {
+      "type": "string",
+      "required": true
+    },
+    "expiresAt": {
+      "type": "datetime",
+      "required": true
+    },
+    "attempts": {
+      "type": "integer",
+      "default": 0,
+      "min": 0
+    },
+    "sigmaSendingId": {
+      "type": "string"
+    },
+    "lastError": {
+      "type": "text"
+    }
+  }
+}

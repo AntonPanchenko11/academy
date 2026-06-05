@@ -1,0 +1,15 @@
+{
+  "collectionName": "components_course_blocks_text_sections",
+  "info": {
+    "displayName": "Текстовый блок",
+    "description": "Заголовок и текстовая секция страницы курса"
+  },
+  "attributes": {
+    "title": {
+      "type": "string"
+    },
+    "body": {
+      "type": "richtext"
+    }
+  }
+}

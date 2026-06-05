@@ -5,7 +5,10 @@ const fs = require('node:fs');
 const Database = require('better-sqlite3');
 const { createStrapi } = require('@strapi/strapi');
 
-const { serializeCourse } = require('../src/utils/tilda-course');
+const {
+  COURSE_CONTENT_BLOCKS_POPULATE,
+  serializeCourse,
+} = require('../src/utils/tilda-course');
 const { syncContentManagerConfig } = require('../src/utils/content-manager-config');
 const { applyDueCoursePriceChanges } = require('../src/utils/course-price-increase');
 const {
@@ -133,6 +136,7 @@ const loadStoredCourse = async (strapi, courseId) => {
     populate: {
       discount: true,
       priceChanges: true,
+      contentBlocks: COURSE_CONTENT_BLOCKS_POPULATE,
     },
   });
 };
@@ -184,6 +188,10 @@ const main = async () => {
       'Expected flow to be present in course edit layout'
     );
     assert.ok(
+      syncedEditFields.includes('contentBlocks'),
+      'Expected contentBlocks to be present in course edit layout'
+    );
+    assert.ok(
       !syncedEditFields.includes('scheduledPriceIncreases'),
       'Expected scheduledPriceIncreases to be removed from course edit layout'
     );
@@ -223,6 +231,12 @@ const main = async () => {
         && syncedCourseConfig.metadatas.flow.edit.label,
       'Поток'
     );
+    assert.equal(
+      syncedCourseConfig.metadatas && syncedCourseConfig.metadatas.contentBlocks
+        && syncedCourseConfig.metadatas.contentBlocks.edit
+        && syncedCourseConfig.metadatas.contentBlocks.edit.label,
+      'Контентные блоки страницы курса'
+    );
 
     const seedCourse = await createRegressionCourse(strapi);
     const documents = strapi.documents(COURSE_UID);
@@ -232,10 +246,22 @@ const main = async () => {
       documentId: seedCourse.documentId,
       data: {
         comment: 'regression-simple-update',
+        contentBlocks: [
+          {
+            __component: 'course-blocks.text-section',
+            title: 'Регрессионный блок',
+            body: 'Текст для проверки Dynamic Zone',
+          },
+        ],
+      },
+      populate: {
+        contentBlocks: COURSE_CONTENT_BLOCKS_POPULATE,
       },
     });
 
     assert.equal(simpleUpdate.comment, 'regression-simple-update');
+    assert.equal(simpleUpdate.contentBlocks.length, 1);
+    assert.equal(simpleUpdate.contentBlocks[0].__component, 'course-blocks.text-section');
 
     const duplicateId = await insertDuplicateCourseRow(strapi, simpleUpdate);
     assert.ok(duplicateId, 'Expected duplicate course row to be inserted for uniqueness regression');

@@ -23,6 +23,10 @@ const COURSE_TEXT_FIELDS = [
     label: 'Поток',
   },
 ];
+const COURSE_CONTENT_BLOCKS_FIELD = {
+  name: 'contentBlocks',
+  label: 'Контентные блоки страницы курса',
+};
 const COURSE_PRICE_CHANGES_FIELD = 'priceChanges';
 const LEGACY_COURSE_FIELDS = new Set(['priceIncreases', 'scheduledIncreaseIds', 'scheduledPriceIncreases']);
 
@@ -85,7 +89,16 @@ const normalizeCourseEditLayout = (rows) => {
     rowsWithTextFields.push(textFieldsToInsert.map((field) => ({ name: field.name, size: 4 })));
   }
 
-  return [...rowsWithTextFields, ...imageRows, [{ name: COURSE_PRICE_CHANGES_FIELD, size: 12 }]];
+  const contentBlocksRows = normalizedRows.some((row) => row.some((item) => item.name === COURSE_CONTENT_BLOCKS_FIELD.name))
+    ? []
+    : [[{ name: COURSE_CONTENT_BLOCKS_FIELD.name, size: 12 }]];
+
+  return [
+    ...rowsWithTextFields,
+    ...imageRows,
+    ...contentBlocksRows,
+    [{ name: COURSE_PRICE_CHANGES_FIELD, size: 12 }],
+  ];
 };
 
 const normalizeCourseListLayout = (fields) => {
@@ -123,7 +136,7 @@ const syncCourseConfig = async (strapi) => {
   if (!row) return { skipped: true, reason: 'missing-course-config' };
 
   const current = parseJson(row.value, {});
-  const configurableFields = [...COURSE_IMAGE_FIELDS, ...COURSE_TEXT_FIELDS];
+  const configurableFields = [...COURSE_IMAGE_FIELDS, ...COURSE_TEXT_FIELDS, COURSE_CONTENT_BLOCKS_FIELD];
   const fieldMetadatas = configurableFields.reduce((acc, field) => {
     acc[field.name] = {
       ...(current && current.metadatas && current.metadatas[field.name]

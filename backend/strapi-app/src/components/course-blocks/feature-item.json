@@ -1,0 +1,16 @@
+{
+  "collectionName": "components_course_blocks_feature_items",
+  "info": {
+    "displayName": "Feature item",
+    "description": "Пункт списка преимуществ"
+  },
+  "attributes": {
+    "label": {
+      "type": "string",
+      "required": true
+    },
+    "text": {
+      "type": "text"
+    }
+  }
+}

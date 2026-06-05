@@ -1,0 +1,17 @@
+{
+  "collectionName": "components_course_blocks_feature_lists",
+  "info": {
+    "displayName": "Список преимуществ",
+    "description": "Повторяемый список преимуществ или результатов обучения"
+  },
+  "attributes": {
+    "title": {
+      "type": "string"
+    },
+    "items": {
+      "type": "component",
+      "repeatable": true,
+      "component": "course-blocks.feature-item"
+    }
+  }
+}
