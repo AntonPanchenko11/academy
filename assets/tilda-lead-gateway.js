@@ -128,6 +128,60 @@
     });
   }
 
+  function getJson(url) {
+    return fetch(url, {
+      method: 'GET',
+      headers: {
+        Accept: 'application/json'
+      }
+    }).then(function (response) {
+      return response.json().catch(function () {
+        return {};
+      }).then(function (body) {
+        if (!response.ok || body.ok === false) {
+          throw new Error(body.error || 'Request failed.');
+        }
+        return body;
+      });
+    });
+  }
+
+  function loadVerificationChannels(root, form) {
+    var apiBase = resolveApiBase(root);
+    var token = trim(root.getAttribute('data-lead-token'));
+    var url = apiBase + '/api/tilda/lead-verification/channels';
+    if (token) url += '?token=' + encodeURIComponent(token);
+
+    return getJson(url).then(function (body) {
+      var channels = body.channels || {};
+      var inputs = form.querySelectorAll('[name="verificationChannel"]');
+      var firstEnabled = null;
+      var checkedEnabled = null;
+
+      for (var i = 0; i < inputs.length; i += 1) {
+        var input = inputs[i];
+        var enabled = channels[input.value] === true;
+        input.disabled = !enabled;
+
+        var label = input.closest ? input.closest('label') : null;
+        if (label) {
+          label.setAttribute('data-channel-enabled', enabled ? 'true' : 'false');
+          label.setAttribute('title', enabled ? '' : 'Канал пока не настроен');
+        }
+
+        if (enabled && !firstEnabled) firstEnabled = input;
+        if (enabled && input.checked) checkedEnabled = input;
+      }
+
+      if (!checkedEnabled && firstEnabled) firstEnabled.checked = true;
+      if (!firstEnabled) {
+        setStatus(root, 'Нет доступных способов отправки кода.', 'error');
+      }
+    }).catch(function () {
+      // The start endpoint still validates the selected channel server-side.
+    });
+  }
+
   function toggleCodeInput(root, visible) {
     var wrap = root.querySelector(CODE_WRAP_SELECTOR);
     if (wrap) wrap.hidden = !visible;
@@ -236,6 +290,7 @@
 
     root.__academyTildaLeadBound = true;
     toggleCodeInput(root, false);
+    loadVerificationChannels(root, form);
 
     var startButton = root.querySelector(START_SELECTOR);
     if (startButton) {

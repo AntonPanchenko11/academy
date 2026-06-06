@@ -112,6 +112,11 @@ const createPublicApiMiddleware = ({ strapi, loadSerializedCourses, checkDatabas
       return;
     }
 
+    if (isReadMethod(ctx.method) && matchesExactPath(ctx, '/api/tilda/lead-verification/channels')) {
+      tildaLeadGateway.respondVerificationChannels(ctx);
+      return;
+    }
+
     if (ctx.method === 'POST' && matchesExactPath(ctx, '/api/tilda/leads')) {
       await tildaLeadGateway.respondSubmitLead(ctx);
       return;

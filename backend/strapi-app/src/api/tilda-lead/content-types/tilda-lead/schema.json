@@ -15,10 +15,12 @@
       "list": [
         "id",
         "status",
+        "bitrixStatus",
         "name",
         "phone",
         "courseSlug",
         "leadType",
+        "bitrixLeadId",
         "sigmaIncomingId",
         "createdAt"
       ],
@@ -39,6 +41,20 @@
           {
             "name": "sigmaIncomingId",
             "size": 3
+          }
+        ],
+        [
+          {
+            "name": "bitrixStatus",
+            "size": 3
+          },
+          {
+            "name": "bitrixLeadId",
+            "size": 3
+          },
+          {
+            "name": "bitrixLastError",
+            "size": 6
           }
         ],
         [
@@ -121,6 +137,16 @@
         ],
         [
           {
+            "name": "bitrixRequest",
+            "size": 6
+          },
+          {
+            "name": "bitrixResponse",
+            "size": 6
+          }
+        ],
+        [
+          {
             "name": "rawPayload",
             "size": 12
           }
@@ -196,6 +222,19 @@
     "sigmaIncomingId": {
       "type": "string"
     },
+    "bitrixStatus": {
+      "type": "enumeration",
+      "enum": [
+        "disabled",
+        "pending",
+        "sent",
+        "failed"
+      ],
+      "default": "disabled"
+    },
+    "bitrixLeadId": {
+      "type": "string"
+    },
     "idempotencyKey": {
       "type": "string"
     },
@@ -207,6 +246,15 @@
     },
     "sigmaResponse": {
       "type": "json"
+    },
+    "bitrixRequest": {
+      "type": "json"
+    },
+    "bitrixResponse": {
+      "type": "json"
+    },
+    "bitrixLastError": {
+      "type": "text"
     },
     "lastError": {
       "type": "text"

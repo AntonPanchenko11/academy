@@ -380,7 +380,7 @@ Renderer `/courses/{slug}` не создает системный hero по ум
 Для HTML-блоков Tilda есть отдельный gateway:
 
 - `POST /api/tilda/lead-verification/start` — отправить код пользователю;
-- `POST /api/tilda/leads` — проверить код, сохранить лид и передать его в SIGMA как входящее сообщение через `sendingsIncoming`;
+- `POST /api/tilda/leads` — проверить код, сохранить лид, создать лид в Bitrix24 и передать заявку в SIGMA как входящее сообщение через `sendingsIncoming`;
 - `/assets/tilda-lead-gateway.js` — frontend-helper для формы.
 
 Поддерживаемые каналы кода:
@@ -435,10 +435,26 @@ TILDA_LEAD_IP_RATE_LIMIT_MAX=8
 SIGMA_API_BASE_URL=https://user.sigmasms.ru/api
 SIGMA_API_TOKEN=replace_me_sigma_static_token
 SIGMA_INCOMING_TO=ModernPsy
-SIGMA_CODE_SENDER=Academy
+SIGMA_SMS_SENDER=replace_with_registered_sms_sender
+SIGMA_TELEGRAM_SENDER=-
+SIGMA_VK_SENDER=replace_with_registered_vk_sender
+SIGMA_FLASHCALL_SENDER=replace_with_registered_flashcall_sender
+BITRIX24_WEBHOOK_BASE_URL=https://your-domain.bitrix24.ru/rest/USER_ID/WEBHOOK_CODE
+BITRIX24_CREATE_LEADS=true
+BITRIX24_SOURCE_ID=WEB
+BITRIX24_ASSIGNED_BY_ID=
 ```
 
-`SIGMA_API_TOKEN` нельзя вставлять в Tilda или frontend-код. Он должен быть только в окружении backend. `TILDA_LEADS_TOKEN` используется helper'ом в HTML, поэтому это публичный токен формы, а не секрет уровня SIGMA.
+`SIGMA_API_TOKEN` и `BITRIX24_WEBHOOK_BASE_URL` нельзя вставлять в Tilda или frontend-код. Они должны быть только в окружении backend. `TILDA_LEADS_TOKEN` используется helper'ом в HTML, поэтому это публичный токен формы, а не секрет уровня SIGMA/Bitrix.
+
+`SIGMA_SMS_SENDER`, `SIGMA_VK_SENDER` и `SIGMA_FLASHCALL_SENDER` должны содержать точные sender-имена, зарегистрированные и разрешенные в личном кабинете SIGMA для соответствующего канала. Телефон пользователя является `recipient` и не заменяет sender. Helper запрашивает `GET /api/tilda/lead-verification/channels` и отключает в форме каналы без настроенного sender.
+
+После успешной проверки кода backend:
+
+1. сохраняет лид в Strapi;
+2. создает лид в Bitrix24 методом `crm.lead.add`;
+3. отправляет входящее сообщение в SIGMA методом `sendingsIncoming`;
+4. сохраняет `bitrixLeadId`, `bitrixStatus`, `sigmaIncomingId`, request/response и ошибки доставки.
 
 Защита формы:
 

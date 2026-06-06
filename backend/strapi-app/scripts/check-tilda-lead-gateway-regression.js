@@ -3,9 +3,11 @@
 const assert = require('node:assert/strict');
 
 const {
+  buildBitrixLeadPayload,
   buildIncomingLeadPayload,
   buildVerificationSendingPayload,
   createTildaLeadGateway,
+  getVerificationChannelConfig,
   normalizePhone,
 } = require('../src/server/tilda-leads-gateway');
 
@@ -94,9 +96,14 @@ const main = async () => {
   process.env.TILDA_LEADS_TOKEN = 'form-token';
   process.env.SIGMA_API_TOKEN = 'sigma-token';
   process.env.SIGMA_INCOMING_TO = 'ModernPsy';
-  process.env.SIGMA_CODE_SENDER = 'Academy';
+  process.env.SIGMA_SMS_SENDER = 'RegisteredSmsSender';
+  process.env.SIGMA_VK_SENDER = 'RegisteredVkSender';
+  process.env.SIGMA_FLASHCALL_SENDER = 'RegisteredFlashSender';
+  process.env.SIGMA_TELEGRAM_SENDER = '-';
   process.env.TILDA_LEAD_CODE_SECRET = 'test-secret';
   process.env.TILDA_LEAD_CODE_COOLDOWN_SECONDS = '1';
+  process.env.BITRIX24_WEBHOOK_BASE_URL = 'https://example.bitrix24.ru/rest/1/webhook';
+  process.env.BITRIX24_CREATE_LEADS = 'true';
 
   const queries = {
     'api::tilda-lead.tilda-lead': createMockQuery(),
@@ -124,6 +131,13 @@ const main = async () => {
       return {
         ok: true,
         json: async () => ({ id: 'sigma-code-id', status: 'pending' }),
+      };
+    }
+
+    if (url.endsWith('/crm.lead.add')) {
+      return {
+        ok: true,
+        json: async () => ({ result: 321 }),
       };
     }
 
@@ -172,6 +186,63 @@ const main = async () => {
     },
   });
 
+  assert.deepEqual(buildVerificationSendingPayload({
+    phone: '+79991234567',
+    channel: 'sms',
+    code: '1234',
+  }, {
+    sigmaSmsSender: 'RegisteredSmsSender',
+  }), {
+    recipient: '+79991234567',
+    type: 'sms',
+    payload: {
+      sender: 'RegisteredSmsSender',
+      text: 'Код подтверждения: 1234',
+    },
+  });
+
+  assert.deepEqual(buildVerificationSendingPayload({
+    phone: '+79991234567',
+    channel: 'vk',
+    code: '1234',
+  }, {
+    sigmaVkSender: 'RegisteredVkSender',
+  }), {
+    recipient: '+79991234567',
+    type: 'vk',
+    payload: {
+      sender: 'RegisteredVkSender',
+      text: 'Код подтверждения: 1234',
+    },
+  });
+
+  assert.deepEqual(buildVerificationSendingPayload({
+    phone: '+79991234567',
+    channel: 'flashcall',
+    code: '1234',
+  }, {
+    sigmaFlashcallSender: 'RegisteredFlashSender',
+  }), {
+    recipient: '+79991234567',
+    type: 'flashcall',
+    payload: {
+      sender: 'RegisteredFlashSender',
+      text: '1234',
+    },
+  });
+
+  assert.deepEqual(getVerificationChannelConfig({
+    sigmaSmsSender: '',
+    sigmaTelegramSender: '-',
+    sigmaVkSender: '',
+    sigmaFlashcallSender: '',
+  }), {
+    sms: { enabled: false, requiredEnv: 'SIGMA_SMS_SENDER' },
+    telegram: { enabled: true, requiredEnv: 'SIGMA_TELEGRAM_SENDER' },
+    vk: { enabled: false, requiredEnv: 'SIGMA_VK_SENDER' },
+    flashcall: { enabled: false, requiredEnv: 'SIGMA_FLASHCALL_SENDER' },
+  });
+
   const startCtx = createMockCtx({
     path: '/api/tilda/lead-verification/start',
     headers: { 'X-Tilda-Lead-Token': 'form-token' },
@@ -195,6 +266,7 @@ const main = async () => {
       name: 'Иван',
       phone: '+79991234567',
       email: 'IVAN@EXAMPLE.COM',
+      comment: 'Хочу узнать детали',
       courseSlug: 'act',
       formId: 'main-form',
       pageUrl: 'https://modern-psy.ru/act',
@@ -205,10 +277,17 @@ const main = async () => {
   assert.equal(leadCtx.status, 202);
   assert.equal(leadCtx.body.ok, true);
   assert.equal(leadCtx.body.status, 'sent');
+  assert.equal(leadCtx.body.bitrixStatus, 'sent');
+  assert.equal(leadCtx.body.bitrixLeadId, '321');
   assert.equal(leadCtx.body.sigmaIncomingId, 'sigma-incoming-id');
-  assert.equal(sigmaCalls[1].payload.to, 'ModernPsyCourses');
-  assert.equal(sigmaCalls[1].payload.from, '+79991234567');
-  assert.ok(sigmaCalls[1].payload.payload.text.includes('Актерское мастерство'));
+  assert.equal(sigmaCalls[1].payload.fields.TITLE, 'Заявка с сайта: Актерское мастерство');
+  assert.equal(sigmaCalls[1].payload.fields.NAME, 'Иван');
+  assert.deepEqual(sigmaCalls[1].payload.fields.PHONE, [{ VALUE: '+79991234567', VALUE_TYPE: 'WORK' }]);
+  assert.equal(sigmaCalls[1].payload.fields.UTM_SOURCE, 'yandex');
+  assert.ok(sigmaCalls[1].payload.fields.COMMENTS.includes('Хочу узнать детали'));
+  assert.equal(sigmaCalls[2].payload.to, 'ModernPsyCourses');
+  assert.equal(sigmaCalls[2].payload.from, '+79991234567');
+  assert.ok(sigmaCalls[2].payload.payload.text.includes('Актерское мастерство'));
 
   const builtIncoming = buildIncomingLeadPayload({
     lead: {
@@ -227,6 +306,29 @@ const main = async () => {
   });
   assert.equal(builtIncoming.to, 'ModernPsy');
   assert.equal(builtIncoming.type, 'sms');
+
+  const builtBitrix = buildBitrixLeadPayload({
+    lead: {
+      phone: '+79991234567',
+      name: 'Иван',
+      email: 'ivan@example.com',
+      courseSlug: 'act',
+      leadType: 'course_request',
+      idempotencyKey: 'lead-key',
+      pageUrl: 'https://modern-psy.ru/act',
+    },
+    route: {
+      sigmaIncomingTo: 'ModernPsy',
+      sigmaTags: [],
+    },
+  }, {
+    bitrixSourceId: 'WEB',
+    bitrixAssignedById: 7,
+  });
+  assert.equal(builtBitrix.fields.SOURCE_ID, 'WEB');
+  assert.equal(builtBitrix.fields.ASSIGNED_BY_ID, 7);
+  assert.equal(builtBitrix.fields.ORIGIN_ID, 'lead-key');
+  assert.deepEqual(builtBitrix.params, { REGISTER_SONET_EVENT: 'Y' });
 
   process.env = previousEnv;
   console.log('tilda lead gateway regression check passed');

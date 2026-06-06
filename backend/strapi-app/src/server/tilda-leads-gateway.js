@@ -23,18 +23,27 @@ const parseIntegerEnv = (name, fallback) => {
   return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
 };
 
+const normalizeBooleanEnv = (value, fallback = false) => {
+  const raw = toTrimmedString(value, 20).toLowerCase();
+  if (!raw) return fallback;
+  if (['1', 'true', 'yes', 'on'].includes(raw)) return true;
+  if (['0', 'false', 'no', 'off'].includes(raw)) return false;
+  return fallback;
+};
+
 const getConfig = () => {
   const appKeys = toTrimmedString(process.env.APP_KEYS || process.env.STRAPI_APP_KEYS, 1000);
+  const bitrixWebhookBaseUrl = toTrimmedString(process.env.BITRIX24_WEBHOOK_BASE_URL, 1000);
   return {
     tildaToken: toTrimmedString(process.env.TILDA_LEADS_TOKEN, 500),
     sigmaApiBaseUrl: toTrimmedString(process.env.SIGMA_API_BASE_URL, 500) || 'https://user.sigmasms.ru/api',
     sigmaApiToken: toTrimmedString(process.env.SIGMA_API_TOKEN, 1000),
     sigmaIncomingTo: toTrimmedString(process.env.SIGMA_INCOMING_TO, 255),
     sigmaIncomingType: toTrimmedString(process.env.SIGMA_INCOMING_TYPE, 40) || 'sms',
-    sigmaSmsSender: toTrimmedString(process.env.SIGMA_SMS_SENDER || process.env.SIGMA_CODE_SENDER, 255),
-    sigmaVkSender: toTrimmedString(process.env.SIGMA_VK_SENDER || process.env.SIGMA_CODE_SENDER, 255),
+    sigmaSmsSender: toTrimmedString(process.env.SIGMA_SMS_SENDER, 255),
+    sigmaVkSender: toTrimmedString(process.env.SIGMA_VK_SENDER, 255),
     sigmaTelegramSender: toTrimmedString(process.env.SIGMA_TELEGRAM_SENDER, 255) || '-',
-    sigmaFlashcallSender: toTrimmedString(process.env.SIGMA_FLASHCALL_SENDER || process.env.SIGMA_CODE_SENDER, 255),
+    sigmaFlashcallSender: toTrimmedString(process.env.SIGMA_FLASHCALL_SENDER, 255),
     requestTimeoutMs: parseIntegerEnv('SIGMA_REQUEST_TIMEOUT_MS', 8000),
     codeLength: Math.min(parseIntegerEnv('TILDA_LEAD_CODE_LENGTH', DEFAULT_CODE_LENGTH), 8),
     codeTtlSeconds: parseIntegerEnv('TILDA_LEAD_CODE_TTL_SECONDS', DEFAULT_CODE_TTL_SECONDS),
@@ -44,6 +53,11 @@ const getConfig = () => {
     ipRateLimitWindowSeconds: parseIntegerEnv('TILDA_LEAD_IP_RATE_LIMIT_WINDOW_SECONDS', DEFAULT_IP_RATE_LIMIT_WINDOW_SECONDS),
     ipRateLimitMax: parseIntegerEnv('TILDA_LEAD_IP_RATE_LIMIT_MAX', DEFAULT_IP_RATE_LIMIT_MAX),
     allowedOrigins: parseListEnv(process.env.TILDA_LEADS_ALLOWED_ORIGINS || process.env.CORS_ORIGIN),
+    bitrixCreateLeads: normalizeBooleanEnv(process.env.BITRIX24_CREATE_LEADS, Boolean(bitrixWebhookBaseUrl)),
+    bitrixWebhookBaseUrl,
+    bitrixSourceId: toTrimmedString(process.env.BITRIX24_SOURCE_ID, 80) || 'WEB',
+    bitrixAssignedById: parseIntegerEnv('BITRIX24_ASSIGNED_BY_ID', 0),
+    bitrixRequestTimeoutMs: parseIntegerEnv('BITRIX24_REQUEST_TIMEOUT_MS', 8000),
     hashSecret: toTrimmedString(process.env.TILDA_LEAD_CODE_SECRET, 1000)
       || appKeys
       || toTrimmedString(process.env.JWT_SECRET, 1000)
@@ -153,6 +167,36 @@ const normalizeChannel = (value) => {
   return CHANNELS.includes(channel) ? channel : '';
 };
 
+const getVerificationChannelConfig = (config) => {
+  return {
+    sms: {
+      enabled: Boolean(config.sigmaSmsSender),
+      requiredEnv: 'SIGMA_SMS_SENDER',
+    },
+    telegram: {
+      enabled: Boolean(config.sigmaTelegramSender),
+      requiredEnv: 'SIGMA_TELEGRAM_SENDER',
+    },
+    vk: {
+      enabled: Boolean(config.sigmaVkSender),
+      requiredEnv: 'SIGMA_VK_SENDER',
+    },
+    flashcall: {
+      enabled: Boolean(config.sigmaFlashcallSender),
+      requiredEnv: 'SIGMA_FLASHCALL_SENDER',
+    },
+  };
+};
+
+const assertVerificationChannelConfigured = (channel, config) => {
+  const channelConfig = getVerificationChannelConfig(config)[channel];
+  if (channelConfig && channelConfig.enabled) return;
+
+  const error = new Error(`${channelConfig ? channelConfig.requiredEnv : 'SIGMA sender'} is not configured.`);
+  error.status = 503;
+  throw error;
+};
+
 const normalizeCode = (value, codeLength) => {
   const code = toTrimmedString(value, 20).replace(/\D/g, '');
   return code.length === codeLength ? code : '';
@@ -225,6 +269,12 @@ const buildSigmaUrl = (config, path) => {
   return `${config.sigmaApiBaseUrl.replace(/\/+$/, '')}/${path.replace(/^\/+/, '')}`;
 };
 
+const buildBitrixUrl = (config) => {
+  const baseUrl = config.bitrixWebhookBaseUrl.replace(/\/+$/, '');
+  if (/\/crm\.lead\.add(?:\.json)?$/i.test(baseUrl)) return baseUrl;
+  return `${baseUrl}/crm.lead.add`;
+};
+
 const createSigmaClient = ({ fetchImpl = global.fetch } = {}) => {
   const request = async (path, payload, config) => {
     if (!config.sigmaApiToken) {
@@ -283,7 +333,64 @@ const createSigmaClient = ({ fetchImpl = global.fetch } = {}) => {
   };
 };
 
+const createBitrixClient = ({ fetchImpl = global.fetch } = {}) => {
+  return {
+    async createLead(params, config) {
+      if (!config.bitrixWebhookBaseUrl) {
+        const error = new Error('BITRIX24_WEBHOOK_BASE_URL is not configured.');
+        error.status = 503;
+        throw error;
+      }
+
+      const payload = buildBitrixLeadPayload(params, config);
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), config.bitrixRequestTimeoutMs);
+
+      try {
+        const response = await fetchImpl(buildBitrixUrl(config), {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Accept: 'application/json',
+          },
+          body: JSON.stringify(payload),
+          signal: controller.signal,
+        });
+
+        let body = null;
+        try {
+          body = await response.json();
+        } catch (error) {
+          body = null;
+        }
+
+        if (!response.ok || (body && body.error)) {
+          const message = toTrimmedString(
+            (body && (body.error_description || body.error))
+              || `Bitrix24 request failed with HTTP ${response.status}`,
+            1000
+          );
+          const error = new Error(message);
+          error.status = response.status;
+          error.body = body;
+          error.request = payload;
+          throw error;
+        }
+
+        return {
+          request: payload,
+          response: body,
+        };
+      } finally {
+        clearTimeout(timeout);
+      }
+    },
+  };
+};
+
 const buildVerificationSendingPayload = ({ phone, channel, code, vkRecipient }, config) => {
+  assertVerificationChannelConfigured(channel, config);
+
   if (channel === 'telegram') {
     return {
       recipient: phone,
@@ -300,7 +407,7 @@ const buildVerificationSendingPayload = ({ phone, channel, code, vkRecipient }, 
       recipient: phone,
       type: 'flashcall',
       payload: {
-        sender: config.sigmaFlashcallSender || 'Academy',
+        sender: config.sigmaFlashcallSender,
         text: code,
       },
     };
@@ -311,7 +418,7 @@ const buildVerificationSendingPayload = ({ phone, channel, code, vkRecipient }, 
       recipient: toTrimmedString(vkRecipient, 80) || phone,
       type: 'vk',
       payload: {
-        sender: config.sigmaVkSender || 'Academy',
+        sender: config.sigmaVkSender,
         text: `Код подтверждения: ${code}`,
       },
     };
@@ -321,19 +428,14 @@ const buildVerificationSendingPayload = ({ phone, channel, code, vkRecipient }, 
     recipient: phone,
     type: 'sms',
     payload: {
-      sender: config.sigmaSmsSender || 'Academy',
+      sender: config.sigmaSmsSender,
       text: `Код подтверждения: ${code}`,
     },
   };
 };
 
-const buildIncomingLeadText = ({ lead, route }) => {
+const buildLeadDetailsText = ({ lead, route }) => {
   const lines = [
-    'Новая заявка с сайта',
-    '',
-    lead.name ? `Имя: ${lead.name}` : '',
-    `Телефон: ${lead.phone}`,
-    lead.email ? `Email: ${lead.email}` : '',
     lead.comment ? `Комментарий: ${lead.comment}` : '',
     lead.courseTitle || lead.courseSlug ? `Курс: ${lead.courseTitle || lead.courseSlug}` : '',
     lead.leadType ? `Тип заявки: ${lead.leadType}` : '',
@@ -349,6 +451,19 @@ const buildIncomingLeadText = ({ lead, route }) => {
       : '',
   ];
 
+  return lines.filter((line) => line !== '').join('\n');
+};
+
+const buildIncomingLeadText = ({ lead, route }) => {
+  const lines = [
+    'Новая заявка с сайта',
+    '',
+    lead.name ? `Имя: ${lead.name}` : '',
+    `Телефон: ${lead.phone}`,
+    lead.email ? `Email: ${lead.email}` : '',
+    buildLeadDetailsText({ lead, route }),
+  ];
+
   return lines.filter((line) => line !== '').join('\n').slice(0, 3500);
 };
 
@@ -359,6 +474,56 @@ const buildIncomingLeadPayload = ({ lead, route }, config) => {
     type: config.sigmaIncomingType,
     payload: {
       text: buildIncomingLeadText({ lead, route }),
+    },
+  };
+};
+
+const buildBitrixLeadTitle = (lead) => {
+  const course = lead.courseTitle || lead.courseSlug;
+  return toTrimmedString(
+    course
+      ? `Заявка с сайта: ${course}`
+      : `Заявка с сайта: ${lead.leadType || 'site_request'}`,
+    255
+  );
+};
+
+const buildBitrixLeadPayload = ({ lead, route }, config) => {
+  const fields = {
+    TITLE: buildBitrixLeadTitle(lead),
+    NAME: lead.name || 'Клиент',
+    STATUS_ID: 'NEW',
+    OPENED: 'Y',
+    SOURCE_ID: config.bitrixSourceId,
+    SOURCE_DESCRIPTION: 'Tilda / modern-psy.ru',
+    COMMENTS: buildLeadDetailsText({ lead, route }) || 'Заявка из формы Tilda',
+    ORIGINATOR_ID: 'academy-tilda-leads',
+    ORIGIN_ID: lead.idempotencyKey,
+  };
+
+  if (lead.phone) {
+    fields.PHONE = [{ VALUE: lead.phone, VALUE_TYPE: 'WORK' }];
+  }
+
+  if (lead.email) {
+    fields.EMAIL = [{ VALUE: lead.email, VALUE_TYPE: 'WORK' }];
+  }
+
+  if (lead.pageUrl) {
+    fields.WEB = [{ VALUE: lead.pageUrl, VALUE_TYPE: 'WORK' }];
+  }
+
+  if (lead.utmSource) fields.UTM_SOURCE = lead.utmSource;
+  if (lead.utmMedium) fields.UTM_MEDIUM = lead.utmMedium;
+  if (lead.utmCampaign) fields.UTM_CAMPAIGN = lead.utmCampaign;
+  if (lead.utmContent) fields.UTM_CONTENT = lead.utmContent;
+  if (lead.utmTerm) fields.UTM_TERM = lead.utmTerm;
+  if (config.bitrixAssignedById) fields.ASSIGNED_BY_ID = config.bitrixAssignedById;
+
+  return {
+    fields,
+    params: {
+      REGISTER_SONET_EVENT: 'Y',
     },
   };
 };
@@ -562,8 +727,33 @@ const respondJson = (ctx, status, body) => {
 
 const createTildaLeadGateway = ({ strapi, loadSerializedCourses, fetchImpl } = {}) => {
   const sigma = createSigmaClient({ fetchImpl });
+  const bitrix = createBitrixClient({ fetchImpl });
 
   return {
+    respondVerificationChannels(ctx) {
+      const config = getConfig();
+      const payload = getRequestPayload(ctx);
+
+      if (!isAuthorized(ctx, payload, config)) {
+        respondJson(ctx, 401, { ok: false, error: 'Unauthorized.' });
+        return;
+      }
+
+      if (!isAllowedOrigin(ctx, config)) {
+        respondJson(ctx, 403, { ok: false, error: 'Forbidden origin.' });
+        return;
+      }
+
+      const channels = getVerificationChannelConfig(config);
+      respondJson(ctx, 200, {
+        ok: true,
+        channels: Object.keys(channels).reduce((result, channel) => {
+          result[channel] = channels[channel].enabled;
+          return result;
+        }, {}),
+      });
+    },
+
     async respondStartVerification(ctx) {
       const config = getConfig();
       const payload = getRequestPayload(ctx);
@@ -596,6 +786,16 @@ const createTildaLeadGateway = ({ strapi, loadSerializedCourses, fetchImpl } = {
 
       if (!channel) {
         respondJson(ctx, 422, { ok: false, error: 'Verification channel is required.' });
+        return;
+      }
+
+      try {
+        assertVerificationChannelConfigured(channel, config);
+      } catch (error) {
+        respondJson(ctx, error.status || 503, {
+          ok: false,
+          error: error.message,
+        });
         return;
       }
 
@@ -659,17 +859,24 @@ const createTildaLeadGateway = ({ strapi, loadSerializedCourses, fetchImpl } = {
           expiresInSeconds: config.codeTtlSeconds,
         });
       } catch (error) {
+        const rawError = toTrimmedString(error && error.message, 1000);
+        const senderError = /sender not found/i.test(rawError);
+        const channelConfig = getVerificationChannelConfig(config)[channel];
+        const publicError = senderError && channelConfig
+          ? `SIGMA sender for ${channel} is not registered. Check ${channelConfig.requiredEnv}.`
+          : rawError || 'Failed to send verification code.';
+
         await query.update({
           where: { id: verification.id },
           data: {
             status: 'failed',
-            lastError: toTrimmedString(error && error.message, 1000),
+            lastError: publicError,
           },
         });
 
         respondJson(ctx, error.status && error.status >= 400 && error.status < 500 ? error.status : 502, {
           ok: false,
-          error: toTrimmedString(error && error.message, 1000) || 'Failed to send verification code.',
+          error: publicError,
         });
       }
     },
@@ -748,6 +955,9 @@ const createTildaLeadGateway = ({ strapi, loadSerializedCourses, fetchImpl } = {
       }
 
       const sigmaRequest = buildIncomingLeadPayload({ lead, route }, config);
+      const bitrixRequest = config.bitrixCreateLeads
+        ? buildBitrixLeadPayload({ lead, route }, config)
+        : null;
       const storedLead = await leadQuery.create({
         data: {
           ...lead,
@@ -756,11 +966,45 @@ const createTildaLeadGateway = ({ strapi, loadSerializedCourses, fetchImpl } = {
           routeKey: route.routeKey,
           sigmaDestination: route.sigmaIncomingTo,
           sigmaRequest,
+          bitrixStatus: config.bitrixCreateLeads ? 'pending' : 'disabled',
+          bitrixRequest,
           rawPayload: sanitizeRawPayload(payload),
           requestIp,
           userAgent,
         },
       });
+
+      let bitrixStatus = config.bitrixCreateLeads ? 'pending' : 'disabled';
+      let bitrixLeadId = '';
+
+      if (config.bitrixCreateLeads) {
+        try {
+          const bitrixResult = await bitrix.createLead({ lead, route }, config);
+          bitrixLeadId = toTrimmedString(bitrixResult && bitrixResult.response && bitrixResult.response.result, 120);
+          bitrixStatus = 'sent';
+
+          await leadQuery.update({
+            where: { id: storedLead.id },
+            data: {
+              bitrixStatus,
+              bitrixLeadId,
+              bitrixRequest: bitrixResult.request,
+              bitrixResponse: bitrixResult.response,
+            },
+          });
+        } catch (error) {
+          bitrixStatus = 'failed';
+          await leadQuery.update({
+            where: { id: storedLead.id },
+            data: {
+              bitrixStatus,
+              bitrixRequest: error && error.request ? error.request : bitrixRequest,
+              bitrixResponse: error && error.body ? error.body : null,
+              bitrixLastError: toTrimmedString(error && error.message, 1000),
+            },
+          });
+        }
+      }
 
       try {
         const sigmaResponse = await sigma.createIncomingLead({ lead, route }, config);
@@ -778,6 +1022,8 @@ const createTildaLeadGateway = ({ strapi, loadSerializedCourses, fetchImpl } = {
           ok: true,
           status: 'sent',
           leadId: storedLead.documentId || storedLead.id,
+          bitrixStatus,
+          bitrixLeadId,
           sigmaIncomingId,
         });
       } catch (error) {
@@ -794,6 +1040,8 @@ const createTildaLeadGateway = ({ strapi, loadSerializedCourses, fetchImpl } = {
           ok: true,
           status: 'accepted',
           deliveryStatus: 'failed',
+          bitrixStatus,
+          bitrixLeadId,
           leadId: storedLead.documentId || storedLead.id,
         });
       }
@@ -804,9 +1052,12 @@ const createTildaLeadGateway = ({ strapi, loadSerializedCourses, fetchImpl } = {
 module.exports = {
   CHANNELS,
   buildIncomingLeadPayload,
+  buildBitrixLeadPayload,
   buildVerificationSendingPayload,
+  createBitrixClient,
   createSigmaClient,
   createTildaLeadGateway,
+  getVerificationChannelConfig,
   normalizeChannel,
   normalizeLeadPayload,
   normalizePhone,
