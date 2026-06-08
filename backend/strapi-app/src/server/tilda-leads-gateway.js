@@ -275,6 +275,18 @@ const buildBitrixUrl = (config) => {
   return `${baseUrl}/crm.lead.add`;
 };
 
+const getSigmaErrorMessage = (body, fallback) => {
+  const error = body && body.error;
+  return toTrimmedString(
+    (body && body.message)
+      || (error && typeof error === 'object' && (error.message || error.type))
+      || error
+      || (body && body.type)
+      || fallback,
+    1000
+  );
+};
+
 const createSigmaClient = ({ fetchImpl = global.fetch } = {}) => {
   const request = async (path, payload, config) => {
     if (!config.sigmaApiToken) {
@@ -305,14 +317,13 @@ const createSigmaClient = ({ fetchImpl = global.fetch } = {}) => {
         body = null;
       }
 
-      if (!response.ok) {
-        const message = toTrimmedString(
-          (body && (body.message || body.error || body.type))
-            || `SIGMA request failed with HTTP ${response.status}`,
-          1000
+      if (!response.ok || (body && body.error)) {
+        const message = getSigmaErrorMessage(
+          body,
+          `SIGMA request failed with HTTP ${response.status}`
         );
         const error = new Error(message);
-        error.status = response.status;
+        error.status = response.ok ? 502 : response.status;
         error.body = body;
         throw error;
       }

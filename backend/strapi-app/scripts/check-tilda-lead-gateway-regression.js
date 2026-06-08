@@ -6,6 +6,7 @@ const {
   buildBitrixLeadPayload,
   buildIncomingLeadPayload,
   buildVerificationSendingPayload,
+  createSigmaClient,
   createTildaLeadGateway,
   getVerificationChannelConfig,
   normalizePhone,
@@ -242,6 +243,37 @@ const main = async () => {
     vk: { enabled: false, requiredEnv: 'SIGMA_VK_SENDER' },
     flashcall: { enabled: false, requiredEnv: 'SIGMA_FLASHCALL_SENDER' },
   });
+
+  const failingSigma = createSigmaClient({
+    fetchImpl: async () => ({
+      ok: true,
+      status: 200,
+      json: async () => ({
+        id: 'sigma-failed-id',
+        status: 'failed',
+        error: {
+          message: 'Could not find valid tariff for given source sendings.sms',
+        },
+      }),
+    }),
+  });
+  await assert.rejects(
+    failingSigma.sendVerificationCode({
+      phone: '+79991234567',
+      channel: 'sms',
+      code: '1234',
+    }, {
+      sigmaApiBaseUrl: 'https://user.sigmasms.ru/api',
+      sigmaApiToken: 'sigma-token',
+      sigmaSmsSender: 'RegisteredSmsSender',
+      requestTimeoutMs: 1000,
+    }),
+    (error) => {
+      assert.equal(error.status, 502);
+      assert.match(error.message, /valid tariff/);
+      return true;
+    }
+  );
 
   const startCtx = createMockCtx({
     path: '/api/tilda/lead-verification/start',

@@ -447,7 +447,17 @@ BITRIX24_ASSIGNED_BY_ID=
 
 `SIGMA_API_TOKEN` и `BITRIX24_WEBHOOK_BASE_URL` нельзя вставлять в Tilda или frontend-код. Они должны быть только в окружении backend. `TILDA_LEADS_TOKEN` используется helper'ом в HTML, поэтому это публичный токен формы, а не секрет уровня SIGMA/Bitrix.
 
-`SIGMA_SMS_SENDER`, `SIGMA_VK_SENDER` и `SIGMA_FLASHCALL_SENDER` должны содержать точные sender-имена, зарегистрированные и разрешенные в личном кабинете SIGMA для соответствующего канала. Телефон пользователя является `recipient` и не заменяет sender. Helper запрашивает `GET /api/tilda/lead-verification/channels` и отключает в форме каналы без настроенного sender.
+`SIGMA_SMS_SENDER` и `SIGMA_VK_SENDER` должны содержать точные sender-имена, зарегистрированные и разрешенные в личном кабинете SIGMA. `SIGMA_FLASHCALL_SENDER` задает непустое внутреннее имя отправителя FlashCall. Телефон пользователя является `recipient` и не заменяет sender. Helper запрашивает `GET /api/tilda/lead-verification/channels` и отключает в форме каналы без настроенного sender.
+
+Непустой sender включает канал в форме, но не гарантирует доставку. Для каждого используемого типа сообщения в кабинете SIGMA также должны быть:
+
+- право `advanced.sendings.generate`;
+- активный тариф и правило маршрутизации для `sendings.sms`, `sendings.vk`, `sendings.flashcall` или `sendings.telegramcode`;
+- одобренное имя отправителя для SMS и VK;
+- согласованный сервисный шаблон, которому соответствует текст `Код подтверждения: {code}`, если аккаунт ограничивает тексты шаблонами;
+- положительный баланс.
+
+FlashCall получает цифровой код в `payload.text`; SIGMA подставляет его в последние цифры номера звонящего. `payload.sender` используется как внутреннее имя отправителя. Telegram verification использует `type=telegramcode` и допускает `payload.sender=-`.
 
 После успешной проверки кода backend:
 
